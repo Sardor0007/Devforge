@@ -36,7 +36,7 @@ class Migration(migrations.Migration):
             name='layer_order',
             field=models.JSONField(blank=True, default=list),
         ),
-        migrations.AddField(
+        migrations.AlterField(
             model_name='imageproject',
             name='layers',
             field=models.JSONField(blank=True, default=list),
