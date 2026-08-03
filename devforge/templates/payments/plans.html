@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load sub_tags %}
+{% block title %}Obuna Rejalari — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plans-hero {
+        text-align: center;
+        padding: 3.5rem 2rem 2rem;
+        position: relative;
+    }
+    .plans-hero-badge {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3);
+        border-radius: 9999px; padding: 0.35rem 1rem;
+        font-size: 0.75rem; font-weight: 700; color: #818cf8;
+        text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.25rem;
+    }
+    .plans-title {
+        font-size: clamp(2rem, 5vw, 3.2rem);
+        font-weight: 900; color: var(--text-primary);
+        line-height: 1.1; margin-bottom: 1rem;
+    }
+    .plans-title span {
+        background: linear-gradient(135deg, #6366f1, #9333ea, #ec4899);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .plans-subtitle {
+        color: var(--text-muted); font-size: 1.05rem; max-width: 520px; margin: 0 auto 2.5rem;
+    }
+
+    /* ── Plans Grid ── */
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 2rem 4rem;
+        align-items: start;
+    }
+
+    .plan-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2rem;
+        position: relative;
+        transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+        overflow: hidden;
+    }
+    .plan-card::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, transparent 60%, rgba(99,102,241,0.04));
+        pointer-events: none;
+    }
+    .plan-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .plan-card.featured {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 1px #6366f1, 0 20px 60px rgba(99,102,241,0.2);
+        transform: scale(1.02);
+    }
+    .plan-card.featured:hover { transform: scale(1.02) translateY(-4px); }
+
+    .plan-card.current-plan {
+        border-color: #10b981;
+        box-shadow: 0 0 0 1px #10b981;
+    }
+
+    .featured-badge {
+        position: absolute; top: 1.25rem; right: 1.25rem;
+        background: linear-gradient(135deg, #6366f1, #9333ea);
+        color: #fff; font-size: 0.65rem; font-weight: 800;
+        padding: 0.25rem 0.65rem; border-radius: 9999px;
+        text-transform: uppercase; letter-spacing: 0.8px;
+    }
+
+    .plan-icon {
+        width: 48px; height: 48px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; margin-bottom: 1.25rem;
+    }
+
+    .plan-name {
+        font-size: 1.15rem; font-weight: 800; color: var(--text-primary);
+        margin-bottom: 0.35rem;
+    }
+    .plan-desc {
+        font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .plan-price {
+        margin-bottom: 1.75rem;
+    }
+    .price-amount {
+        font-size: 2.8rem; font-weight: 900; color: var(--text-primary);
+        line-height: 1;
+    }
+    .price-period {
+        font-size: 0.85rem; color: var(--text-muted); font-weight: 500;
+    }
+    .price-custom {
+        font-size: 1.4rem; font-weight: 800; color: var(--text-primary);
+    }
+
+    .plan-features {
+        list-style: none;
+        display: flex; flex-direction: column; gap: 0.65rem;
+        margin-bottom: 2rem;
+    }
+    .plan-features li {
+        display: flex; align-items: center; gap: 0.65rem;
+        font-size: 0.875rem; color: var(--text-secondary);
+    }
+    .plan-features li .check {
+        width: 18px; height: 18px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.65rem; flex-shrink: 0; font-weight: 900;
+    }
+    .check-yes { background: rgba(16,185,129,0.15); color: #34d399; }
+    .check-no  { background: rgba(255,255,255,0.06); color: var(--text-muted); }
+
+    .plan-cta {
+        display: flex; align-items: center; justify-content: center;
+        width: 100%; padding: 0.85rem; border-radius: 12px;
+        font-weight: 700; font-size: 0.92rem; cursor: pointer;
+        border: none; transition: all 0.2s; text-decoration: none;
+        font-family: var(--font-display);
+    }
+    .cta-primary {
+        background: linear-gradient(135deg, #6366f1, #9333ea);
+        color: #fff; box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+    }
+    .cta-primary:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 30px rgba(99,102,241,0.45); }
+    .cta-secondary {
+        background: rgba(255,255,255,0.06); color: var(--text-primary);
+        border: 1px solid var(--border);
+    }
+    .cta-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
+    .cta-current {
+        background: rgba(16,185,129,0.12); color: #34d399;
+        border: 1px solid rgba(16,185,129,0.3); cursor: default;
+    }
+    .cta-enterprise {
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        color: #fff; box-shadow: 0 4px 20px rgba(14,165,233,0.25);
+    }
+
+    /* ── Comparison Table ── */
+    .compare-section {
+        max-width: 900px; margin: 0 auto 4rem; padding: 0 2rem;
+    }
+    .compare-title {
+        font-size: 1.5rem; font-weight: 800; color: var(--text-primary);
+        text-align: center; margin-bottom: 1.5rem;
+    }
+    .compare-table {
+        width: 100%; border-collapse: collapse;
+        background: var(--surface); border-radius: 16px; overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    .compare-table th {
+        padding: 1rem 1.25rem; font-size: 0.78rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        color: var(--text-muted); border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+    .compare-table th:not(:first-child) { text-align: center; }
+    .compare-table td {
+        padding: 0.85rem 1.25rem; font-size: 0.875rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: var(--text-secondary);
+    }
+    .compare-table td:not(:first-child) { text-align: center; font-weight: 700; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .col-pro { color: #6366f1 !important; }
+    .col-studio { color: #9333ea !important; }
+    .col-enterprise { color: #0ea5e9 !important; }
+
+    /* Stripe secure badge */
+    .stripe-badge {
+        display: flex; align-items: center; justify-content: center;
+        gap: 0.5rem; color: var(--text-muted); font-size: 0.78rem;
+        font-weight: 600; padding: 1rem 0 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div>
+    <!-- Hero -->
+    <div class="plans-hero">
+        <div class="plans-hero-badge">💳 Obuna Rejalari</div>
+        <h1 class="plans-title">
+            O'z kelajagingizga<br><span>sarmoya qiling</span>
+        </h1>
+        <p class="plans-subtitle">
+            Hamma narsa bepul boshlanadi. O'sib borganda kuchliroq vositalarga o'ting.
+        </p>
+    </div>
+
+    <!-- Plans Grid -->
+    <div class="plans-grid">
+
+        <!-- FREE -->
+        <div class="plan-card {% if current_plan == 'free' %}current-plan{% endif %}">
+            <div class="plan-icon" style="background: rgba(99,102,241,0.1);">{% sub_icon 'free' %}</div>
+            <div class="plan-name">{% sub_label 'free' %}</div>
+            <div class="plan-desc">Boshlash uchun hamma kerakli narsa</div>
+            <div class="plan-price">
+                <span class="price-amount">$0</span>
+                <span class="price-period">/oy</span>
+            </div>
+            <ul class="plan-features">
+                <li><span class="check check-yes">✓</span> Profil va portfolio</li>
+                <li><span class="check check-yes">✓</span> Feed va jamoa</li>
+                <li><span class="check check-yes">✓</span> Challenges</li>
+                <li><span class="check check-yes">✓</span> Marketplace (faqat sotib olish)</li>
+                <li><span class="check check-no">✕</span> Fayl yuklash</li>
+                <li><span class="check check-no">✕</span> 3D Studio / Workspace</li>
+                <li><span class="check check-no">✕</span> Tournament yaratish</li>
+            </ul>
+            {% if current_plan == 'free' %}
+            <span class="plan-cta cta-current">✅ Joriy rejangiz</span>
+            {% else %}
+            <a href="{% url 'dashboard' %}" class="plan-cta cta-secondary">Davom etish</a>
+            {% endif %}
+        </div>
+
+        <!-- PRO -->
+        <div class="plan-card featured {% if current_plan == 'pro' or current_plan == 'gold' %}current-plan{% endif %}">
+            <span class="featured-badge">⭐ Mashhur</span>
+            <div class="plan-icon" style="background: rgba(99,102,241,0.15);">{% sub_icon 'pro' %}</div>
+            <div class="plan-name" style="color: #818cf8;">{% sub_label 'pro' %}</div>
+            <div class="plan-desc">Jiddiy ijodkorlar uchun professional vositalar</div>
+            <div class="plan-price">
+                <span class="price-amount" style="background: linear-gradient(135deg, #6366f1, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">$9</span>
+                <span class="price-period">/oy</span>
+            </div>
+            <ul class="plan-features">
+                <li><span class="check check-yes">✓</span> Hamma Free imkoniyatlar</li>
+                <li><span class="check check-yes">✓</span> 10 fayl/oy yuklash</li>
+                <li><span class="check check-yes">✓</span> 3D Studio kirish</li>
+                <li><span class="check check-yes">✓</span> Workspace (Private)</li>
+                <li><span class="check check-yes">✓</span> Marketplace (sotish)</li>
+                <li><span class="check check-yes">✓</span> Game Jams ishtirok</li>
+                <li><span class="check check-no">✕</span> Tournament yaratish</li>
+            </ul>
+            {% if current_plan == 'pro' or current_plan == 'gold' %}
+            <span class="plan-cta cta-current">✅ Joriy rejangiz</span>
+            {% else %}
+            <form method="post" action="{% url 'payments:subscribe' 'pro' %}">
+                {% csrf_token %}
+                <button type="submit" class="plan-cta cta-primary">Pro ga o'tish →</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- STUDIO -->
+        <div class="plan-card {% if current_plan == 'studio' or current_plan == 'platinum' %}current-plan{% endif %}">
+            <div class="plan-icon" style="background: rgba(147,51,234,0.15);">{% sub_icon 'studio' %}</div>
+            <div class="plan-name" style="color: #a78bfa;">{% sub_label 'studio' %}</div>
+            <div class="plan-desc">Studio va Tournament tashkilotchilari uchun</div>
+            <div class="plan-price">
+                <span class="price-amount" style="background: linear-gradient(135deg, #9333ea, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">$25</span>
+                <span class="price-period">/oy</span>
+            </div>
+            <ul class="plan-features">
+                <li><span class="check check-yes">✓</span> Hamma Pro imkoniyatlar</li>
+                <li><span class="check check-yes">✓</span> 50 fayl/oy yuklash</li>
+                <li><span class="check check-yes">✓</span> Tournament yaratish</li>
+                <li><span class="check check-yes">✓</span> Team Workspace</li>
+                <li><span class="check check-yes">✓</span> Advanced Analytics</li>
+                <li><span class="check check-yes">✓</span> Stripe Connect (to'lovlar)</li>
+                <li><span class="check check-yes">✓</span> Priority support</li>
+            </ul>
+            {% if current_plan == 'studio' or current_plan == 'platinum' %}
+            <span class="plan-cta cta-current">✅ Joriy rejangiz</span>
+            {% else %}
+            <form method="post" action="{% url 'payments:subscribe' 'studio' %}">
+                {% csrf_token %}
+                <button type="submit" class="plan-cta cta-primary" style="background: linear-gradient(135deg, #9333ea, #ec4899); box-shadow: 0 4px 20px rgba(147,51,234,0.35);">
+                    Studio ga o'tish →
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- ENTERPRISE -->
+        <div class="plan-card {% if current_plan == 'enterprise' %}current-plan{% endif %}">
+            <div class="plan-icon" style="background: rgba(14,165,233,0.15);">{% sub_icon 'enterprise' %}</div>
+            <div class="plan-name" style="color: #38bdf8;">{% sub_label 'enterprise' %}</div>
+            <div class="plan-desc">Katta jamoalar va kompaniyalar uchun maxsus yechim</div>
+            <div class="plan-price">
+                <span class="price-custom">Maxsus narx</span>
+            </div>
+            <ul class="plan-features">
+                <li><span class="check check-yes">✓</span> Hamma Studio imkoniyatlar</li>
+                <li><span class="check check-yes">✓</span> Cheksiz fayl yuklash</li>
+                <li><span class="check check-yes">✓</span> Dedicated support</li>
+                <li><span class="check check-yes">✓</span> Custom integrations</li>
+                <li><span class="check check-yes">✓</span> SLA kafolat</li>
+                <li><span class="check check-yes">✓</span> White-label variant</li>
+                <li><span class="check check-yes">✓</span> Invoice to'lov</li>
+            </ul>
+            {% if current_plan == 'enterprise' %}
+            <span class="plan-cta cta-current">✅ Joriy rejangiz</span>
+            {% else %}
+            <a href="mailto:sales@devforge.uz?subject=Enterprise so'rovi" class="plan-cta cta-enterprise">
+                Bog'lanish →
+            </a>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="compare-section">
+        <h2 class="compare-title">Batafsil taqqoslash</h2>
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>Imkoniyat</th>
+                    <th>Free</th>
+                    <th class="col-pro">Pro $9</th>
+                    <th class="col-studio">Studio $25</th>
+                    <th class="col-enterprise">Enterprise</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Fayl yuklash/oy</td><td>—</td><td class="col-pro">10</td><td class="col-studio">50</td><td class="col-enterprise">∞</td></tr>
+                <tr><td>Marketplace (sotish)</td><td>—</td><td class="col-pro">✓</td><td class="col-studio">✓</td><td class="col-enterprise">✓</td></tr>
+                <tr><td>3D Studio</td><td>—</td><td class="col-pro">✓</td><td class="col-studio">✓</td><td class="col-enterprise">✓</td></tr>
+                <tr><td>Private Workspace</td><td>—</td><td class="col-pro">✓</td><td class="col-studio">✓</td><td class="col-enterprise">✓</td></tr>
+                <tr><td>Tournament yaratish</td><td>—</td><td>—</td><td class="col-studio">✓</td><td class="col-enterprise">✓</td></tr>
+                <tr><td>Team Workspace</td><td>—</td><td>—</td><td class="col-studio">✓</td><td class="col-enterprise">✓</td></tr>
+                <tr><td>Analytics Dashboard</td><td>Asosiy</td><td class="col-pro">Kengaytirilgan</td><td class="col-studio">To'liq</td><td class="col-enterprise">Custom</td></tr>
+                <tr><td>Stripe Connect</td><td>—</td><td>—</td><td class="col-studio">✓</td><td class="col-enterprise">✓</td></tr>
+                <tr><td>Priority Support</td><td>—</td><td>—</td><td class="col-studio">✓</td><td class="col-enterprise">24/7</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Stripe Badge -->
+    <div class="stripe-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Barcha to'lovlar Stripe orqali xavfsiz amalga oshiriladi · USD · SSL himoyalangan
+    </div>
+</div>
+{% endblock %}

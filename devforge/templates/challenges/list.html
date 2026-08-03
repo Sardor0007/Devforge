@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Challenges - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .challenge-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.75rem;
+    }
+
+    .challenge-card {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .challenge-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--border-bright);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+    }
+
+    .card-banner {
+        height: 120px;
+        background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -20px; right: -20px;
+        width: 100px; height: 100px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+    }
+
+    .type-badge {
+        background: rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(8px);
+        color: #fff;
+        padding: 0.3rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .reward-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(99, 102, 241, 0.12);
+        color: #818cf8;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        padding: 0.4rem 0.9rem;
+        border-radius: 0.65rem;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+
+    .reward-pill.badge-pill {
+        background: rgba(139, 92, 246, 0.12);
+        color: #a78bfa;
+        border-color: rgba(139, 92, 246, 0.25);
+    }
+
+    .progress-track {
+        height: 7px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.85rem 0;
+    }
+
+    .progress-thumb {
+        height: 100%;
+        background: linear-gradient(to right, #6366f1, #9333ea);
+        border-radius: 4px;
+        transition: width 0.6s ease;
+        box-shadow: 0 0 8px rgba(99,102,241,0.5);
+    }
+
+    .challenge-join-btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background: linear-gradient(135deg, #6366f1, #9333ea);
+        color: #fff;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        transition: opacity 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+
+    .challenge-join-btn:hover { opacity: 0.88; }
+
+    .challenge-done-btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(16,185,129,0.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,0.3);
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .challenge-inprogress-btn {
+        display: block;
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(99,102,241,0.1);
+        color: #818cf8;
+        border: 1px solid rgba(99,102,241,0.25);
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .page-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 2.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 2rem 3rem;">
+    <div class="page-header-row">
+        <div>
+            <h1 class="page-title">🏆 Challenges</h1>
+            <p class="page-subtitle">Vazifalarni bajaring, XP yig'ing va noyob Badge'larga ega bo'ling.</p>
+        </div>
+        <a href="{% url 'my_challenges' %}" class="btn btn-secondary">
+            📋 Mening ishtirokim
+        </a>
+    </div>
+
+    <div class="challenge-grid">
+        {% for challenge in challenges %}
+        <div class="challenge-card">
+            <div class="card-banner">
+                <span class="type-badge">{{ challenge.get_challenge_type_display }}</span>
+                <div style="color: rgba(255,255,255,0.85); font-size: 0.78rem; font-weight: 600;">
+                    ⏱ {{ challenge.end_date|timeuntil }}
+                </div>
+            </div>
+
+            <div class="card-content">
+                <a href="{% url 'challenge_detail' challenge.pk %}" style="text-decoration: none;">
+                    <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem; transition: color 0.2s;">{{ challenge.title }}</h3>
+                </a>
+                <p style="color: var(--text-muted); font-size: 0.875rem; line-height: 1.6; margin-bottom: 1.25rem; flex-grow: 1;">{{ challenge.description|truncatechars:120 }}</p>
+
+                <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+                    <div class="reward-pill">
+                        <span>✨</span> +{{ challenge.xp_reward }} XP
+                    </div>
+                    {% if challenge.badge_reward %}
+                    <div class="reward-pill badge-pill">
+                        <span>🏅</span> Badge
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-auto">
+                    {% with progress=user_progress|get_item:challenge.id %}
+                        {% if progress %}
+                            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; margin-bottom: 0.3rem;">
+                                <span style="color: var(--text-muted);">PROGRESS</span>
+                                <span style="color: #818cf8;">{{ progress.current_count }}/{{ challenge.target_count }}</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-thumb" style="width: {% widthratio progress.current_count challenge.target_count 100 %}%"></div>
+                            </div>
+                            {% if progress.completed %}
+                                <div class="challenge-done-btn">✅ Bajarildi</div>
+                            {% else %}
+                                <div class="challenge-inprogress-btn">⚡ Jarayonda...</div>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'challenge_join' challenge.pk %}" class="challenge-join-btn">
+                                🚀 Qo'shilish
+                            </a>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 4rem 2rem; background: var(--surface); border: 2px dashed var(--border); border-radius: var(--radius-lg);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Hozircha faol challenge'lar yo'q</h3>
+            <p style="color: var(--text-muted);">Yangi vazifalar paydo bo'lishini kuting!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

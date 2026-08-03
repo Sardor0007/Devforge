@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+{% block title %}{{ service.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.star-rating { display: flex; gap: 2px; }
+.star { font-size: 1.1rem; }
+.star.filled { color: #fbbf24; }
+.star.empty  { color: var(--border); }
+
+.review-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: .75rem;
+}
+
+.seller-card {
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(59,130,246,.05) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+}
+
+.price-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: sticky;
+    top: 80px;
+}
+
+.price-header {
+    background: linear-gradient(135deg, rgba(59,130,246,.15), rgba(139,92,246,.1));
+    border-bottom: 1px solid var(--border);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    gap: 0;
+}
+.tab {
+    padding: .6rem 1.25rem;
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: .2s;
+}
+.tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.badge-delivery {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: rgba(16,185,129,.1); color: #34d399;
+    border: 1px solid rgba(16,185,129,.2);
+    border-radius: 8px; padding: .4rem .85rem;
+    font-size: .8rem; font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;">
+
+    <!-- BREADCRUMB -->
+    <div style="margin-bottom:1.5rem;font-size:.85rem;color:var(--text2);">
+        <a href="{% url 'service_list' %}" style="color:var(--accent);text-decoration:none;">Marketplace</a>
+        &nbsp;›&nbsp; {{ service.get_category_display }}
+        &nbsp;›&nbsp; <span style="color:var(--text);">{{ service.title }}</span>
+    </div>
+
+    <div class="grid-sidebar" style="align-items:start;">
+
+        <!-- ── LEFT: MAIN CONTENT ───────────────────────────────── -->
+        <div>
+
+            <!-- SERVICE HEADER -->
+            <div style="margin-bottom:1.5rem;">
+                <div class="flex gap-1" style="margin-bottom:.75rem;flex-wrap:wrap;">
+                    <span class="badge badge-purple">{{ service.get_category_display }}</span>
+                    {% if service.review_count > 0 %}
+                    <span class="badge badge-orange">
+                        ⭐ {{ service.avg_rating }} ({{ service.review_count }} sharh)
+                    </span>
+                    {% endif %}
+                    <span class="badge-delivery">🕐 {{ service.delivery_days }} kun ichida</span>
+                </div>
+
+                <h1 style="font-size:1.6rem;font-weight:800;line-height:1.3;margin-bottom:1rem;">
+                    {{ service.title }}
+                </h1>
+
+                <!-- SELLER ROW -->
+                <div class="flex items-center gap-2">
+                    <div class="avatar-sm" style="width:40px;height:40px;font-size:1rem;flex-shrink:0;">
+                        {% if service.seller.avatar %}
+                            <img src="{{ service.seller.avatar.url }}" alt="">
+                        {% else %}
+                            {{ service.seller.username|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{% url 'profile' username=service.seller.username %}"
+                           style="font-weight:700;color:var(--text);text-decoration:none;font-size:.95rem;">
+                            {{ service.seller.username }}
+                        </a>
+                        <div class="text-xs text-muted">{{ service.seller.get_role_display }}</div>
+                    </div>
+                    {% if service.seller.is_verified %}
+                    <span class="badge badge-blue" style="margin-left:.5rem;">✓ Tasdiqlangan</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SERVICE IMAGE -->
+            <div style="width:100%;height:360px;
+                        background:linear-gradient(135deg,#0d1b2a,#1e2d45);
+                        border:1px solid var(--border);
+                        border-radius:var(--radius-lg);
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:5rem;overflow:hidden;margin-bottom:2rem;">
+                {% if service.thumbnail %}
+                    <img src="{{ service.thumbnail.url }}"
+                         style="width:100%;height:100%;object-fit:cover;" alt="{{ service.title }}">
+                {% else %}
+                    💼
+                {% endif %}
+            </div>
+
+            <!-- TABS -->
+            <div class="tab-bar">
+                <div class="tab active" onclick="switchTab('desc', this)">📋 Tavsif</div>
+                <div class="tab" onclick="switchTab('reviews', this)">⭐ Sharhlar ({{ service.review_count }})</div>
+                {% if user == service.seller %}
+                <div class="tab" onclick="switchTab('orders', this)">📦 Buyurtmalar</div>
+                {% endif %}
+            </div>
+
+            <!-- TAB: DESCRIPTION -->
+            <div id="tab-desc" class="tab-content active">
+                <div style="color:var(--text2);line-height:1.85;font-size:.95rem;white-space:pre-line;">{{ service.description }}</div>
+
+                <!-- WHAT YOU GET -->
+                <div style="margin-top:2rem;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);
+                            border-radius:var(--radius);padding:1.25rem;">
+                    <div style="font-weight:700;margin-bottom:.75rem;color:var(--accent);">✅ Nimalar kiradi</div>
+                    <div style="display:flex;flex-direction:column;gap:.5rem;color:var(--text2);font-size:.875rem;">
+                        <div>✓ &nbsp; {{ service.delivery_days }} kun ichida yetkazib berish</div>
+                        <div>✓ &nbsp; Mualliflik huquqi sizga o'tadi</div>
+                        <div>✓ &nbsp; Reviziya imkoniyati</div>
+                        <div>✓ &nbsp; Sotuvchi bilan to'g'ridan-to'g'ri aloqa</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: REVIEWS -->
+            <div id="tab-reviews" class="tab-content">
+
+                {% if reviews %}
+                <!-- RATING SUMMARY -->
+                <div style="background:var(--surface2);border:1px solid var(--border);
+                            border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;
+                            display:flex;align-items:center;gap:2rem;">
+                    <div style="text-align:center;">
+                        <div style="font-size:3rem;font-weight:900;color:var(--orange);">{{ service.avg_rating }}</div>
+                        <div class="star-rating" style="justify-content:center;">
+                            {% for i in "12345" %}
+                            <span class="star {% if forloop.counter <= service.avg_rating %}filled{% else %}empty{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                        <div class="text-xs text-muted" style="margin-top:.3rem;">{{ service.review_count }} sharh</div>
+                    </div>
+                    <div style="flex:1;">
+                        {% for star in "54321" %}
+                        {% with s=star|add:0 %}
+                        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.3rem;">
+                            <span class="text-xs" style="width:8px;text-align:right;color:var(--orange);">{{ star }}</span>
+                            <span style="color:var(--orange);font-size:.8rem;">★</span>
+                            <div style="flex:1;height:6px;background:var(--border);border-radius:3px;">
+                                <div style="height:100%;border-radius:3px;background:var(--orange);width:0%;"></div>
+                            </div>
+                        </div>
+                        {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- REVIEW LIST -->
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="flex justify-between items-center" style="margin-bottom:.5rem;">
+                        <div class="flex items-center gap-1">
+                            <div class="avatar-sm" style="width:32px;height:32px;font-size:.8rem;">
+                                {{ review.reviewer.username|first|upper }}
+                            </div>
+                            <div>
+                                <a href="{% url 'profile' username=review.reviewer.username %}"
+                                   style="font-weight:700;font-size:.875rem;color:var(--text);text-decoration:none;">
+                                    {{ review.reviewer.username }}
+                                </a>
+                                <div class="text-xs text-muted">{{ review.created_at|date:"d M Y" }}</div>
+                            </div>
+                        </div>
+                        <div class="star-rating">
+                            {% for i in "12345" %}
+                            <span class="star {% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p style="color:var(--text2);font-size:.875rem;line-height:1.6;">{{ review.comment }}</p>
+                </div>
+                {% endfor %}
+
+                {% else %}
+                <div style="text-align:center;padding:3rem;color:var(--text2);">
+                    <div style="font-size:2.5rem;margin-bottom:.75rem;">⭐</div>
+                    <p>Hali sharh qoldirilmagan.</p>
+                </div>
+                {% endif %}
+
+                <!-- LEAVE A REVIEW -->
+                {% if user.is_authenticated and has_ordered and not has_reviewed and user != service.seller %}
+                <div style="margin-top:1.5rem;background:var(--surface2);border:1px solid var(--border);
+                            border-radius:var(--radius);padding:1.25rem;">
+                    <div style="font-weight:700;margin-bottom:1rem;">✍️ Sharh Qoldiring</div>
+                    <form method="post" action="{% url 'review_create' pk=service.pk %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label class="form-label">Baho</label>
+                            {{ review_form.rating }}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Sharhingiz</label>
+                            {{ review_form.comment }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sharh Yuborish</button>
+                    </form>
+                </div>
+                {% elif user.is_authenticated and has_reviewed %}
+                <div class="alert alert-success" style="margin-top:1rem;">✓ Siz allaqachon sharh qoldirdingiz.</div>
+                {% endif %}
+            </div>
+
+            <!-- TAB: ORDERS (Seller only) -->
+            {% if user == service.seller %}
+            <div id="tab-orders" class="tab-content">
+                {% with my_orders=service.orders.all %}
+                {% if my_orders %}
+                {% for order in my_orders %}
+                <div style="background:var(--surface2);border:1px solid var(--border);
+                            border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div style="font-weight:700;font-size:.9rem;">
+                                👤 {{ order.buyer.username }}
+                            </div>
+                            <div class="text-xs text-muted">
+                                {{ order.created_at|date:"d M Y" }}
+                                {% if order.deadline %}&nbsp;·&nbsp; Muddat: {{ order.deadline|date:"d M Y" }}{% endif %}
+                            </div>
+                            {% if order.requirements %}
+                            <p class="text-sm text-muted" style="margin-top:.4rem;">{{ order.requirements }}</p>
+                            {% endif %}
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:800;color:var(--green);font-size:1.1rem;">${{ order.amount }}</div>
+                            <span class="badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'active' %}badge-blue{% elif order.status == 'cancelled' %}badge-red{% else %}badge-orange{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div style="text-align:center;padding:3rem;color:var(--text2);">
+                    <div style="font-size:2.5rem;margin-bottom:.75rem;">📦</div>
+                    <p>Hali buyurtma yo'q.</p>
+                </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ── RIGHT: PRICE BOX ─────────────────────────────────── -->
+        <div>
+            <div class="price-box">
+                <!-- PRICE HEADER -->
+                <div class="price-header">
+                    <div style="font-size:2.25rem;font-weight:900;color:var(--green);">
+                        ${{ service.price }}
+                    </div>
+                    <div style="color:var(--text2);font-size:.875rem;margin-top:.25rem;">
+                        Bir martalik to'lov
+                    </div>
+                </div>
+
+                <!-- DETAILS -->
+                <div style="padding:1.25rem;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;flex-direction:column;gap:.75rem;">
+                        <div class="flex justify-between items-center">
+                            <span style="color:var(--text2);font-size:.875rem;">🕐 Yetkazib berish</span>
+                            <span style="font-weight:600;font-size:.875rem;">{{ service.delivery_days }} kun</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span style="color:var(--text2);font-size:.875rem;">📂 Kategoriya</span>
+                            <span style="font-weight:600;font-size:.875rem;">{{ service.get_category_display }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span style="color:var(--text2);font-size:.875rem;">⭐ Reyting</span>
+                            <span style="font-weight:600;font-size:.875rem;">
+                                {% if service.review_count > 0 %}
+                                    {{ service.avg_rating }}/5 ({{ service.review_count }})
+                                {% else %}
+                                    Yangi xizmat
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ORDER BUTTON -->
+                <div style="padding:1.25rem;">
+                    {% if user.is_authenticated %}
+                        {% if user == service.seller %}
+                        <div class="alert alert-info" style="text-align:center;margin:0;">
+                            Bu sizning xizmatingiz
+                        </div>
+                        {% else %}
+                        <button onclick="document.getElementById('orderModal').style.display='flex'"
+                                class="btn btn-primary w-full btn-lg"
+                                style="justify-content:center;margin-bottom:.75rem;">
+                            🛒 Buyurtma Berish
+                        </button>
+                        <a href="{% url 'profile' username=service.seller.username %}"
+                           class="btn btn-secondary w-full"
+                           style="justify-content:center;">
+                            💬 Sotuvchi bilan bog'lanish
+                        </a>
+                        {% endif %}
+                    {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}"
+                       class="btn btn-primary w-full btn-lg" style="justify-content:center;">
+                        Buyurtma berish uchun kiring
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- SELLER MINI CARD -->
+            <div class="seller-card" style="margin-top:1.25rem;">
+                <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.8px;color:var(--text3);margin-bottom:1rem;">
+                    Sotuvchi haqida
+                </div>
+                <div class="flex items-center gap-2" style="margin-bottom:1rem;">
+                    <div class="avatar-sm" style="width:50px;height:50px;font-size:1.2rem;flex-shrink:0;">
+                        {% if service.seller.avatar %}
+                            <img src="{{ service.seller.avatar.url }}" alt="">
+                        {% else %}
+                            {{ service.seller.username|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{% url 'profile' username=service.seller.username %}"
+                           style="font-weight:700;color:var(--text);text-decoration:none;">
+                            {{ service.seller.username }}
+                        </a>
+                        <div class="text-xs text-muted">{{ service.seller.get_role_display }}</div>
+                    </div>
+                </div>
+
+                {% if service.seller.bio %}
+                <p style="color:var(--text2);font-size:.8rem;line-height:1.6;margin-bottom:1rem;">
+                    {{ service.seller.bio|truncatechars:120 }}
+                </p>
+                {% endif %}
+
+                <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem;">
+                    <div class="flex justify-between">
+                        <span class="text-xs text-muted">Jami loyihalar</span>
+                        <span class="text-xs" style="font-weight:600;">{{ service.seller.project_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-xs text-muted">Xizmatlar</span>
+                        <span class="text-xs" style="font-weight:600;">{{ service.seller.services.count }}</span>
+                    </div>
+                    {% if service.seller.location %}
+                    <div class="flex justify-between">
+                        <span class="text-xs text-muted">Joylashuv</span>
+                        <span class="text-xs" style="font-weight:600;">{{ service.seller.location }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- SELLER SKILLS -->
+                {% if service.seller.skills.all %}
+                <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+                    {% for skill in service.seller.skills.all|slice:":5" %}
+                    <span class="badge badge-gray">{{ skill.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- OTHER SERVICES BY SELLER -->
+            {% with other=service.seller.services.all %}
+            {% if other.count > 1 %}
+            <div style="margin-top:1.25rem;">
+                <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.8px;color:var(--text3);margin-bottom:.75rem;">
+                    Boshqa xizmatlar
+                </div>
+                {% for s in other %}
+                {% if s.pk != service.pk %}
+                <a href="{% url 'service_detail' pk=s.pk %}"
+                   style="display:flex;align-items:center;gap:.75rem;
+                          background:var(--surface2);border:1px solid var(--border);
+                          border-radius:8px;padding:.65rem .85rem;
+                          text-decoration:none;margin-bottom:.5rem;transition:.2s;"
+                   onmouseover="this.style.borderColor='rgba(59,130,246,.4)'"
+                   onmouseout="this.style.borderColor='var(--border)'">
+                    <div style="width:36px;height:36px;border-radius:6px;
+                                background:var(--border);flex-shrink:0;
+                                display:flex;align-items:center;justify-content:center;
+                                font-size:1.1rem;overflow:hidden;">
+                        {% if s.thumbnail %}
+                        <img src="{{ s.thumbnail.url }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}💼{% endif %}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:.8rem;font-weight:600;color:var(--text);
+                                    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+                            {{ s.title }}
+                        </div>
+                        <div style="font-size:.75rem;color:var(--green);font-weight:700;">${{ s.price }}</div>
+                    </div>
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+    </div><!-- /grid -->
+</div>
+
+<!-- ── ORDER MODAL ──────────────────────────────────────────── -->
+<div id="orderModal"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+            z-index:200;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:var(--surface);border:1px solid var(--border);
+                border-radius:var(--radius-lg);padding:2rem;
+                width:100%;max-width:500px;box-shadow:0 24px 60px rgba(0,0,0,.5);">
+
+        <div style="font-size:1.15rem;font-weight:800;margin-bottom:.3rem;">🛒 Buyurtma Berish</div>
+        <div style="color:var(--text2);font-size:.875rem;margin-bottom:1.5rem;">
+            {{ service.title }}
+        </div>
+
+        <!-- ORDER SUMMARY -->
+        <div style="background:var(--surface2);border:1px solid var(--border);
+                    border-radius:var(--radius);padding:1rem;margin-bottom:1.5rem;">
+            <div class="flex justify-between items-center" style="margin-bottom:.5rem;">
+                <span style="color:var(--text2);font-size:.875rem;">Xizmat narxi</span>
+                <span style="font-weight:800;color:var(--green);font-size:1.1rem;">${{ service.price }}</span>
+            </div>
+            <div class="flex justify-between items-center" style="margin-bottom:.5rem;">
+                <span style="color:var(--text2);font-size:.875rem;">Yetkazib berish</span>
+                <span style="font-weight:600;font-size:.875rem;">{{ service.delivery_days }} kun</span>
+            </div>
+            <hr class="divider" style="margin:.75rem 0;">
+            <div class="flex justify-between items-center">
+                <span style="font-weight:700;">Jami</span>
+                <span style="font-weight:900;color:var(--green);font-size:1.2rem;">${{ service.price }}</span>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'order_create' pk=service.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label">Qo'shimcha talablar / Izoh</label>
+                {{ order_form.requirements }}
+                <span class="form-hint">Sotuvchiga loyiha haqida qo'shimcha ma'lumot bering</span>
+            </div>
+            <div class="flex gap-1">
+                <button type="submit" class="btn btn-primary btn-lg" style="flex:1;justify-content:center;">
+                    ✅ Buyurtmani Tasdiqlash
+                </button>
+                <button type="button"
+                        onclick="document.getElementById('orderModal').style.display='none'"
+                        class="btn btn-secondary">
+                    Bekor
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchTab(name, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    el.classList.add('active');
+}
+</script>
+{% endblock %}

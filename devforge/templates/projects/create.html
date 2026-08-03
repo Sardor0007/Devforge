@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Loyiha Yaratish{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;max-width:700px;">
+    <div class="page-header">
+        <h1 class="page-title">🚀 Yangi Loyiha</h1>
+        <p class="page-subtitle">Jamoa qurish uchun loyihangizni e'lon qiling</p>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Loyiha Nomi *</label>
+                    {{ form.title }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tavsif *</label>
+                    {{ form.description }}
+                </div>
+                <div class="grid-2" style="gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Janr</label>
+                        {{ form.genre }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Holat</label>
+                        {{ form.status }}
+                    </div>
+                </div>
+                <div class="grid-2" style="gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Ko'rinish</label>
+                        {{ form.visibility }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maksimal A'zolar</label>
+                        {{ form.max_members }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Texnologiyalar</label>
+                    {{ form.tech_stack }}
+                    <span class="form-hint">Masalan: Unity, Blender, C#, Python</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Muqova rasm</label>
+                    {{ form.thumbnail }}
+                </div>
+                <div class="flex gap-1" style="margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary btn-lg">Loyiha Yaratish</button>
+                    <a href="{% url 'project_list' %}" class="btn btn-secondary btn-lg">Bekor qilish</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

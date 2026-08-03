@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Aktiv Yuklash{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;max-width:680px;">
+    <div class="page-header"><h1 class="page-title">📦 Aktiv Yuklash</h1><p class="page-subtitle">3D modelingizni platformaga qo'shing</p></div>
+    <div class="card"><div class="card-body">
+        <form method="post" enctype="multipart/form-data">{% csrf_token %}
+            <div class="form-group"><label class="form-label">Aktiv Nomi *</label>{{ form.title }}</div>
+            <div class="form-group"><label class="form-label">Tavsif *</label>{{ form.description }}</div>
+            <div class="grid-2" style="gap:1rem;">
+                <div class="form-group"><label class="form-label">Kategoriya</label>{{ form.category }}</div>
+                <div class="form-group"><label class="form-label">Format</label>{{ form.format }}</div>
+            </div>
+            <div class="form-group"><label class="form-label">Fayl *</label>{{ form.file }}</div>
+            <div class="form-group"><label class="form-label">Muqova rasm</label>{{ form.thumbnail }}</div>
+            <div class="grid-2" style="gap:1rem;">
+                <div class="form-group"><label class="form-label">Narx ($) — 0 = bepul</label>{{ form.price }}</div>
+                <div class="form-group"><label class="form-label">Teglar</label>{{ form.tags }}</div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">Aktivni Yuklash</button>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

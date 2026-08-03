@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Buyurtmalarim{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;">
+    <div class="page-header"><h1 class="page-title">📋 Buyurtmalar</h1></div>
+    <div class="grid-2">
+        <div>
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;">📥 Mening Buyurtmalarim</h2>
+            {% for order in orders %}
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-body">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div style="font-weight:700;">{{ order.service.title }}</div>
+                            <div class="text-xs text-muted">Sotuvchi: {{ order.service.seller.username }} · {{ order.created_at|date:"d M Y" }}</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:800;color:var(--green);">${{ order.amount }}</div>
+                            <span class="badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'active' %}badge-blue{% elif order.status == 'cancelled' %}badge-red{% else %}badge-orange{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}<p style="color:var(--text2);">Buyurtmangiz yo'q.</p>{% endfor %}
+        </div>
+        <div>
+            <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;">📤 Xizmatlarimga Buyurtmalar</h2>
+            {% for order in my_service_orders %}
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-body">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div style="font-weight:700;">{{ order.service.title }}</div>
+                            <div class="text-xs text-muted">Buyurtmachi: {{ order.buyer.username }} · {{ order.created_at|date:"d M Y" }}</div>
+                            {% if order.requirements %}<p class="text-xs text-muted" style="margin-top:.3rem;">{{ order.requirements }}</p>{% endif %}
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'active' %}badge-blue{% else %}badge-orange{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                            {% if order.status == 'pending' %}
+                            <div style="margin-top:.5rem;">
+                                <a href="{% url 'order_confirm' order.pk %}" class="btn btn-sm btn-primary">Tasdiqlash</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}<p style="color:var(--text2);">Xizmatlaringizga buyurtma yo'q.</p>{% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}To'lov Bekor Qilindi — DevForge{% endblock %}
+{% block content %}
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
+  <div style="text-align:center; max-width:480px;">
+    <div style="font-size:5rem; margin-bottom:1.5rem;">❌</div>
+    <h1 style="font-size:2rem; font-weight:800; margin-bottom:0.75rem;">To'lov Bekor Qilindi</h1>
+    <p style="color:var(--text2); margin-bottom:2rem;">
+      Hisobingizdan hech qanday mablag' yechilmadi. Qaytadan urinib ko'rishingiz mumkin.
+    </p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <a href="{% url 'payments:deposit' %}" class="btn btn-primary">🔄 Qaytadan to'lash</a>
+      <a href="{% url 'home' %}" class="btn" style="background:var(--surface2); border:1px solid var(--border);">🏠 Bosh sahifa</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

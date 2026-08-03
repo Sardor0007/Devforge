@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Natija: {{ test.skill_name }} - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        text-align: center;
+    }
+
+    .result-circle {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 3rem;
+        position: relative;
+        border: 8px solid;
+    }
+
+    .circle-success {
+        background: #f0fdf4;
+        border-color: #22c55e;
+        color: #166534;
+    }
+
+    .circle-fail {
+        background: #fef2f2;
+        border-color: #ef4444;
+        color: #991b1b;
+    }
+
+    .score-value {
+        font-size: 4rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .score-label {
+        font-size: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        opacity: 0.7;
+    }
+
+    .confetti {
+        position: absolute;
+        top: -20px;
+        font-size: 2rem;
+        animation: float 2s infinite ease-in-out;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    {% if cert.passed %}
+        <div class="result-circle circle-success">
+            <span class="confetti" style="left: -20px;">🎉</span>
+            <span class="confetti" style="right: -20px;">🎊</span>
+            <div class="score-value">{{ cert.score }}%</div>
+            <div class="score-label">Muvaffaqiyatli</div>
+        </div>
+        <h1 class="text-4xl font-bold text-slate-900 mb-4">Tabriklaymiz! 🎉</h1>
+        <p class="text-slate-600 text-lg mb-12">
+            Siz <strong>{{ test.skill_name }}</strong> bo'yicha imtihondan muvaffaqiyatli o'tdingiz va professional sertifikatga ega bo'ldingiz.
+        </p>
+        
+        <div class="bg-indigo-50 p-6 rounded-2xl mb-8 flex items-center justify-between">
+            <div class="text-left">
+                <div class="text-sm text-indigo-600 font-bold uppercase">Siz yutdingiz</div>
+                <div class="text-xl font-bold text-indigo-900">+{{ test.xp_reward }} XP & Badge</div>
+            </div>
+            <div class="w-12 h-12 bg-white rounded-lg flex items-center justify-center text-2xl">
+                🏆
+            </div>
+        </div>
+    {% else %}
+        <div class="result-circle circle-fail">
+            <div class="score-value">{{ cert.score }}%</div>
+            <div class="score-label">Yiqildingiz</div>
+        </div>
+        <h1 class="text-4xl font-bold text-slate-900 mb-4">Afsus... 😔</h1>
+        <p class="text-slate-600 text-lg mb-12">
+            O'tish uchun kamida <strong>{{ test.passing_score }}%</strong> to'g'ri javob berishingiz kerak edi. 
+            Bilimingizni oshirib, yana bir bor urinib ko'ring!
+        </p>
+    {% endif %}
+
+    <div class="flex flex-col gap-4">
+        <a href="{% url 'assessment_list' %}" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition">
+            Boshqa testlarni ko'rish
+        </a>
+        <a href="{% url 'profile' user.username %}" class="w-full py-4 bg-white text-slate-600 border border-slate-200 rounded-xl font-bold text-lg hover:bg-slate-50 transition">
+            Profilga qaytish
+        </a>
+    </div>
+</div>
+{% endblock %}

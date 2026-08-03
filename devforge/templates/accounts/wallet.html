@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% load sub_tags %}
+{% block title %}Hamyon — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ─────────────────────────────────────────────────────── */
+/*  WALLET PAGE                                            */
+/* ─────────────────────────────────────────────────────── */
+.wallet-wrap { max-width: 980px; margin: 2rem auto; padding: 0 1.5rem 6rem; }
+
+/* ── Hero row ── */
+.wallet-hero-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+@media(max-width:680px){ .wallet-hero-row{ grid-template-columns:1fr; } }
+
+/* ── Base card ── */
+.w-card {
+  border-radius: 22px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.w-card::before {
+  content:''; position:absolute; top:-70px; right:-70px;
+  width:220px; height:220px; border-radius:50%;
+  background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+  pointer-events:none;
+}
+.w-card-label {
+  font-size:.68rem; font-weight:800; letter-spacing:1.8px;
+  text-transform:uppercase; color:rgba(255,255,255,.5);
+  margin-bottom:.5rem; display:flex; align-items:center; gap:.4rem;
+}
+.w-card-label i { font-size:.85rem; }
+.w-card-amount {
+  font-size:2.6rem; font-weight:900;
+  font-family:'Space Mono',monospace; color:#fff; line-height:1.1;
+}
+.w-card-amount .cur { font-size:1.2rem; color:rgba(255,255,255,.45); font-weight:400; margin-right:.15rem; }
+.w-card-sub { font-size:.78rem; color:rgba(255,255,255,.4); margin-top:.4rem; }
+
+/* Deposit card */
+.w-deposit {
+  background: linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4c1d95 100%);
+  --glow: rgba(139,92,246,.28);
+}
+/* Earnings card */
+.w-earnings {
+  background: linear-gradient(135deg,#064e3b 0%,#065f46 55%,#047857 100%);
+  --glow: rgba(16,185,129,.28);
+}
+
+.w-card-actions {
+  display:flex; gap:.6rem; margin-top:1.6rem; flex-wrap:wrap;
+}
+.w-btn {
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.55rem 1.1rem; border-radius:10px; font-size:.82rem;
+  font-weight:700; cursor:pointer; border:none; transition:all .2s;
+  text-decoration:none;
+}
+.w-btn-primary {
+  background:rgba(255,255,255,.15); color:#fff;
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.2);
+}
+.w-btn-primary:hover { background:rgba(255,255,255,.25); }
+.w-btn-ghost {
+  background:transparent; color:rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.12);
+}
+.w-btn-ghost:hover { background:rgba(255,255,255,.08); color:#fff; }
+
+/* ── Subscription row ── */
+.sub-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1.25rem 1.5rem;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;
+}
+.sub-info { display:flex; align-items:center; gap:.85rem; }
+.sub-icon { width:42px; height:42px; border-radius:12px;
+  background:rgba(99,102,241,.12); display:flex; align-items:center;
+  justify-content:center; font-size:1.2rem; flex-shrink:0; }
+.sub-plan { font-weight:800; font-size:.95rem; color:var(--text-primary); }
+.sub-expires { font-size:.76rem; color:var(--text-muted); margin-top:.15rem; }
+.sub-badge {
+  padding:.28rem .8rem; border-radius:20px; font-size:.73rem;
+  font-weight:800; text-transform:uppercase; letter-spacing:1px;
+}
+.badge-free     { background:rgba(107,114,128,.15); color:#9ca3af; }
+.badge-pro      { background:rgba(99,102,241,.15);  color:#818cf8; }
+.badge-studio   { background:rgba(168,85,247,.15);  color:#c084fc; }
+.badge-enterprise { background:rgba(245,158,11,.15);color:#fbbf24; }
+
+/* ── Modals ── */
+.modal-backdrop {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.65);
+  backdrop-filter:blur(4px); z-index:1000;
+  align-items:center; justify-content:center;
+}
+.modal-backdrop.open { display:flex; }
+.modal-box {
+  background:#1a1a2e; border:1px solid rgba(255,255,255,.1);
+  border-radius:20px; padding:2rem; width:100%; max-width:440px;
+  position:relative; animation:modalIn .2s ease;
+}
+@keyframes modalIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.modal-title { font-size:1.1rem; font-weight:800; color:#fff; margin-bottom:1.5rem; }
+.modal-close {
+  position:absolute; top:1rem; right:1rem;
+  background:rgba(255,255,255,.08); border:none; border-radius:8px;
+  width:30px; height:30px; cursor:pointer; color:rgba(255,255,255,.6);
+  font-size:1rem; display:flex; align-items:center; justify-content:center;
+}
+.modal-close:hover { background:rgba(255,255,255,.15); color:#fff; }
+.form-group { margin-bottom:1rem; }
+.form-group label { display:block; font-size:.8rem; font-weight:700;
+  color:rgba(255,255,255,.6); margin-bottom:.4rem; }
+.form-group input, .form-group select, .form-group textarea {
+  width:100%; padding:.7rem .9rem; border-radius:10px;
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+  color:#fff; font-size:.9rem; outline:none; transition:border-color .2s;
+  font-family:inherit; box-sizing:border-box;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color:rgba(99,102,241,.6); background:rgba(255,255,255,.1);
+}
+.form-group textarea { min-height:80px; resize:vertical; }
+.form-group select option { background:#1a1a2e; }
+.form-submit {
+  width:100%; padding:.75rem; border-radius:12px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  border:none; color:#fff; font-weight:800; font-size:.9rem;
+  cursor:pointer; transition:opacity .2s;
+}
+.form-submit:hover { opacity:.88; }
+.rule-note {
+  display:flex; align-items:flex-start; gap:.5rem;
+  background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2);
+  border-radius:10px; padding:.75rem; margin-bottom:1rem;
+  font-size:.8rem; color:rgba(245,158,11,.85); line-height:1.45;
+}
+
+/* ── Transactions ── */
+.tx-section-title {
+  font-size:1rem; font-weight:800; color:var(--text-primary);
+  margin-bottom:1rem; display:flex; align-items:center; gap:.5rem;
+}
+.tx-filters { display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap; }
+.tx-filter-btn {
+  padding:.35rem .9rem; border-radius:20px; font-size:.78rem;
+  font-weight:700; cursor:pointer; border:1px solid var(--border);
+  background:var(--surface); color:var(--text-muted);
+  transition:all .15s;
+}
+.tx-filter-btn.active { border-color:#6366f1; background:rgba(99,102,241,.15); color:#818cf8; }
+
+.tx-list { display:flex; flex-direction:column; gap:.5rem; }
+.tx-item {
+  display:flex; align-items:center; gap:1rem;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:1rem 1.25rem;
+  transition:border-color .15s;
+}
+.tx-item:hover { border-color:rgba(99,102,241,.3); }
+.tx-icon {
+  width:38px; height:38px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:1rem;
+}
+.tx-icon.in  { background:rgba(16,185,129,.12); color:#10b981; }
+.tx-icon.out { background:rgba(239,68,68,.12);  color:#ef4444; }
+.tx-icon.sys { background:rgba(99,102,241,.12); color:#818cf8; }
+.tx-info { flex:1; min-width:0; }
+.tx-desc { font-size:.85rem; font-weight:600; color:var(--text-primary);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tx-meta { font-size:.73rem; color:var(--text-muted); margin-top:.1rem; }
+.tx-wallet-badge {
+  font-size:.67rem; font-weight:800; padding:.15rem .5rem;
+  border-radius:6px; margin-left:.4rem; text-transform:uppercase; letter-spacing:.7px;
+}
+.tx-wallet-badge.deposit  { background:rgba(99,102,241,.15); color:#818cf8; }
+.tx-wallet-badge.earnings { background:rgba(16,185,129,.15); color:#10b981; }
+.tx-amount {
+  font-family:'Space Mono',monospace; font-weight:800; font-size:.9rem;
+  text-align:right; flex-shrink:0;
+}
+.tx-amount.pos { color:#10b981; }
+.tx-amount.neg { color:#ef4444; }
+.tx-empty { text-align:center; padding:3rem 1rem; color:var(--text-muted); font-size:.9rem; }
+
+/* Scroll filter */
+.filter-all    .tx-item[data-wallet]         { display:flex; }
+.filter-deposit .tx-item[data-wallet=earnings] { display:none; }
+.filter-earnings .tx-item[data-wallet=deposit] { display:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wallet-wrap">
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags }} mb-3">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ── HERO ROW: Two Wallets ── -->
+  <div class="wallet-hero-row">
+
+    <!-- Depazit Hamyon -->
+    <div class="w-card w-deposit">
+      <div class="w-card-label"><i class="bi bi-wallet2"></i> Depazit Hamyon</div>
+      <div class="w-card-amount">
+        <span class="cur">$</span>{{ deposit|floatformat:2 }}
+      </div>
+      <div class="w-card-sub">Stripe orqali to'ldiriladi · Xarid va obuna uchun ishlatiladi</div>
+      <div class="w-card-actions">
+        <a href="{% url 'payments:deposit' %}" class="w-btn w-btn-primary">
+          <i class="bi bi-plus-circle"></i> To'ldirish
+        </a>
+      </div>
+    </div>
+
+    <!-- Foyda Hamyon -->
+    <div class="w-card w-earnings">
+      <div class="w-card-label"><i class="bi bi-graph-up-arrow"></i> Foyda Hamyon</div>
+      <div class="w-card-amount">
+        <span class="cur">$</span>{{ earnings|floatformat:2 }}
+      </div>
+      <div class="w-card-sub">Sotish · Vazifa · Mukofot daromadlari</div>
+      <div class="w-card-actions">
+        <button class="w-btn w-btn-primary" onclick="openModal('withdrawModal')">
+          <i class="bi bi-arrow-up-circle"></i> Yechish
+        </button>
+        <button class="w-btn w-btn-ghost" onclick="openModal('transferModal')">
+          <i class="bi bi-arrow-left-right"></i> Depazitga o'tkazish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Subscription row ── -->
+  {% if subscription %}
+  <div class="sub-card">
+    <div class="sub-info">
+      <div class="sub-icon">
+        {% if subscription.plan == 'pro' %}💎
+        {% elif subscription.plan == 'studio' %}🏢
+        {% elif subscription.plan == 'enterprise' %}🚀
+        {% else %}🎮{% endif %}
+      </div>
+      <div>
+        <div class="sub-plan">{{ subscription.plan|title }} obunasi</div>
+        <div class="sub-expires">
+          {% if subscription.is_active %}
+            Muddati: {{ subscription.expires_at|date:"d M Y" }}
+          {% else %}
+            Faol emas
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;">
+      <span class="sub-badge badge-{{ subscription.plan }}">{{ subscription.plan }}</span>
+      {% if subscription.plan == 'free' or not subscription.is_active %}
+        <a href="{% url 'payments:plans' %}" class="w-btn w-btn-primary" style="background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.4);">
+          <i class="bi bi-arrow-up"></i> Yangilash
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Transactions ── -->
+  <div class="tx-section-title"><i class="bi bi-clock-history"></i> Tranzaksiyalar tarixi</div>
+
+  <div class="tx-filters">
+    <button class="tx-filter-btn active" onclick="setFilter('all',this)">Barchasi</button>
+    <button class="tx-filter-btn" onclick="setFilter('deposit',this)">Depazit</button>
+    <button class="tx-filter-btn" onclick="setFilter('earnings',this)">Foyda</button>
+  </div>
+
+  <div class="tx-list" id="txList">
+    {% for tx in transactions %}
+    {% with is_pos=tx.amount|floatformat:2 %}
+    <div class="tx-item" data-wallet="{{ tx.wallet_type }}">
+      <div class="tx-icon {% if tx.amount > 0 %}in{% elif tx.transaction_type == 'admin_adjustment' %}sys{% else %}out{% endif %}">
+        {% if tx.transaction_type == 'deposit' %}<i class="bi bi-arrow-down-circle"></i>
+        {% elif tx.transaction_type == 'withdrawal' %}<i class="bi bi-arrow-up-circle"></i>
+        {% elif tx.transaction_type == 'subscription' %}<i class="bi bi-star"></i>
+        {% elif tx.transaction_type == 'purchase' %}<i class="bi bi-bag"></i>
+        {% elif tx.transaction_type == 'sale' %}<i class="bi bi-shop"></i>
+        {% elif tx.transaction_type == 'prize' %}<i class="bi bi-trophy"></i>
+        {% elif tx.transaction_type == 'transfer_to_deposit' %}<i class="bi bi-arrow-left-right"></i>
+        {% elif tx.transaction_type == 'admin_adjustment' %}<i class="bi bi-shield-check"></i>
+        {% elif tx.transaction_type == 'refund' %}<i class="bi bi-arrow-counterclockwise"></i>
+        {% else %}<i class="bi bi-currency-dollar"></i>{% endif %}
+      </div>
+      <div class="tx-info">
+        <div class="tx-desc">
+          {{ tx.description|default:tx.get_transaction_type_display }}
+          <span class="tx-wallet-badge {{ tx.wallet_type }}">{{ tx.wallet_type }}</span>
+        </div>
+        <div class="tx-meta">{{ tx.created_at|date:"d M Y, H:i" }}</div>
+      </div>
+      <div class="tx-amount {% if tx.amount > 0 %}pos{% else %}neg{% endif %}">
+        {% if tx.amount > 0 %}+{% endif %}${{ tx.amount|floatformat:2 }}
+      </div>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="tx-empty">
+      <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:.5rem;opacity:.4;"></i>
+      Hozircha tranzaksiyalar yo'q
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ── WITHDRAW MODAL ── -->
+<div class="modal-backdrop" id="withdrawModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('withdrawModal')">×</button>
+    <div class="modal-title"><i class="bi bi-arrow-up-circle" style="color:#10b981;"></i> Pul yechish</div>
+    <div class="rule-note">
+      <i class="bi bi-exclamation-triangle" style="flex-shrink:0;font-size:1rem;margin-top:1px;"></i>
+      Faqat <strong>Foyda hamyonidan</strong> pul yechish mumkin.
+      So'rov 1–3 ish kuni ichida ko'rib chiqiladi. Minimal: $1.00
+    </div>
+    <form method="post" action="{% url 'wallet_withdraw' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Miqdor (USD)</label>
+        <input type="number" name="amount" min="1" step="0.01"
+               max="{{ earnings }}" placeholder="0.00" required
+               style="appearance:textfield;">
+        <small style="color:rgba(255,255,255,.35);font-size:.73rem;">
+          Mavjud: ${{ earnings|floatformat:2 }}
+        </small>
+      </div>
+      <div class="form-group">
+        <label>To'lov usuli</label>
+        <select name="method">
+          <option value="Bank Card">Bank karta</option>
+          <option value="PayPal">PayPal</option>
+          <option value="Bank Transfer">Bank o'tkazmasi</option>
+          <option value="Crypto">Kripto (USDT/BTC)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Karta / Hisob raqam</label>
+        <input type="text" name="details" placeholder="Karta raqam yoki email" required>
+      </div>
+      <button type="submit" class="form-submit">
+        <i class="bi bi-arrow-up-circle"></i> So'rov yuborish
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── TRANSFER TO DEPOSIT MODAL ── -->
+<div class="modal-backdrop" id="transferModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('transferModal')">×</button>
+    <div class="modal-title"><i class="bi bi-arrow-left-right" style="color:#818cf8;"></i> Depazitga o'tkazish</div>
+    <div class="rule-note">
+      <i class="bi bi-info-circle" style="flex-shrink:0;font-size:1rem;margin-top:1px;"></i>
+      <strong>Foyda → Depazit</strong> o'tkazma. Depazitdan foydaga qayta o'tkazib bo'lmaydi.
+    </div>
+    <form method="post" action="{% url 'wallet_transfer' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Miqdor (USD)</label>
+        <input type="number" name="amount" min="0.01" step="0.01"
+               max="{{ earnings }}" placeholder="0.00" required
+               style="appearance:textfield;">
+        <small style="color:rgba(255,255,255,.35);font-size:.73rem;">
+          Foyda hamyon: ${{ earnings|floatformat:2 }}
+        </small>
+      </div>
+      <button type="submit" class="form-submit">
+        <i class="bi bi-arrow-left-right"></i> O'tkazish
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+// Close on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', e => { if(e.target === el) closeModal(el.id); });
+});
+
+// Filter
+let currentFilter = 'all';
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.tx-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const list = document.getElementById('txList');
+  list.className = 'tx-list filter-' + f;
+}
+
+// Auto-open modals on page load from hash
+if(location.hash === '#withdraw') openModal('withdrawModal');
+if(location.hash === '#transfer') openModal('transferModal');
+</script>
+{% endblock %}

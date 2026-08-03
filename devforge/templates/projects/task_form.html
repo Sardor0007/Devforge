@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Vazifa Qo'shish{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;max-width:580px;">
+    <div class="page-header"><h1 class="page-title">📋 Vazifa Qo'shish</h1><p class="page-subtitle">{{ project.title }}</p></div>
+    <div class="card"><div class="card-body">
+        <form method="post">{% csrf_token %}
+            <div class="form-group"><label class="form-label">Vazifa nomi *</label>{{ form.title }}</div>
+            <div class="form-group"><label class="form-label">Tavsif</label>{{ form.description }}</div>
+            <div class="grid-2" style="gap:1rem;">
+                <div class="form-group"><label class="form-label">Holat</label>{{ form.status }}</div>
+                <div class="form-group"><label class="form-label">Muhimlik</label>{{ form.priority }}</div>
+            </div>
+            <div class="grid-2" style="gap:1rem;">
+                <div class="form-group"><label class="form-label">Bajaruvchi</label>{{ form.assigned_to }}</div>
+                <div class="form-group"><label class="form-label">Muddat</label>{{ form.due_date }}</div>
+            </div>
+            <div class="flex gap-1">
+                <button type="submit" class="btn btn-primary">Vazifa Qo'shish</button>
+                <a href="{% url 'project_detail' pk=project.pk %}" class="btn btn-secondary">Bekor qilish</a>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

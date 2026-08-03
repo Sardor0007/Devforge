@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.kanban { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.kanban-col { background:var(--surface2); border-radius:var(--radius-md); padding:1rem; min-height:200px; }
+.kanban-col-title { font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.75rem; }
+.kanban-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.75rem; margin-bottom:.5rem; transition:.15s; }
+.kanban-card:hover { border-color:var(--border-bright); }
+.kanban-card-title { font-size:.875rem; font-weight:600; margin-bottom:.4rem; }
+.grid-sidebar { display:grid; grid-template-columns:1fr 300px; gap:1.5rem; }
+.card-header { font-weight:700; font-size:.9rem; padding-bottom:.85rem; margin-bottom:.85rem; border-bottom:1px solid var(--border); }
+.card-body { }
+.divider { border:none; border-top:1px solid var(--border); margin:1.25rem 0; }
+@media (max-width:900px) { .grid-sidebar { grid-template-columns:1fr; } .kanban { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;">
+    <!-- HEADER -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;margin-bottom:2rem;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+            <div>
+                <div class="flex gap-1 items-center" style="margin-bottom:.75rem;flex-wrap:wrap;">
+                    <span class="badge badge-blue">{{ project.get_genre_display }}</span>
+                    <span class="badge {% if project.status == 'active' %}badge-green{% elif project.status == 'completed' %}badge-gray{% else %}badge-orange{% endif %}">
+                        {{ project.get_status_display }}
+                    </span>
+                    <span class="badge badge-gray">{{ project.get_visibility_display }}</span>
+                </div>
+                <h1 style="font-size:1.75rem;font-weight:800;">{{ project.title }}</h1>
+                <p style="color:var(--text2);margin-top:.4rem;">
+                    👤 <a href="{% url 'profile' username=project.creator.username %}" style="color:var(--accent);">{{ project.creator.username }}</a>
+                    &nbsp;·&nbsp; 👥 {{ project.member_count }}/{{ project.max_members }} a'zo
+                    &nbsp;·&nbsp; 📋 {{ project.tasks.count }} vazifa
+                </p>
+                {% if project.tech_stack %}
+                <p style="margin-top:.5rem;color:var(--text2);font-size:.875rem;">🔧 {{ project.tech_stack }}</p>
+                {% endif %}
+            </div>
+            <div class="flex gap-1" style="flex-wrap:wrap;">
+                {% if is_creator %}
+                    <a href="{% url 'workspace' pk=project.pk %}" class="btn btn-primary">💻 Workspace</a>
+                    <a href="{% url 'task_create' pk=project.pk %}" class="btn btn-secondary">+ Vazifa</a>
+                {% elif is_member %}
+                    <a href="{% url 'workspace' pk=project.pk %}" class="btn btn-primary">💻 Workspace</a>
+                {% elif not has_pending %}
+                    <button onclick="document.getElementById('applyModal').style.display='flex'" class="btn btn-primary">
+                        Jamoaga Qo'shilish
+                    </button>
+                {% else %}
+                    <span class="badge badge-orange" style="padding:.5rem 1rem;">Ariza ko'rib chiqilmoqda...</span>
+                {% endif %}
+            </div>
+        </div>
+        <hr class="divider">
+        <p style="color:var(--text2);line-height:1.7;">{{ project.description }}</p>
+    </div>
+
+    <div class="grid-sidebar">
+        <div>
+            <!-- TASKS KANBAN -->
+            {% if is_creator or is_member %}
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-header flex justify-between items-center">
+                    <span>📋 Vazifalar</span>
+                    {% if is_creator %}
+                    <div style="display:flex;gap:.4rem;">
+                        <button onclick="openAiTaskModal()" class="btn btn-ghost btn-sm" style="color:var(--accent);">🤖 AI Vazifalar</button>
+                        <a href="{% url 'task_create' pk=project.pk %}" class="btn btn-ghost btn-sm">+ Qo'shish</a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="kanban">
+                        <div class="kanban-col">
+                            <div class="kanban-col-title">📌 Kutilmoqda</div>
+                            {% for task in tasks %}{% if task.status == 'todo' %}
+                            <div class="kanban-card">
+                                <div class="kanban-card-title">{{ task.title }}</div>
+                                <div class="flex gap-1">
+                                    <span class="badge {% if task.priority == 'high' %}badge-red{% elif task.priority == 'medium' %}badge-orange{% else %}badge-gray{% endif %}">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                </div>
+                                {% if is_creator %}<form method="post" action="{% url 'task_status' pk=project.pk task_pk=task.pk %}" style="margin-top:.5rem;">
+                                    {% csrf_token %}<input type="hidden" name="status" value="inprogress">
+                                    <button type="submit" class="btn btn-ghost btn-sm">→ Boshlash</button>
+                                </form>{% endif %}
+                            </div>
+                            {% endif %}{% endfor %}
+                        </div>
+                        <div class="kanban-col">
+                            <div class="kanban-col-title">⚡ Jarayonda</div>
+                            {% for task in tasks %}{% if task.status == 'inprogress' %}
+                            <div class="kanban-card" style="border-color:rgba(59,130,246,.3);">
+                                <div class="kanban-card-title">{{ task.title }}</div>
+                                {% if task.assigned_to %}<span class="text-xs text-muted">👤 {{ task.assigned_to.username }}</span>{% endif %}
+                                {% if is_creator %}<form method="post" action="{% url 'task_status' pk=project.pk task_pk=task.pk %}" style="margin-top:.5rem;">
+                                    {% csrf_token %}<input type="hidden" name="status" value="done">
+                                    <button type="submit" class="btn btn-success btn-sm">✓ Tugatish</button>
+                                </form>{% endif %}
+                            </div>
+                            {% endif %}{% endfor %}
+                        </div>
+                        <div class="kanban-col">
+                            <div class="kanban-col-title">✅ Bajarildi</div>
+                            {% for task in tasks %}{% if task.status == 'done' %}
+                            <div class="kanban-card" style="opacity:.7;">
+                                <div class="kanban-card-title">{{ task.title }}</div>
+                            </div>
+                            {% endif %}{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- SIDEBAR -->
+        <div>
+            <!-- OPEN ROLES -->
+            {% if open_roles %}
+            <div class="card" style="margin-bottom:1.25rem;">
+                <div class="card-header">🎯 Kerakli Rollar</div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:.6rem;">
+                    {% for role in open_roles %}
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem;">
+                        <div style="font-weight:600;font-size:.875rem;">{{ role.get_role_type_display }}</div>
+                        {% if role.required_skills %}<div class="text-xs text-muted" style="margin-top:.2rem;">🔧 {{ role.required_skills }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- MEMBERS -->
+            <div class="card" style="margin-bottom:1.25rem;">
+                <div class="card-header">👥 Jamoa A'zolari</div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:.5rem;">
+                    <!-- Creator -->
+                    <div class="flex items-center gap-1">
+                        <div class="avatar-sm">{{ project.creator.username|first|upper }}</div>
+                        <div>
+                            <a href="{% url 'profile' username=project.creator.username %}" style="font-size:.875rem;font-weight:600;color:var(--text);text-decoration:none;">
+                                {{ project.creator.username }}
+                            </a>
+                            <div class="text-xs text-muted">Egasi</div>
+                        </div>
+                    </div>
+                    {% for member in members %}
+                    <div class="flex items-center gap-1">
+                        <div class="avatar-sm">{{ member.user.username|first|upper }}</div>
+                        <div>
+                            <a href="{% url 'profile' username=member.user.username %}" style="font-size:.875rem;font-weight:600;color:var(--text);text-decoration:none;">
+                                {{ member.user.username }}
+                            </a>
+                            {% if member.role %}<div class="text-xs text-muted">{{ member.role.get_role_type_display }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- PENDING REQUESTS (Creator only) -->
+            {% if is_creator and pending_requests %}
+            <div class="card">
+                <div class="card-header">📨 Arizalar ({{ pending_requests.count }})</div>
+                <div class="card-body" style="display:flex;flex-direction:column;gap:.75rem;">
+                    {% for req in pending_requests %}
+                    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem;">
+                        <div style="font-weight:600;font-size:.875rem;">{{ req.user.username }}</div>
+                        {% if req.message %}<p class="text-xs text-muted" style="margin:.3rem 0;">{{ req.message }}</p>{% endif %}
+                        <a href="{% url 'project_approve' pk=project.pk member_pk=req.pk %}" class="btn btn-success btn-sm">✓ Qabul qilish</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- APPLY MODAL -->
+<div id="applyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:480px;margin:1rem;">
+        <h3 style="margin-bottom:1rem;">Jamoaga Qo'shilish</h3>
+        <form method="post" action="{% url 'project_apply' pk=project.pk %}">
+            {% csrf_token %}
+            {% if open_roles %}
+            <div class="form-group">
+                <label class="form-label">Rol tanlang</label>
+                <select name="role_id" class="form-input">
+                    <option value="">— Rol tanlang —</option>
+                    {% for role in open_roles %}
+                    <option value="{{ role.pk }}">{{ role.get_role_type_display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="form-group">
+                <label class="form-label">Qisqacha o'zingizni tanishtiring</label>
+                <textarea name="message" class="form-input" rows="4" placeholder="Nima uchun bu loyihaga qo'shilmoqchisiz?"></textarea>
+            </div>
+            <div class="flex gap-1">
+                <button type="submit" class="btn btn-primary">Ariza Yuborish</button>
+                <button type="button" onclick="document.getElementById('applyModal').style.display='none'" class="btn btn-secondary">Bekor qilish</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- AI TASK GENERATOR MODAL -->
+<div id="aiTaskModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h2 style="font-size:1.1rem;font-weight:800;">🤖 AI Vazifa Generatori</h2>
+      <button onclick="closeAiTaskModal()" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <p style="color:var(--text2);font-size:.875rem;margin-bottom:1.25rem;line-height:1.6;">
+      Loyiha ma'lumotlari asosida AI avtomatik vazifalar ro'yxatini yaratadi
+    </p>
+    <div class="form-group">
+      <label class="form-label">Nechta vazifa?</label>
+      <select id="aiTaskCount" class="form-input" style="width:120px;">
+        <option value="5">5 ta</option>
+        <option value="10" selected>10 ta</option>
+        <option value="15">15 ta</option>
+        <option value="20">20 ta</option>
+      </select>
+    </div>
+    <button onclick="generateAiTasks()" id="aiGenBtn" class="btn btn-primary w-full" style="justify-content:center;margin-top:.5rem;">
+      ✨ Vazifalar Yaratish
+    </button>
+    <!-- Natijalar -->
+    <div id="aiTaskResults" style="display:none;margin-top:1.25rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+        <div style="font-size:.85rem;font-weight:700;">Yaratilgan vazifalar:</div>
+        <button onclick="addAllTasks()" class="btn btn-primary btn-sm">✓ Hammasini Qo'shish</button>
+      </div>
+      <div id="aiTaskList" style="display:flex;flex-direction:column;gap:.5rem;max-height:320px;overflow-y:auto;"></div>
+      <div id="aiDemoNote" style="display:none;margin-top:.75rem;padding:.6rem .85rem;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;font-size:.78rem;color:var(--orange);">
+        ⚠️ Demo rejim — ANTHROPIC_API_KEY sozlanmagan. .env faylga qo'shing.
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
+}
+
+const PROJECT_PK    = {{ project.pk }};
+const PROJECT_GENRE = "{{ project.get_genre_display }}";
+let generatedTasks  = [];
+
+function openAiTaskModal()  { document.getElementById('aiTaskModal').style.display = 'flex'; }
+function closeAiTaskModal() { document.getElementById('aiTaskModal').style.display = 'none'; }
+
+function generateAiTasks() {
+    const btn   = document.getElementById('aiGenBtn');
+    const count = document.getElementById('aiTaskCount').value;
+    btn.disabled = true;
+    btn.textContent = '⏳ Yaratilmoqda...';
+
+    fetch('/ai/generate-tasks/', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({
+            project_title: '{{ project.title|escapejs }}',
+            project_description: '{{ project.description|escapejs }}',
+            genre: PROJECT_GENRE,
+            count: parseInt(count),
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = '✨ Vazifalar Yaratish';
+        if (data.error) { alert('Xato: ' + data.error); return; }
+        generatedTasks = data.tasks;
+        document.getElementById('aiDemoNote').style.display = data.demo ? 'block' : 'none';
+        renderAiTasks(data.tasks);
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = '✨ Vazifalar Yaratish';
+        alert('Server xatosi: ' + err.message);
+    });
+}
+
+function renderAiTasks(tasks) {
+    const list = document.getElementById('aiTaskList');
+    const res  = document.getElementById('aiTaskResults');
+    list.innerHTML = '';
+    res.style.display = 'block';
+
+    const prioColors = {high:'var(--red)', medium:'var(--orange)', low:'var(--green)'};
+    const catIcons   = {dev:'💻', art:'🎨', design:'✏️', audio:'🎵', management:'📋'};
+
+    tasks.forEach((task, i) => {
+        const el = document.createElement('div');
+        el.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem;display:flex;align-items:flex-start;gap:.65rem;';
+        el.innerHTML = `
+            <input type="checkbox" id="task-check-${i}" checked style="margin-top:.2rem;flex-shrink:0;width:15px;height:15px;">
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.2rem;flex-wrap:wrap;">
+                    <span style="font-weight:700;font-size:.85rem;">${esc(task.title)}</span>
+                    <span style="font-size:.65rem;color:${prioColors[task.priority]||'var(--text3)'};font-weight:700;text-transform:uppercase;">${task.priority}</span>
+                    <span style="font-size:.72rem;">${catIcons[task.category]||'📌'}</span>
+                </div>
+                ${task.description ? `<div style="font-size:.78rem;color:var(--text2);">${esc(task.description)}</div>` : ''}
+            </div>`;
+        list.appendChild(el);
+    });
+}
+
+function addAllTasks() {
+    const checked = generatedTasks.filter((_, i) =>
+        document.getElementById(`task-check-${i}`)?.checked
+    );
+    if (!checked.length) { alert("Hech qanday vazifa tanlanmagan"); return; }
+
+    const btn = document.querySelector('#aiTaskResults .btn-primary');
+    btn.disabled = true;
+    btn.textContent = '⏳ Qo\'shilmoqda...';
+
+    const createTask = (task) => fetch(`/dashboard/projects/${PROJECT_PK}/task/create/`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken':getCookie('csrftoken')},
+        body: new URLSearchParams({
+            title: task.title,
+            description: task.description || '',
+            priority: task.priority || 'medium',
+            status: 'todo',
+        })
+    });
+
+    Promise.all(checked.map(createTask))
+        .then(() => {
+            btn.textContent = `✓ ${checked.length} ta qo'shildi!`;
+            setTimeout(() => { closeAiTaskModal(); location.reload(); }, 1200);
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.textContent = "✓ Hammasini Qo'shish";
+            alert('Xatolik yuz berdi');
+        });
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+{% endblock %}

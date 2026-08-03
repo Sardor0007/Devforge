@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+{% block title %}Qidiruv{% if query %} — {{ query }}{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+.search-hero {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+}
+.search-big {
+    flex: 1; display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: border-color .2s;
+}
+.search-big:focus-within { border-color: var(--accent); }
+.search-big span { padding: 0 1rem; font-size: 1.1rem; }
+.search-big input {
+    flex: 1; background: none; border: none; color: var(--text);
+    font-size: 1rem; padding: .85rem 0; outline: none;
+}
+.search-big button {
+    background: var(--accent); border: none; color: #fff;
+    padding: .85rem 1.5rem; cursor: pointer; font-weight: 700;
+    font-size: .9rem; transition: .15s;
+}
+.search-big button:hover { background: #2563eb; }
+
+/* Tabs */
+.tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin-bottom: 1.75rem; }
+.tab-btn {
+    padding: .6rem 1.1rem; border: none; background: none;
+    color: var(--text2); cursor: pointer; font-size: .875rem;
+    font-weight: 600; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: .15s; text-decoration: none;
+    display: inline-flex; align-items: center; gap: .4rem;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-count {
+    background: var(--surface2); border-radius: 99px;
+    padding: 1px 7px; font-size: .7rem; font-weight: 700; color: var(--text2);
+}
+.tab-btn.active .tab-count { background: rgba(59,130,246,.15); color: var(--accent); }
+
+/* Result grids */
+.results-grid { display: grid; gap: 1rem; }
+.results-grid.two-col { grid-template-columns: 1fr 1fr; }
+.results-grid.three-col { grid-template-columns: repeat(3, 1fr); }
+
+/* User card */
+.user-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.1rem;
+    display: flex; align-items: center; gap: .85rem;
+    text-decoration: none; transition: .2s;
+}
+.user-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-weight: 700; color: var(--text); }
+.user-role { font-size: .75rem; color: var(--text2); margin-top: .1rem; }
+
+/* Project card */
+.proj-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.1rem;
+    text-decoration: none; transition: .2s; display: block;
+}
+.proj-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.proj-title { font-weight: 700; color: var(--text); font-size: .95rem; margin-bottom: .4rem; }
+.proj-desc { font-size: .8rem; color: var(--text2); line-height: 1.5;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+/* Section header */
+.sec-head { font-size: .8rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--text3); margin-bottom: .85rem;
+    display: flex; align-items: center; justify-content: space-between; }
+
+/* Pagination */
+.pagination { display: flex; gap: .4rem; justify-content: center; margin-top: 2rem; }
+.page-btn {
+    padding: .45rem .85rem; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text2); text-decoration: none;
+    font-size: .875rem; font-weight: 600; transition: .15s;
+}
+.page-btn:hover, .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.page-btn.disabled { opacity: .4; pointer-events: none; }
+
+/* Empty */
+.no-results { text-align: center; padding: 4rem 2rem; color: var(--text2); }
+.no-results .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.highlight { background: rgba(59,130,246,.2); color: var(--accent); border-radius: 3px; padding: 0 2px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-page">
+
+  <!-- SEARCH BAR -->
+  <div class="search-hero">
+    <form method="get" action="{% url 'search' %}" style="display:flex; flex:1; gap:.75rem;">
+      <div class="search-big" style="flex:1;">
+        <span>🔍</span>
+        <input name="q" value="{{ query }}" placeholder="Foydalanuvchi, loyiha, aktiv, xizmat..." autofocus>
+        <input type="hidden" name="tab" value="{{ tab }}">
+        <button type="submit">Qidirish</button>
+      </div>
+    </form>
+  </div>
+
+  {% if query %}
+  <!-- NATIJALAR SONI -->
+  <div style="margin-bottom:1.25rem; color:var(--text2); font-size:.9rem;">
+    <strong style="color:var(--text);">"{{ query }}"</strong> uchun
+    <strong style="color:var(--accent);">{{ total }}</strong> ta natija topildi
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <a href="?q={{ query }}&tab=all"      class="tab-btn {% if tab == 'all' %}active{% endif %}">
+      Hammasi <span class="tab-count">{{ total }}</span>
+    </a>
+    <a href="?q={{ query }}&tab=users"    class="tab-btn {% if tab == 'users' %}active{% endif %}">
+      👤 Foydalanuvchilar <span class="tab-count">{{ counts.users }}</span>
+    </a>
+    <a href="?q={{ query }}&tab=projects" class="tab-btn {% if tab == 'projects' %}active{% endif %}">
+      🚀 Loyihalar <span class="tab-count">{{ counts.projects }}</span>
+    </a>
+    <a href="?q={{ query }}&tab=assets"   class="tab-btn {% if tab == 'assets' %}active{% endif %}">
+      📦 Aktivlar <span class="tab-count">{{ counts.assets }}</span>
+    </a>
+    <a href="?q={{ query }}&tab=posts"    class="tab-btn {% if tab == 'posts' %}active{% endif %}">
+      📡 Postlar <span class="tab-count">{{ counts.posts }}</span>
+    </a>
+    <a href="?q={{ query }}&tab=jobs"     class="tab-btn {% if tab == 'jobs' %}active{% endif %}">
+      💼 Ish o'rinlari <span class="tab-count">{{ counts.jobs }}</span>
+    </a>
+    <a href="?q={{ query }}&tab=services" class="tab-btn {% if tab == 'services' %}active{% endif %}">
+      💼 Xizmatlar <span class="tab-count">{{ counts.services }}</span>
+    </a>
+  </div>
+
+  <!-- ALL TAB -->
+  {% if tab == 'all' %}
+
+    {% if results.users %}
+    <div style="margin-bottom:2rem;">
+      <div class="sec-head">
+        👤 Foydalanuvchilar
+        {% if counts.users > 6 %}
+        <a href="?q={{ query }}&tab=users" style="color:var(--accent); font-size:.78rem; font-weight:600;">Barchasi →</a>
+        {% endif %}
+      </div>
+      <div class="results-grid three-col">
+        {% for u in results.users %}
+        <a href="{% url 'profile' username=u.username %}" class="user-card">
+          <div class="avatar-sm" style="width:42px;height:42px;font-size:1.1rem;flex-shrink:0;">
+            {% if u.avatar %}<img src="{{ u.avatar.url }}" alt="">{% else %}{{ u.username|first|upper }}{% endif %}
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ u.username }}</div>
+            <div class="user-role">{{ u.get_role_display }}</div>
+            {% if u.bio %}<div style="font-size:.75rem;color:var(--text3);margin-top:.2rem;">{{ u.bio|truncatechars:40 }}</div>{% endif %}
+          </div>
+          {% if u.is_verified %}<span title="Tasdiqlangan">✅</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if results.projects %}
+    <div style="margin-bottom:2rem;">
+      <div class="sec-head">
+        🚀 Loyihalar
+        {% if counts.projects > 6 %}
+        <a href="?q={{ query }}&tab=projects" style="color:var(--accent); font-size:.78rem; font-weight:600;">Barchasi →</a>
+        {% endif %}
+      </div>
+      <div class="results-grid two-col">
+        {% for p in results.projects %}
+        <a href="{% url 'project_detail' pk=p.pk %}" class="proj-card">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
+            <span class="badge badge-blue" style="font-size:.68rem;">{{ p.get_genre_display }}</span>
+            <span class="badge {% if p.status == 'active' %}badge-green{% else %}badge-gray{% endif %}" style="font-size:.68rem;">{{ p.get_status_display }}</span>
+          </div>
+          <div class="proj-title">{{ p.title }}</div>
+          <div class="proj-desc">{{ p.description }}</div>
+          <div style="font-size:.75rem;color:var(--text3);margin-top:.5rem;">👤 {{ p.creator.username }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if results.assets %}
+    <div style="margin-bottom:2rem;">
+      <div class="sec-head">
+        📦 Aktivlar
+        {% if counts.assets > 6 %}
+        <a href="?q={{ query }}&tab=assets" style="color:var(--accent); font-size:.78rem; font-weight:600;">Barchasi →</a>
+        {% endif %}
+      </div>
+      <div class="results-grid three-col">
+        {% for a in results.assets %}
+        <a href="{% url 'asset_detail' pk=a.pk %}" class="proj-card">
+          {% if a.thumbnail %}
+          <img src="{{ a.thumbnail.url }}" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:.65rem;">
+          {% endif %}
+          <div class="proj-title" style="font-size:.88rem;">{{ a.title }}</div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.4rem;">
+            <span class="badge badge-purple" style="font-size:.65rem;">{{ a.format|upper }}</span>
+            <span style="font-size:.75rem;color:var(--text2);">⬇ {{ a.downloads }}</span>
+            {% if a.price > 0 %}<span style="font-size:.75rem;color:var(--green);font-weight:700;margin-left:auto;">${{ a.price }}</span>
+            {% else %}<span style="font-size:.75rem;color:var(--green);font-weight:700;margin-left:auto;">Bepul</span>{% endif %}
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if results.services %}
+    <div style="margin-bottom:2rem;">
+      <div class="sec-head">
+        💼 Xizmatlar
+        {% if counts.services > 6 %}
+        <a href="?q={{ query }}&tab=services" style="color:var(--accent); font-size:.78rem; font-weight:600;">Barchasi →</a>
+        {% endif %}
+      </div>
+      <div class="results-grid two-col">
+        {% for s in results.services %}
+        <a href="{% url 'service_detail' pk=s.pk %}" class="proj-card">
+          <div class="proj-title">{{ s.title }}</div>
+          <div class="proj-desc">{{ s.description }}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.6rem;">
+            <span style="font-size:.78rem;color:var(--text2);">👤 {{ s.seller.username }}</span>
+            <span style="font-weight:800;color:var(--green);">$  {{ s.price }}</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if total == 0 %}
+    <div class="no-results">
+      <div class="icon">🔍</div>
+      <p style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem;">Hech narsa topilmadi</p>
+      <p>Boshqa kalit so'z bilan urinib ko'ring</p>
+    </div>
+    {% endif %}
+
+  <!-- USERS TAB -->
+  {% elif tab == 'users' %}
+  <div class="results-grid three-col">
+    {% for u in results.users %}
+    <a href="{% url 'profile' username=u.username %}" class="user-card">
+      <div class="avatar-sm" style="width:42px;height:42px;font-size:1.1rem;flex-shrink:0;">
+        {% if u.avatar %}<img src="{{ u.avatar.url }}" alt="">{% else %}{{ u.username|first|upper }}{% endif %}
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ u.username }}</div>
+        <div class="user-role">{{ u.get_role_display }}</div>
+      </div>
+    </a>
+    {% empty %}
+    <div class="no-results" style="grid-column:1/-1;">
+      <div class="icon">👤</div><p>Foydalanuvchi topilmadi</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% include "search/_pagination.html" with page_obj=results.users tab="users" %}
+
+  <!-- PROJECTS TAB -->
+  {% elif tab == 'projects' %}
+  <div class="results-grid two-col">
+    {% for p in results.projects %}
+    <a href="{% url 'project_detail' pk=p.pk %}" class="proj-card">
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem;">
+        <span class="badge badge-blue" style="font-size:.68rem;">{{ p.get_genre_display }}</span>
+        <span class="badge {% if p.status == 'active' %}badge-green{% else %}badge-gray{% endif %}" style="font-size:.68rem;">{{ p.get_status_display }}</span>
+      </div>
+      <div class="proj-title">{{ p.title }}</div>
+      <div class="proj-desc">{{ p.description }}</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:.5rem;">👤 {{ p.creator.username }} · {{ p.created_at|date:"d M Y" }}</div>
+    </a>
+    {% empty %}
+    <div class="no-results" style="grid-column:1/-1;">
+      <div class="icon">🚀</div><p>Loyiha topilmadi</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% include "search/_pagination.html" with page_obj=results.projects tab="projects" %}
+
+  <!-- POSTS TAB -->
+  {% elif tab == 'posts' %}
+  <div class="results-grid two-col">
+    {% for p in results.posts %}
+    <a href="{% url 'post_detail' pk=p.pk %}" class="proj-card">
+      <div class="proj-title">{{ p.author.username }}</div>
+      <div class="proj-desc">{{ p.content }}</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:.5rem;">{{ p.created_at|date:"d M Y" }}</div>
+    </a>
+    {% empty %}
+    <div class="no-results" style="grid-column:1/-1;"><div class="icon">📡</div><p>Post topilmadi</p></div>
+    {% endfor %}
+  </div>
+  {% include "search/_pagination.html" with tab="posts" %}
+
+  <!-- JOBS TAB -->
+  {% elif tab == 'jobs' %}
+  <div class="results-grid two-col">
+    {% for j in results.jobs %}
+    <a href="{% url 'job_detail' pk=j.pk %}" class="proj-card">
+      <div style="display:flex;gap:.4rem;margin-bottom:.4rem;">
+        <span class="badge badge-blue" style="font-size:.68rem;">{{ j.get_status_display }}</span>
+        <span class="badge badge-green" style="font-size:.68rem;">💰 {{ j.budget }} so'm</span>
+      </div>
+      <div class="proj-title">{{ j.title }}</div>
+      <div class="proj-desc">{{ j.description }}</div>
+      <div style="font-size:.75rem;color:var(--text3);margin-top:.5rem;">{{ j.client.username }} · {{ j.created_at|date:"d M Y" }}</div>
+    </a>
+    {% empty %}
+    <div class="no-results" style="grid-column:1/-1;"><div class="icon">💼</div><p>Ish o'rni topilmadi</p></div>
+    {% endfor %}
+  </div>
+  {% include "search/_pagination.html" with tab="jobs" %}
+
+  <!-- ASSETS TAB -->
+  {% elif tab == 'assets' %}
+  <div class="results-grid three-col">
+    {% for a in results.assets %}
+    <a href="{% url 'asset_detail' pk=a.pk %}" class="proj-card">
+      {% if a.thumbnail %}
+      <img src="{{ a.thumbnail.url }}" alt="" style="width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:.65rem;">
+      {% endif %}
+      <div class="proj-title">{{ a.title }}</div>
+      <div style="display:flex;align-items:center;gap:.5rem;margin-top:.4rem;">
+        <span class="badge badge-purple" style="font-size:.65rem;">{{ a.format|upper }}</span>
+        <span style="font-size:.75rem;color:var(--text2);">⬇ {{ a.downloads }}</span>
+        {% if a.price > 0 %}<span style="font-size:.75rem;color:var(--green);font-weight:700;margin-left:auto;">${{ a.price }}</span>
+        {% else %}<span style="font-size:.75rem;color:var(--green);font-weight:700;margin-left:auto;">Bepul</span>{% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <div class="no-results" style="grid-column:1/-1;">
+      <div class="icon">📦</div><p>Aktiv topilmadi</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% include "search/_pagination.html" with page_obj=results.assets tab="assets" %}
+
+  <!-- SERVICES TAB -->
+  {% elif tab == 'services' %}
+  <div class="results-grid two-col">
+    {% for s in results.services %}
+    <a href="{% url 'service_detail' pk=s.pk %}" class="proj-card">
+      <div class="proj-title">{{ s.title }}</div>
+      <div class="proj-desc">{{ s.description }}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.6rem;">
+        <span style="font-size:.78rem;color:var(--text2);">👤 {{ s.seller.username }}</span>
+        <span style="font-weight:800;color:var(--green);">${{ s.price }}</span>
+      </div>
+    </a>
+    {% empty %}
+    <div class="no-results" style="grid-column:1/-1;">
+      <div class="icon">💼</div><p>Xizmat topilmadi</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% include "search/_pagination.html" with page_obj=results.services tab="services" %}
+  {% endif %}
+
+  {% else %}
+  <!-- BO'SH HOLAT -->
+  <div class="no-results">
+    <div class="icon">🔍</div>
+    <p style="font-size:1.2rem;font-weight:700;margin-bottom:.75rem;">Nima qidirayapsiz?</p>
+    <p style="color:var(--text2);">Foydalanuvchi, loyiha, 3D aktiv yoki xizmat nomi yozing</p>
+    <div style="display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;">
+      <a href="?q=unity" class="badge badge-blue" style="padding:.4rem .85rem;cursor:pointer;">unity</a>
+      <a href="?q=character" class="badge badge-purple" style="padding:.4rem .85rem;cursor:pointer;">character</a>
+      <a href="?q=texture" class="badge badge-green" style="padding:.4rem .85rem;cursor:pointer;">texture</a>
+      <a href="?q=rpg" class="badge badge-orange" style="padding:.4rem .85rem;cursor:pointer;">rpg</a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Xizmat Yaratish{% endblock %}
+
+{% block extra_js %}
+<script>
+function aiGenerateDesc() {
+    const title    = document.querySelector('[name=title]')?.value || '';
+    const category = document.querySelector('[name=category]')?.value || '';
+    if (!title) { alert('Avval sarlavha kiriting'); return; }
+
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = '⏳ Yaratilmoqda...';
+
+    fetch('/ai/generate-description/', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({title, category, keywords:'', tone:'professional'})
+    })
+    .then(r=>r.json())
+    .then(d => {
+        btn.disabled=false; btn.textContent='🤖 AI tavsif yozish';
+        if (d.error) { alert(d.error); return; }
+        const descField = document.querySelector('[name=description]');
+        if (descField && d.description) descField.value = d.description;
+        if (d.demo) alert('Demo rejim: ANTHROPIC_API_KEY sozlanmagan');
+    })
+    .catch(()=>{ btn.disabled=false; btn.textContent='🤖 AI tavsif yozish'; });
+}
+</script>
+{% endblock %}
+
+
+
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem;max-width:680px;">
+    <div class="page-header"><h1 class="page-title">💼 Xizmat Taklif Qilish</h1><p class="page-subtitle">Yoyilgan freelance xizmatingizni e'lon qiling</p></div>
+    <div class="card"><div class="card-body">
+        <form method="post" enctype="multipart/form-data">{% csrf_token %}
+            <div class="form-group"><label class="form-label">Xizmat nomi *</label>{{ form.title }}</div>
+            <div class="form-group"><label class="form-label">Tavsif *</label>{{ form.description }}</div>
+            <div class="grid-2" style="gap:1rem;">
+                <div class="form-group"><label class="form-label">Kategoriya</label>{{ form.category }}</div>
+                <div class="form-group"><label class="form-label">Yetkazib berish (kun)</label>{{ form.delivery_days }}</div>
+            </div>
+            <div class="form-group"><label class="form-label">Narx ($) *</label>{{ form.price }}</div>
+            <div class="form-group"><label class="form-label">Muqova rasm</label>{{ form.thumbnail }}</div>
+            <button type="submit" class="btn btn-primary btn-lg">Xizmatni Nashr Qilish</button>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

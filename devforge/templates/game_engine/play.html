@@ -1,0 +1,439 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+body { background: #05070a; }
+.play-shell {
+    min-height: calc(100vh - 120px);
+    display: flex; gap: 2rem; align-items: flex-start;
+}
+.play-main { flex: 1; }
+.play-header {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;
+    padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+}
+.play-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; }
+.play-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.play-badge {
+    padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;
+    background: rgba(0,245,255,0.1); color: var(--accent); border: 1px solid rgba(0,245,255,0.2);
+}
+
+/* Canvas wrapper */
+.canvas-wrapper {
+    background: #08090d;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(0,245,255,0.15);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,245,255,0.05);
+}
+.canvas-topbar {
+    background: #0d1117; padding: 0.5rem 1rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.canvas-topbar-title { font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+.canvas-frame {
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+    min-height: 400px;
+}
+#playCanvas {
+    max-width: 100%; height: auto;
+    border-radius: 4px;
+}
+
+/* Controls hint */
+.controls-hint {
+    background: rgba(255,255,255,0.03); border-radius: var(--radius-md);
+    padding: 0.75rem 1rem; margin-top: 1rem;
+    display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+.ctrl-key {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.78rem; color: var(--text-muted);
+}
+.key-badge {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px; padding: 1px 6px; font-size: 0.7rem;
+    font-family: var(--font-mono); color: var(--text-primary);
+}
+
+/* Score / HUD overlay */
+.play-hud {
+    position: absolute; top: 50px; left: 0; right: 0;
+    display: flex; justify-content: space-between; padding: 0.5rem 1rem;
+    pointer-events: none;
+}
+.hud-item {
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    border-radius: 8px; padding: 0.35rem 0.75rem;
+    font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-primary);
+}
+
+/* Sidebar */
+.play-sidebar { width: 300px; flex-shrink: 0; }
+.sidebar-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+.sidebar-card-title {
+    font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem;
+    display: flex; align-items: center; gap: 6px;
+}
+.creator-info {
+    display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+}
+.creator-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--accent-gradient); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; color: #000; flex-shrink: 0; overflow: hidden;
+}
+.creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.creator-name { font-weight: 600; font-size: 0.9rem; }
+.creator-role { font-size: 0.78rem; color: var(--text-muted); }
+
+.play-action-btn {
+    width: 100%; padding: 0.6rem 1rem; border-radius: var(--radius-md);
+    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface-hover);
+    color: var(--text-secondary); display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; transition: var(--transition); text-decoration: none; margin-bottom: 0.5rem;
+}
+.play-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+.play-action-btn.liked { background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.4); }
+
+/* Stats */
+.play-stats { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.play-stat { text-align: center; flex: 1; }
+.play-stat-val { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+.play-stat-lbl { font-size: 0.72rem; color: var(--text-muted); }
+
+@media (max-width: 900px) {
+    .play-shell { flex-direction: column; }
+    .play-sidebar { width: 100%; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="play-shell">
+    <!-- Main Play Area -->
+    <div class="play-main">
+        <div class="play-header">
+            <a href="{% url 'game_engine:dashboard' %}" style="color:var(--text-muted);font-size:1.2rem;">←</a>
+            <div>
+                <div class="play-title">{{ project.title }}</div>
+                <div class="play-badges">
+                    <span class="play-badge">{{ project.get_genre_display }}</span>
+                    {% if project.is_featured %}<span class="play-badge" style="background:rgba(245,158,11,0.1);color:#fcd34d;border-color:rgba(245,158,11,0.3);">⭐ Featured</span>{% endif %}
+                </div>
+            </div>
+            {% if request.user == project.owner %}
+            <a href="{% url 'game_engine:editor' project.pk %}" class="btn btn-secondary btn-sm" style="margin-left:auto;">✏️ Edit</a>
+            {% endif %}
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas-wrapper">
+            <div class="canvas-topbar">
+                <div style="display:flex;gap:5px;">
+                    <div style="width:10px;height:10px;border-radius:50%;background:#ef4444;"></div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;"></div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:#10b981;"></div>
+                </div>
+                <span class="canvas-topbar-title">{{ project.title }}</span>
+                <button id="restartBtn" onclick="restartGame()" style="margin-left:auto;background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.2);color:var(--accent);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;">🔄 Restart</button>
+                <button id="fullscreenBtn" onclick="toggleFullscreen()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text-muted);padding:3px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;">⛶ Fullscreen</button>
+            </div>
+
+            <!-- HUD -->
+            <div class="play-hud">
+                <div class="hud-item" id="scoreDisplay">Score: 0</div>
+                <div class="hud-item" id="timerDisplay">⏱ 0:00</div>
+            </div>
+
+            <div class="canvas-frame" id="canvasFrame">
+                <canvas id="playCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-hint">
+            <span class="ctrl-key"><span class="key-badge">←</span><span class="key-badge">→</span> Harakat</span>
+            <span class="ctrl-key"><span class="key-badge">↑</span> / <span class="key-badge">Space</span> Sakrash</span>
+            <span class="ctrl-key"><span class="key-badge">R</span> Qayta boshlash</span>
+            <span class="ctrl-key"><span class="key-badge">F</span> Fullscreen</span>
+        </div>
+
+        <!-- Description -->
+        {% if project.description %}
+        <div class="sidebar-card" style="margin-top:1.5rem;background:var(--surface);">
+            <div class="sidebar-card-title">📋 Tavsif</div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.7;">{{ project.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="play-sidebar">
+        <!-- Creator -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">👤 Yaratuvchi</div>
+            <div class="creator-info">
+                <div class="creator-avatar">
+                    {% if project.owner.avatar %}<img src="{{ project.owner.avatar.url }}">{% else %}{{ project.owner.username|first|upper }}{% endif %}
+                </div>
+                <div>
+                    <div class="creator-name">{{ project.owner.username }}</div>
+                    <div class="creator-role">{{ project.owner.get_role_display }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="sidebar-card">
+            <div class="play-stats">
+                <div class="play-stat">
+                    <div class="play-stat-val" id="playCountDisplay">{{ project.play_count }}</div>
+                    <div class="play-stat-lbl">O'yinlar</div>
+                </div>
+                <div class="play-stat">
+                    <div class="play-stat-val" id="likeCountDisplay">{{ project.like_count }}</div>
+                    <div class="play-stat-lbl">Layk</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <button class="play-action-btn {% if liked %}liked{% endif %}" id="likeBtn" onclick="toggleLike()">
+                {% if liked %}❤️ Yoqdi{% else %}🤍 Yoqdi{% endif %} (<span id="likeCount">{{ project.like_count }}</span>)
+            </button>
+
+            {% if request.user == project.owner %}
+            <a href="{% url 'game_engine:editor' project.pk %}" class="play-action-btn">✏️ Tahrirlash</a>
+            {% endif %}
+            <a href="{% url 'game_engine:dashboard' %}" class="play-action-btn">🎮 Barcha O'yinlar</a>
+        </div>
+
+        <!-- Comments -->
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">💬 Izohlar</div>
+            {% if user.is_authenticated %}
+            <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+                <input id="commentInput" placeholder="Izoh qoldiring..." style="flex:1;background:var(--surface-hover);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.45rem 0.75rem;color:var(--text-primary);font-size:0.85rem;outline:none;" onkeydown="if(event.key==='Enter')submitComment()">
+                <button onclick="submitComment()" class="btn btn-primary btn-sm">Send</button>
+            </div>
+            {% endif %}
+            <div id="commentsList" style="display:flex;flex-direction:column;gap:0.75rem;">
+                <!-- Loaded via JS -->
+                <div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:1rem;">Yuklanmoqda...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PROJECT_ID   = {{ project.pk }};
+const API_BASE     = '/game-engine/api';
+const SCENE_DATA   = {{ scene_data_json|safe }};
+const ASSETS       = {{ assets_json|safe }};
+const SCRIPTS      = {{ scripts_json|safe }};
+const ALL_SCENES   = {{ all_scenes_json|safe }};
+let   isLiked      = {% if liked %}true{% else %}false{% endif %};
+let   score        = 0;
+let   playTime     = 0;
+let   gameRunning  = false;
+let   animFrame    = null;
+let   lastTime     = 0;
+
+// ─ Game Engine ─
+const canvas = document.getElementById('playCanvas');
+const ctx    = canvas.getContext('2d');
+let   sceneSettings = { gravity: 0.5, width: 800, height: 600, backgroundColor: '#1a1a2e', fps: 60, ...(SCENE_DATA.settings || {}) };
+let   entities      = JSON.parse(JSON.stringify(SCENE_DATA.entities || []));
+const assetImgs     = {};
+let   keys          = {};
+
+function loadImages(cb) {
+    const sprites = ASSETS.filter(a => a.type === 'sprite' && a.url);
+    let loaded = 0;
+    if (!sprites.length) { cb(); return; }
+    sprites.forEach(a => {
+        const img = new Image();
+        img.onload = img.onerror = () => { assetImgs[a.name] = img; if (++loaded === sprites.length) cb(); };
+        img.src = a.url;
+    });
+}
+
+function startGame() {
+    canvas.width  = sceneSettings.width;
+    canvas.height = sceneSettings.height;
+    const w = sceneSettings.width, h = sceneSettings.height;
+    const cont = document.getElementById('canvasFrame');
+    const scaleX = (cont.clientWidth - 32) / w;
+    canvas.style.maxWidth = Math.min(w, cont.clientWidth - 32) + 'px';
+
+    entities = JSON.parse(JSON.stringify(SCENE_DATA.entities || []));
+    entities.forEach(e => { if (e.hasPhysics) { e.vx = 0; e.vy = 0; e.onGround = false; } });
+    score = 0; playTime = 0; gameRunning = true; lastTime = performance.now();
+    document.getElementById('scoreDisplay').textContent = 'Score: 0';
+
+    document.addEventListener('keydown', kd);
+    document.addEventListener('keyup',   ku);
+
+    loop();
+}
+
+function kd(e) { keys[e.code] = true; if (['Space','ArrowUp','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); if(e.code==='KeyR') restartGame(); if(e.code==='KeyF') toggleFullscreen(); }
+function ku(e) { keys[e.code] = false; }
+
+function loop(now = performance.now()) {
+    if (!gameRunning) return;
+    const dt = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+    playTime += dt;
+
+    const mins = Math.floor(playTime / 60), secs = Math.floor(playTime % 60);
+    document.getElementById('timerDisplay').textContent = `⏱ ${mins}:${secs.toString().padStart(2,'0')}`;
+
+    update(dt);
+    render();
+    animFrame = requestAnimationFrame(loop);
+}
+
+function update(dt) {
+    const gravity   = sceneSettings.gravity * 60;
+    const platforms = entities.filter(e => e.type === 'platform' && e.isSolid);
+    const coins     = entities.filter(e => e.name && e.name.startsWith('coin'));
+
+    entities.forEach(e => {
+        if (!e.hasPhysics) return;
+        const spd = e.speed || 200;
+        if (e.type === 'player') {
+            if (keys['ArrowLeft']  || keys['KeyA']) { e.vx = -spd; e.facingLeft = true; }
+            else if (keys['ArrowRight'] || keys['KeyD']) { e.vx = spd; e.facingLeft = false; }
+            else e.vx *= 0.7;
+            if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && e.onGround) {
+                e.vy = e.jumpForce || -500; e.onGround = false;
+            }
+        }
+        e.vy += gravity * dt;
+        e.x  += e.vx * dt;
+        e.y  += e.vy * dt;
+        e.onGround = false;
+
+        platforms.forEach(p => {
+            const ew = e.width||48, eh = e.height||64, pw = p.width||200, ph = p.height||24;
+            if (e.x+ew > p.x && e.x < p.x+pw && e.y+eh > p.y && e.y+eh < p.y+ph+15 && e.vy >= 0) {
+                e.y = p.y - eh; e.vy = 0; e.onGround = true;
+            }
+        });
+
+        const h = sceneSettings.height;
+        if (e.y + (e.height||64) > h) { e.y = h - (e.height||64); e.vy = 0; e.onGround = true; }
+        if (e.y < 0) { e.y = 0; e.vy = 0; }
+        if (e.x < 0) e.x = 0;
+        if (e.x + (e.width||48) > sceneSettings.width) e.x = sceneSettings.width - (e.width||48);
+    });
+}
+
+function render() {
+    ctx.fillStyle = sceneSettings.backgroundColor || '#1a1a2e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    entities.forEach(e => drawEnt(e));
+}
+
+function drawEnt(e) {
+    ctx.save(); ctx.globalAlpha = e.opacity !== undefined ? e.opacity : 1;
+    switch (e.type) {
+        case 'rect': case 'platform':
+            ctx.fillStyle = e.color||'#4ade80'; ctx.fillRect(e.x||0,e.y||0,e.width||64,e.height||32);
+            break;
+        case 'circle':
+            ctx.beginPath(); ctx.arc((e.x||0)+(e.radius||24),(e.y||0)+(e.radius||24),e.radius||24,0,Math.PI*2);
+            ctx.fillStyle = e.color||'#f472b6'; ctx.fill(); break;
+        case 'text':
+            ctx.fillStyle = e.color||'#fff'; ctx.font = `${e.fontSize||18}px sans-serif`;
+            ctx.fillText(e.text||'',e.x||0,(e.y||0)+(e.fontSize||18)); break;
+        case 'sprite': case 'player':
+            const img = assetImgs[e.assetName];
+            if (img && img.complete && img.naturalWidth > 0) {
+                if (e.facingLeft) { ctx.translate((e.x||0)+(e.width||48),e.y||0); ctx.scale(-1,1); ctx.drawImage(img,0,0,e.width||48,e.height||48); }
+                else ctx.drawImage(img,e.x||0,e.y||0,e.width||48,e.height||48);
+            } else {
+                ctx.fillStyle = e.type==='player'?'#00f5ff':'#8b5cf6';
+                ctx.fillRect(e.x||0,e.y||0,e.width||48,e.height||48);
+            }
+            break;
+    }
+    ctx.restore();
+}
+
+function restartGame() {
+    if (animFrame) cancelAnimationFrame(animFrame);
+    document.removeEventListener('keydown', kd);
+    document.removeEventListener('keyup',   ku);
+    gameRunning = false;
+    setTimeout(() => loadImages(startGame), 100);
+}
+function toggleFullscreen() {
+    const el = document.querySelector('.canvas-wrapper');
+    if (!document.fullscreenElement) el.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+}
+
+// ─ Social ─
+async function toggleLike() {
+    const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/like/`, {
+        method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    const data = await res.json();
+    isLiked = data.liked;
+    document.getElementById('likeCount').textContent = data.like_count;
+    const btn = document.getElementById('likeBtn');
+    btn.className = 'play-action-btn' + (isLiked ? ' liked' : '');
+    btn.innerHTML = `${isLiked ? '❤️ Yoqdi' : '🤍 Yoqdi'} (<span id="likeCount">${data.like_count}</span>)`;
+}
+
+async function loadComments() {
+    const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/comments/`);
+    const data = await res.json();
+    const list = document.getElementById('commentsList');
+    if (!data.comments.length) { list.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.8rem;padding:1rem;">Hali izoh yo\'q</div>'; return; }
+    list.innerHTML = data.comments.slice(0,20).map(c => `
+        <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-gradient);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#000;overflow:hidden;">
+                ${c.author_avatar ? `<img src="${c.author_avatar}" style="width:100%;height:100%;object-fit:cover;">` : c.author_username[0].toUpperCase()}
+            </div>
+            <div>
+                <span style="font-size:0.78rem;font-weight:600;">${c.author_username}</span>
+                <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;line-height:1.4;">${c.body}</p>
+            </div>
+        </div>`).join('');
+}
+
+async function submitComment() {
+    const inp  = document.getElementById('commentInput');
+    const body = inp.value.trim();
+    if (!body) return;
+    await fetch(`${API_BASE}/projects/${PROJECT_ID}/comment/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ body })
+    });
+    inp.value = '';
+    loadComments();
+}
+
+// Record play & start
+fetch(`${API_BASE}/projects/${PROJECT_ID}/play/`, {
+    method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }
+});
+loadComments();
+loadImages(startGame);
+</script>
+{% endblock %}

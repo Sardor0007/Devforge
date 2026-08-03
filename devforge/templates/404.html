@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Sahifa topilmadi | DevForge</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0f1e; --surface: #111827; --border: #1e2d45;
+    --text: #e2e8f0; --text2: #94a3b8; --accent: #3b82f6;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 2rem;
+  }
+  .code {
+    font-size: clamp(6rem, 20vw, 12rem);
+    font-weight: 900; line-height: 1;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Space Mono', monospace;
+  }
+  h1 { font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: 800; margin: 1rem 0 .75rem; }
+  p { color: var(--text2); max-width: 420px; line-height: 1.7; margin-bottom: 2rem; }
+  .btn {
+    display: inline-block; padding: .75rem 1.75rem; border-radius: 10px;
+    text-decoration: none; font-weight: 700; font-size: .95rem; transition: .2s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; margin-right: .5rem; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text2); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .stars {
+    position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1;
+  }
+  .star {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: rgba(255,255,255,.6); animation: twinkle 3s infinite;
+  }
+  @keyframes twinkle { 0%,100%{opacity:.3} 50%{opacity:1} }
+  .glitch {
+    position: relative; display: inline-block;
+    animation: glitch 4s infinite;
+  }
+  @keyframes glitch {
+    0%,95%,100%{ transform: translate(0) }
+    96%{ transform: translate(-3px, 1px) }
+    97%{ transform: translate(3px, -1px) }
+    98%{ transform: translate(-1px, 2px) }
+  }
+</style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="glitch">
+    <div class="code">404</div>
+  </div>
+
+  <h1>🚀 Sahifa topilmadi</h1>
+  <p>
+    Siz qidirgan sahifa o'chirilgan, ko'chirilgan yoki hech qachon mavjud bo'lmagan.
+    Ehtimol URL noto'g'ridir.
+  </p>
+
+  <div>
+    <a href="/" class="btn btn-primary">🏠 Bosh sahifa</a>
+    <a href="javascript:history.back()" class="btn btn-ghost">← Orqaga</a>
+  </div>
+
+  <script>
+    const s = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+      const d = document.createElement('div');
+      d.className = 'star';
+      d.style.cssText = `
+        left:${Math.random()*100}%;top:${Math.random()*100}%;
+        animation-delay:${Math.random()*3}s;
+        animation-duration:${2+Math.random()*3}s;
+        opacity:${Math.random()*.8+.2};
+      `;
+      s.appendChild(d);
+    }
+  </script>
+</body>
+</html>

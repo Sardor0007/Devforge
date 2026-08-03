@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Balansni To'ldirish — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.payment-page {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.payment-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    max-width: 520px;
+    width: 100%;
+}
+.payment-card h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+.payment-card .subtitle {
+    color: var(--text2);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+.amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.amount-option {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface2);
+}
+.amount-option:hover { border-color: var(--accent); background: rgba(59,130,246,0.08); }
+.amount-option.selected { border-color: var(--accent); background: rgba(59,130,246,0.15); }
+.amount-option .price { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+.amount-option .label { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+.current-balance {
+    background: rgba(34,197,94,0.1);
+    border: 1px solid rgba(34,197,94,0.3);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.current-balance .bal-val { font-weight: 700; color: #22c55e; }
+.pay-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.pay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
+.pay-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.stripe-badge {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text3);
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+.demo-notice {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    color: #f59e0b;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-page">
+    <div class="payment-card">
+        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">💳</div>
+        <h1>Balansni To'ldirish</h1>
+        <p class="subtitle">Loyiha va ish haqlarini to'lash uchun balansni to'ldiring</p>
+
+        <div class="current-balance">
+            <span>Joriy balans:</span>
+            <span class="bal-val">${{ request.user.balance }}</span>
+        </div>
+
+        {% if not stripe_available %}
+        <div class="demo-notice">
+            ⚠️ To'lov tizimi hozirda sozlanmagan. Stripe kalitlarini <code>.env</code> ga kiriting.
+        </div>
+        {% else %}
+        <form method="post" id="depositForm">
+            {% csrf_token %}
+            <input type="hidden" name="amount" id="selectedAmount" value="25">
+
+            <div class="amount-grid">
+                {% for opt in deposit_options %}
+                <div class="amount-option {% if opt == 25 %}selected{% endif %}"
+                     onclick="selectAmount({{ opt }}, this)">
+                    <div class="price">${{ opt }}</div>
+                    <div class="label">USD ($)</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="pay-btn" id="payBtn">
+                🔒 Stripe bilan To'lash
+            </button>
+        </form>
+
+        <div class="stripe-badge">
+            🔒 Stripe orqali xavfsiz to'lov • SSL shifrlangan
+        </div>
+        {% endif %}
+
+        <div style="text-align:center; margin-top: 1.5rem;">
+            <a href="{% url 'home' %}" style="color: var(--text3); font-size: 0.85rem;">← Ortga qaytish</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectAmount(amount, el) {
+    document.querySelectorAll('.amount-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selectedAmount').value = amount;
+    document.getElementById('payBtn').textContent = `🔒 $${amount} To'lash`;
+}
+document.getElementById('depositForm')?.addEventListener('submit', function() {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Yo\'naltirilmoqda...';
+});
+</script>
+{% endblock %}

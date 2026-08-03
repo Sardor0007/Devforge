@@ -1,0 +1,1490 @@
+{% extends 'base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ══ EDITOR SHELL ══ */
+body { overflow: hidden; }
+.editor-shell {
+    display: grid;
+    grid-template-columns: 240px 1fr 280px;
+    grid-template-rows: 48px 1fr 200px;
+    height: calc(100vh - 0px);
+    gap: 0; background: #08090d;
+    font-family: var(--font-mono);
+}
+
+/* ── Top Toolbar ── */
+.editor-toolbar {
+    grid-column: 1 / -1;
+    background: #0d1117;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 0; padding: 0 0.75rem;
+    position: relative; z-index: 100;
+}
+.toolbar-brand {
+    font-family: var(--font-display); font-weight: 700; font-size: 0.9rem;
+    color: var(--accent); margin-right: 1rem; white-space: nowrap;
+}
+.toolbar-title {
+    font-size: 0.85rem; color: var(--text-secondary); margin-right: auto;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+}
+.toolbar-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 0.5rem; }
+.tb-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 500;
+    background: transparent; border: none; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.tb-btn:hover { background: rgba(255,255,255,0.07); color: var(--text-primary); }
+.tb-btn.active { background: rgba(0,245,255,0.12); color: var(--accent); }
+.tb-btn.primary { background: var(--accent-gradient); color: #000; font-weight: 700; }
+.tb-btn.primary:hover { filter: brightness(1.1); }
+.tb-btn.danger:hover { background: rgba(239,68,68,0.15); color: #fca5a5; }
+.tb-mode-group {
+    display: flex; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 2px; gap: 2px;
+}
+.save-indicator { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+.save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+.save-dot.unsaved { background: var(--warning); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Left Panel: Hierarchy + Assets ── */
+.editor-left {
+    background: #0d1117;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.panel-tabs {
+    display: flex; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.panel-tab {
+    flex: 1; padding: 0.5rem; text-align: center; font-size: 0.72rem; font-weight: 600;
+    color: var(--text-muted); cursor: pointer; transition: all 0.2s;
+    border-bottom: 2px solid transparent; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.panel-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(0,245,255,0.04); }
+.panel-content { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.panel-content::-webkit-scrollbar { width: 4px; }
+.panel-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* Hierarchy tree */
+.hierarchy-item {
+    display: flex; align-items: center; gap: 6px; padding: 0.3rem 0.5rem;
+    border-radius: 6px; cursor: pointer; font-size: 0.78rem; color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.hierarchy-item:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.hierarchy-item.selected { background: rgba(0,245,255,0.12); color: var(--accent); }
+.hierarchy-item .item-icon { font-size: 0.85rem; flex-shrink: 0; }
+.hierarchy-item .item-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hierarchy-item .item-del {
+    opacity: 0; font-size: 0.7rem; background: none; border: none;
+    color: var(--danger); cursor: pointer; padding: 2px 4px; border-radius: 3px;
+}
+.hierarchy-item:hover .item-del { opacity: 1; }
+
+/* Scene tabs */
+.scene-tabs-bar {
+    display: flex; gap: 4px; padding: 4px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.06); flex-wrap: wrap;
+}
+.scene-tab-btn {
+    padding: 3px 10px; border-radius: 5px; font-size: 0.72rem; font-weight: 500;
+    background: var(--surface-hover); border: 1px solid var(--border); color: var(--text-muted);
+    cursor: pointer; transition: all 0.2s;
+}
+.scene-tab-btn.active { background: rgba(0,245,255,0.12); color: var(--accent); border-color: var(--accent); }
+.scene-tab-btn:hover { color: var(--text-primary); }
+
+/* Asset items */
+.asset-item {
+    display: flex; align-items: center; gap: 8px; padding: 0.35rem 0.5rem;
+    border-radius: 6px; cursor: pointer; font-size: 0.75rem; color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.asset-item:hover { background: rgba(255,255,255,0.05); }
+.asset-thumb {
+    width: 32px; height: 32px; border-radius: 4px; object-fit: cover;
+    background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0; overflow: hidden;
+}
+.asset-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Panel section header */
+.panel-sec-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.3rem 0.25rem 0.2rem; margin-top: 0.3rem;
+}
+.panel-sec-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+.panel-sec-btn {
+    font-size: 0.7rem; background: none; border: none; color: var(--accent);
+    cursor: pointer; padding: 2px 6px; border-radius: 4px; font-weight: 600;
+}
+.panel-sec-btn:hover { background: rgba(0,245,255,0.1); }
+
+/* ── Center: Canvas Viewport ── */
+.editor-viewport {
+    background: #111318; display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+}
+.viewport-bar {
+    background: #0d1117; border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+    height: 36px; flex-shrink: 0;
+}
+.vp-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.vp-res { font-size: 0.7rem; color: var(--text-muted); margin-left: auto; }
+.canvas-container {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+}
+#gameCanvas {
+    border: 1px solid rgba(0,245,255,0.2);
+    cursor: crosshair;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    image-rendering: pixelated;
+}
+.canvas-overlay-info {
+    position: absolute; bottom: 8px; left: 8px;
+    font-size: 0.65rem; color: rgba(255,255,255,0.3);
+    font-family: var(--font-mono); pointer-events: none;
+}
+.canvas-zoom-controls {
+    position: absolute; bottom: 8px; right: 8px;
+    display: flex; gap: 4px;
+}
+.zoom-btn {
+    width: 26px; height: 26px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(13,17,23,0.8); color: var(--text-secondary); cursor: pointer;
+    font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+}
+.zoom-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Minimap */
+.minimap {
+    position: absolute; top: 8px; right: 8px;
+    width: 100px; height: 70px;
+    background: rgba(13,17,23,0.8); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; overflow: hidden;
+}
+
+/* ── Right Panel: Inspector ── */
+.editor-right {
+    background: #0d1117;
+    border-left: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.inspector-header {
+    padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); display: flex; align-items: center; gap: 6px;
+}
+.inspector-body { flex: 1; overflow-y: auto; padding: 0.5rem; }
+.inspector-body::-webkit-scrollbar { width: 4px; }
+.inspector-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* Inspector fields */
+.insp-section { margin-bottom: 1rem; }
+.insp-section-title {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 0.4rem; padding: 0 0.25rem;
+    display: flex; align-items: center; gap: 4px;
+}
+.insp-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.insp-label {
+    font-size: 0.72rem; color: var(--text-muted); min-width: 70px; flex-shrink: 0;
+}
+.insp-input {
+    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px; padding: 3px 6px; color: var(--text-primary); font-size: 0.78rem;
+    font-family: var(--font-mono); outline: none; width: 100%;
+}
+.insp-input:focus { border-color: var(--accent); background: rgba(0,245,255,0.05); }
+.insp-color { width: 30px; height: 22px; border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; cursor: pointer; padding: 0; }
+.insp-checkbox { width: 14px; height: 14px; accent-color: var(--accent); }
+.insp-select {
+    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px; padding: 3px 6px; color: var(--text-primary); font-size: 0.78rem;
+    outline: none;
+}
+.insp-select option { background: #0d1117; }
+
+/* Add component button */
+.add-component-btn {
+    width: 100%; padding: 0.4rem; border-radius: 6px; font-size: 0.78rem;
+    background: rgba(0,245,255,0.06); border: 1px dashed rgba(0,245,255,0.3);
+    color: var(--accent); cursor: pointer; transition: all 0.2s; margin-top: 0.5rem;
+}
+.add-component-btn:hover { background: rgba(0,245,255,0.12); }
+
+/* No selection state */
+.no-selection {
+    text-align: center; padding: 3rem 1rem; color: var(--text-muted); font-size: 0.8rem;
+}
+
+/* ── Bottom Panel: Script/Timeline ── */
+.editor-bottom {
+    grid-column: 1 / -1;
+    background: #0a0b0f;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column;
+}
+.bottom-tabs {
+    display: flex; border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 0 0.5rem;
+}
+.bottom-tab {
+    padding: 0.35rem 0.85rem; font-size: 0.72rem; font-weight: 600;
+    color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.bottom-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.bottom-content { flex: 1; overflow: hidden; position: relative; }
+
+/* Code Editor */
+#scriptEditor {
+    width: 100%; height: 100%; background: transparent; border: none; outline: none;
+    color: #a6e22e; font-family: var(--font-mono); font-size: 0.82rem;
+    padding: 0.75rem 1rem; resize: none; line-height: 1.6;
+}
+.console-output {
+    height: 100%; overflow-y: auto; padding: 0.5rem 1rem; font-size: 0.78rem;
+    font-family: var(--font-mono); color: var(--text-secondary); line-height: 1.5;
+}
+.console-output::-webkit-scrollbar { width: 4px; }
+.console-output::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+.console-line.error { color: #fca5a5; }
+.console-line.warn  { color: #fcd34d; }
+.console-line.info  { color: var(--accent); }
+.console-line.log   { color: var(--text-secondary); }
+
+/* ── Entity Tool Palette ── */
+.entity-palette {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
+}
+.entity-pal-btn {
+    padding: 0.35rem 0.4rem; border-radius: 5px; font-size: 0.7rem; font-weight: 500;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    color: var(--text-secondary); cursor: pointer; text-align: center; transition: all 0.2s;
+    display: flex; align-items: center; gap: 4px; justify-content: center;
+}
+.entity-pal-btn:hover { background: rgba(0,245,255,0.1); color: var(--accent); border-color: rgba(0,245,255,0.3); }
+
+/* ── Play Mode Overlay ── */
+#playModeOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 9999; display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 1rem;
+}
+#playModeOverlay.show { display: flex; }
+#playCanvas {
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 60px rgba(0,245,255,0.3);
+}
+.play-mode-ui {
+    display: flex; gap: 1rem; align-items: center;
+}
+.play-stop-btn {
+    padding: 0.5rem 1.5rem; background: var(--danger); color: #fff;
+    border: none; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; font-family: var(--font-display);
+}
+
+/* ── Upload Modal ── */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 5000; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+.modal-backdrop.show { display: flex; }
+.modal-box { background: #0d1117; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.75rem; width: 100%; max-width: 440px; }
+.modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; }
+.drop-zone {
+    border: 2px dashed rgba(0,245,255,0.3); border-radius: var(--radius-md);
+    padding: 2.5rem; text-align: center; cursor: pointer; transition: all 0.2s;
+    color: var(--text-muted); font-size: 0.85rem;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(0,245,255,0.05); }
+.drop-zone-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+/* Responsive — hide on mobile */
+@media (max-width: 900px) {
+    .editor-shell { grid-template-columns: 200px 1fr 220px; }
+}
+@media (max-width: 700px) {
+    .editor-shell { grid-template-columns: 1fr; grid-template-rows: 48px 1fr 36px 160px; }
+    .editor-left, .editor-right { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Remove default container margin -->
+<style>
+main.container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+</style>
+
+<div class="editor-shell">
+    <!-- ══ TOP TOOLBAR ══ -->
+    <div class="editor-toolbar">
+        <a href="{% url 'game_engine:dashboard' %}" class="tb-btn" title="Dashboard">◀</a>
+        <span class="toolbar-brand">🎮</span>
+        <span class="toolbar-title" id="projectTitleDisplay">{{ project.title }}</span>
+        <div class="toolbar-sep"></div>
+
+        <!-- Mode buttons -->
+        <div class="tb-mode-group">
+            <button class="tb-btn active" id="modeSelect" onclick="setTool('select')" title="Tanlash (V)">▷ Select</button>
+            <button class="tb-btn" id="modeMove" onclick="setTool('move')" title="Ko'chirish (M)">✥ Move</button>
+            <button class="tb-btn" id="modeAdd" onclick="setTool('add')" title="Qo'shish">＋ Add</button>
+        </div>
+        <div class="toolbar-sep"></div>
+
+        <!-- Grid / Snap -->
+        <button class="tb-btn" id="snapBtn" onclick="toggleSnap()" title="Grid snap">⊞ Snap</button>
+        <button class="tb-btn" id="gridBtn" onclick="toggleGrid()" title="Grid ko'rinishi">⊡ Grid</button>
+        <div class="toolbar-sep"></div>
+
+        <!-- Scene settings -->
+        <button class="tb-btn" onclick="showSceneSettings()" title="Sahna sozlamalari">⚙ Scene</button>
+        <div class="toolbar-sep"></div>
+
+        <!-- Save / Build / Play -->
+        <div class="save-indicator" id="saveIndicator">
+            <span class="save-dot" id="saveDot"></span>
+            <span id="saveText">Saqlangan</span>
+        </div>
+        <button class="tb-btn" onclick="saveProject()" title="Saqlash (Ctrl+S)">💾 Save</button>
+        <button class="tb-btn" onclick="buildAndPublish()" title="Nashr qilish">📦 Build</button>
+        <button class="tb-btn primary" onclick="launchPlay()" title="O'ynatish (F5)">▶ Play</button>
+    </div>
+
+    <!-- ══ LEFT PANEL ══ -->
+    <div class="editor-left">
+        <!-- Scene Tabs -->
+        <div class="scene-tabs-bar" id="sceneTabsBar"></div>
+
+        <!-- Panel Tabs -->
+        <div class="panel-tabs">
+            <div class="panel-tab active" id="tabHierarchy" onclick="switchPanel('hierarchy')">Hierarchy</div>
+            <div class="panel-tab" id="tabAssets" onclick="switchPanel('assets')">Assets</div>
+        </div>
+
+        <!-- Hierarchy Panel -->
+        <div class="panel-content" id="panelHierarchy">
+            <div class="panel-sec-header">
+                <span class="panel-sec-title">Entities</span>
+                <button class="panel-sec-btn" onclick="showAddEntityMenu()">+ Add</button>
+            </div>
+            <div id="entityPalette" class="entity-palette" style="display:none;">
+                <button class="entity-pal-btn" onclick="addEntity('sprite')">🖼️ Sprite</button>
+                <button class="entity-pal-btn" onclick="addEntity('rect')">⬜ Rect</button>
+                <button class="entity-pal-btn" onclick="addEntity('circle')">⬤ Circle</button>
+                <button class="entity-pal-btn" onclick="addEntity('text')">𝐓 Text</button>
+                <button class="entity-pal-btn" onclick="addEntity('player')">🕹️ Player</button>
+                <button class="entity-pal-btn" onclick="addEntity('platform')">▬ Platform</button>
+                <button class="entity-pal-btn" onclick="addEntity('camera')">📷 Camera</button>
+                <button class="entity-pal-btn" onclick="addEntity('tilemap')">🗺️ Tilemap</button>
+            </div>
+            <div id="hierarchyList"></div>
+        </div>
+
+        <!-- Assets Panel -->
+        <div class="panel-content" id="panelAssets" style="display:none;">
+            <div class="panel-sec-header">
+                <span class="panel-sec-title">Assets</span>
+                <button class="panel-sec-btn" onclick="document.getElementById('uploadModal').classList.add('show')">Upload</button>
+            </div>
+            <div id="assetList"></div>
+        </div>
+    </div>
+
+    <!-- ══ CENTER VIEWPORT ══ -->
+    <div class="editor-viewport">
+        <div class="viewport-bar">
+            <span class="vp-label">🖥️ Scene Viewport</span>
+            <button class="tb-btn" onclick="resetCamera()">⌖ Reset</button>
+            <button class="tb-btn" onclick="fitToScreen()">⊞ Fit</button>
+            <span class="vp-res" id="vpRes">800 × 600</span>
+        </div>
+        <div class="canvas-container" id="canvasContainer">
+            <canvas id="gameCanvas"></canvas>
+            <div class="canvas-overlay-info" id="overlayInfo">x: 0, y: 0 | zoom: 100%</div>
+            <div class="canvas-zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">−</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ RIGHT PANEL: INSPECTOR ══ -->
+    <div class="editor-right">
+        <div class="inspector-header">🔍 Inspector</div>
+        <div class="inspector-body" id="inspectorBody">
+            <div class="no-selection">
+                <div style="font-size:2rem;margin-bottom:0.5rem;">👆</div>
+                <p>Entity tanlang yoki canvas ga bosing</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ BOTTOM PANEL ══ -->
+    <div class="editor-bottom">
+        <div class="bottom-tabs">
+            <div class="bottom-tab active" id="btScript" onclick="switchBottom('script')">📝 Script</div>
+            <div class="bottom-tab" id="btConsole" onclick="switchBottom('console')">⌨ Console</div>
+            <div class="bottom-tab" id="btScene" onclick="switchBottom('scene')">⚙ Scene Settings</div>
+        </div>
+        <div class="bottom-content">
+            <!-- Script Editor -->
+            <div id="bottomScript" style="height:100%;">
+                <textarea id="scriptEditor" spellcheck="false" placeholder="// Entity component uchun JavaScript yozing...
+// Mavjud funksiyalar:
+// onStart() {} — o'yin boshlananda
+// onUpdate(dt) {} — har kadrda
+// onCollision(other) {} — to'qnashganda
+// this.x, this.y — pozitsiya
+// this.vx, this.vy — tezlik"></textarea>
+            </div>
+            <!-- Console -->
+            <div id="bottomConsole" style="display:none;height:100%;">
+                <div class="console-output" id="consoleOutput">
+                    <div class="console-line info">[Engine] DevForge Game Engine v1.0 — Tayyor</div>
+                </div>
+            </div>
+            <!-- Scene Settings -->
+            <div id="bottomScene" style="display:none;padding:0.75rem 1rem;height:100%;overflow-y:auto;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;">
+                    <div>
+                        <label class="insp-label">Kenglik (px)</label>
+                        <input class="insp-input" id="sceneWidth" type="number" value="800" oninput="updateSceneSetting('width',this.value)">
+                    </div>
+                    <div>
+                        <label class="insp-label">Balandlik (px)</label>
+                        <input class="insp-input" id="sceneHeight" type="number" value="600" oninput="updateSceneSetting('height',this.value)">
+                    </div>
+                    <div>
+                        <label class="insp-label">FPS</label>
+                        <input class="insp-input" id="sceneFps" type="number" value="60" oninput="updateSceneSetting('fps',this.value)">
+                    </div>
+                    <div>
+                        <label class="insp-label">Gravitatsiya</label>
+                        <input class="insp-input" id="sceneGravity" type="number" step="0.1" value="0.5" oninput="updateSceneSetting('gravity',this.value)">
+                    </div>
+                    <div>
+                        <label class="insp-label">Fon rangi</label>
+                        <input type="color" class="insp-color" id="sceneBg" value="#1a1a2e" style="width:60px;height:28px;" oninput="updateSceneSetting('backgroundColor',this.value)">
+                    </div>
+                    <div>
+                        <label class="insp-label">Ism</label>
+                        <input class="insp-input" id="sceneNameInput" type="text" placeholder="Sahna nomi">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ PLAY MODE OVERLAY ══ -->
+<div id="playModeOverlay">
+    <div class="play-mode-ui">
+        <span style="color:var(--accent);font-weight:700;">▶ PLAY MODE</span>
+        <button class="play-stop-btn" onclick="stopPlay()">⏹ Stop</button>
+    </div>
+    <canvas id="playCanvas"></canvas>
+    <div style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-family:var(--font-mono);">ESC — To'xtatish</div>
+</div>
+
+<!-- ══ UPLOAD MODAL ══ -->
+<div class="modal-backdrop" id="uploadModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('uploadModal').classList.remove('show')"
+                style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">✕</button>
+        <div class="modal-title">📁 Asset Yuklash</div>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('assetFileInput').click()">
+            <div class="drop-zone-icon">📂</div>
+            <p>Faylni shu yerga tashlang yoki bosing</p>
+            <p style="font-size:0.75rem;margin-top:0.3rem;">PNG, JPG, GIF, MP3, WAV, JSON</p>
+        </div>
+        <input type="file" id="assetFileInput" style="display:none;" multiple accept="image/*,audio/*,.json,.js,.ttf" onchange="handleFileUpload(this.files)">
+        <div id="uploadProgress" style="margin-top:1rem;display:none;">
+            <div style="height:4px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+                <div id="uploadBar" style="height:100%;background:var(--accent);width:0;transition:width 0.3s;border-radius:2px;"></div>
+            </div>
+            <p id="uploadStatus" style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem;"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Build Modal -->
+<div class="modal-backdrop" id="buildModal">
+    <div class="modal-box">
+        <div class="modal-title">📦 O'yinni Nashr Qilish</div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div>
+                <label class="insp-label">Versiya</label>
+                <input class="insp-input" id="buildVersion" value="1.0.0" style="width:100%;">
+            </div>
+            <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;cursor:pointer;">
+                <input type="checkbox" id="buildPublish" class="insp-checkbox"> Ommaga ochiq qil (Public)
+            </label>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('buildModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary btn-sm" onclick="confirmBuild()">📦 Nashr Et</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DATA from Django
+// ═══════════════════════════════════════════════════════════════
+const PROJECT_ID      = {{ project.pk }};
+const API_BASE        = '/game-engine/api';
+const SCENES_INIT     = {{ scenes_json|safe }};
+const ASSETS_INIT     = {{ assets_json|safe }};
+const SCRIPTS_INIT    = {{ scripts_json|safe }};
+const INITIAL_SCENE_NAME = "{{ main_scene.name|default:'Main'|escapejs }}";
+let   sceneData       = {{ scene_data_json|safe }};
+let   currentSceneId  = {% if main_scene %}{{ main_scene.pk }}{% else %}null{% endif %};
+
+// ═══════════════════════════════════════════════════════════════
+//  ENGINE STATE
+// ═══════════════════════════════════════════════════════════════
+let entities    = [];
+let scenes      = [...SCENES_INIT];
+let assets      = [...ASSETS_INIT];
+let selectedId  = null;
+let tool        = 'select';   // select | move | add
+let snapToGrid  = false;
+let showGrid    = true;
+let gridSize    = 32;
+let zoom        = 1;
+let camX = 0, camY = 0;
+let isDragging  = false;
+let dragOffX = 0, dragOffY = 0;
+let isPanning   = false;
+let panStartX = 0, panStartY = 0, panStartCamX = 0, panStartCamY = 0;
+let unsaved     = false;
+let entityCount = 0;
+let animFrame   = null;
+let sceneSettings = { gravity: 0.5, width: 800, height: 600, backgroundColor: '#1a1a2e', fps: 60 };
+let assetImages = {};   // name -> HTMLImageElement
+let activeScript = null;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+function init() {
+    // Load scene data
+    if (sceneData && sceneData.settings) {
+        Object.assign(sceneSettings, sceneData.settings);
+    }
+    if (sceneData && Array.isArray(sceneData.entities)) {
+        entities = sceneData.entities.map(e => ({ ...e }));
+        entityCount = entities.length;
+    }
+
+    // Apply scene settings to UI
+    document.getElementById('sceneWidth').value   = sceneSettings.width;
+    document.getElementById('sceneHeight').value  = sceneSettings.height;
+    document.getElementById('sceneFps').value     = sceneSettings.fps;
+    document.getElementById('sceneGravity').value = sceneSettings.gravity;
+    document.getElementById('sceneBg').value      = sceneSettings.backgroundColor || '#1a1a2e';
+    document.getElementById('vpRes').textContent  = `${sceneSettings.width} × ${sceneSettings.height}`;
+
+    canvas.width  = sceneSettings.width;
+    canvas.height = sceneSettings.height;
+
+    renderSceneTabs();
+    renderHierarchy();
+    renderAssets();
+    startEditorLoop();
+    loadAssetImages();
+    setupCanvasEvents();
+
+    consoleLog('info', '[Engine] DevForge Game Engine v1.0 — Tayyor');
+    consoleLog('info', '[Scene] "' + INITIAL_SCENE_NAME + '" yuklandi — ' + entities.length + ' ta entity');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDERING LOOP
+// ═══════════════════════════════════════════════════════════════
+function startEditorLoop() {
+    if (animFrame) cancelAnimationFrame(animFrame);
+    function loop() {
+        renderScene();
+        animFrame = requestAnimationFrame(loop);
+    }
+    loop();
+}
+
+function renderScene() {
+    ctx.save();
+    // Background
+    ctx.fillStyle = sceneSettings.backgroundColor || '#1a1a2e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Camera transform
+    ctx.translate(-camX * zoom, -camY * zoom);
+    ctx.scale(zoom, zoom);
+
+    // Grid
+    if (showGrid) drawGrid();
+
+    // Entities
+    entities.forEach(e => drawEntity(e));
+
+    ctx.restore();
+
+    // Selection handles (screen space)
+    if (selectedId !== null) {
+        const e = entities.find(en => en.id === selectedId);
+        if (e) drawSelectionHandles(e);
+    }
+}
+
+function drawGrid() {
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth   = 0.5 / zoom;
+    const w = sceneSettings.width, h = sceneSettings.height;
+    for (let x = 0; x <= w; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    // Main axes
+    ctx.strokeStyle = 'rgba(0,245,255,0.12)'; ctx.lineWidth = 1 / zoom;
+    ctx.beginPath(); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+}
+
+function drawEntity(e) {
+    ctx.save();
+    ctx.globalAlpha = e.opacity !== undefined ? e.opacity : 1;
+
+    const cx = (e.x || 0) + (e.width || 0) / 2;
+    const cy = (e.y || 0) + (e.height || 0) / 2;
+    ctx.translate(cx, cy);
+    ctx.rotate(((e.rotation || 0) * Math.PI) / 180);
+    ctx.translate(-cx, -cy);
+
+    switch (e.type) {
+        case 'rect':
+        case 'platform':
+            ctx.fillStyle = e.color || '#4ade80';
+            ctx.fillRect(e.x || 0, e.y || 0, e.width || 64, e.height || 32);
+            if (e.stroke) {
+                ctx.strokeStyle = e.strokeColor || 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = e.strokeWidth || 1;
+                ctx.strokeRect(e.x || 0, e.y || 0, e.width || 64, e.height || 32);
+            }
+            break;
+        case 'circle':
+            ctx.beginPath();
+            ctx.arc((e.x || 0) + (e.radius || 24), (e.y || 0) + (e.radius || 24), e.radius || 24, 0, Math.PI * 2);
+            ctx.fillStyle = e.color || '#f472b6';
+            ctx.fill();
+            break;
+        case 'text':
+            ctx.fillStyle = e.color || '#ffffff';
+            ctx.font = `${e.fontSize || 18}px ${e.fontFamily || 'Outfit, sans-serif'}`;
+            ctx.fillText(e.text || 'Text', e.x || 0, (e.y || 0) + (e.fontSize || 18));
+            break;
+        case 'sprite':
+        case 'player':
+            const img = assetImages[e.assetName];
+            if (img) {
+                ctx.drawImage(img, e.x || 0, e.y || 0, e.width || 48, e.height || 48);
+            } else {
+                // Placeholder
+                ctx.fillStyle = e.type === 'player' ? '#00f5ff' : '#8b5cf6';
+                ctx.fillRect(e.x || 0, e.y || 0, e.width || 48, e.height || 48);
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.font = '10px monospace';
+                ctx.fillText(e.type === 'player' ? '🕹️' : '🖼️', (e.x || 0) + 2, (e.y || 0) + 16);
+            }
+            break;
+        case 'camera':
+            ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.5;
+            ctx.strokeRect(e.x || 0, e.y || 0, e.width || 100, e.height || 80);
+            ctx.fillStyle = 'rgba(251,191,36,0.1)';
+            ctx.fillRect(e.x || 0, e.y || 0, e.width || 100, e.height || 80);
+            ctx.fillStyle = '#fbbf24'; ctx.font = '10px sans-serif';
+            ctx.fillText('📷', (e.x || 0) + 4, (e.y || 0) + 16);
+            break;
+        case 'tilemap':
+            ctx.fillStyle = 'rgba(139,92,246,0.2)'; ctx.strokeStyle = '#8b5cf6'; ctx.lineWidth = 1;
+            ctx.fillRect(e.x || 0, e.y || 0, e.width || 200, e.height || 200);
+            ctx.strokeRect(e.x || 0, e.y || 0, e.width || 200, e.height || 200);
+            ctx.fillStyle = '#8b5cf6'; ctx.font = '12px sans-serif';
+            ctx.fillText('🗺️ Tilemap', (e.x || 0) + 8, (e.y || 0) + 20);
+            break;
+        default:
+            ctx.fillStyle = e.color || '#64748b';
+            ctx.fillRect(e.x || 0, e.y || 0, e.width || 48, e.height || 48);
+    }
+    ctx.restore();
+
+    // Name label
+    if (e.showName !== false) {
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '9px monospace';
+        ctx.fillText(e.name || e.type, (e.x || 0), Math.max(0, (e.y || 0) - 3));
+    }
+}
+
+function drawSelectionHandles(e) {
+    const w = e.width  || (e.type === 'circle' ? e.radius * 2 : 48) || 48;
+    const h = e.height || (e.type === 'circle' ? e.radius * 2 : 48) || 48;
+    const sx = ((e.x || 0) - camX) * zoom;
+    const sy = ((e.y || 0) - camY) * zoom;
+    const sw = w * zoom, sh = h * zoom;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,245,255,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(sx, sy, sw, sh);
+    ctx.setLineDash([]);
+
+    // Corner handles
+    const hs = 6;
+    [[sx,sy],[sx+sw,sy],[sx,sy+sh],[sx+sw,sy+sh],[sx+sw/2,sy],[sx+sw/2,sy+sh],[sx,sy+sh/2],[sx+sw,sy+sh/2]].forEach(([hx,hy]) => {
+        ctx.fillStyle = '#00f5ff';
+        ctx.fillRect(hx - hs/2, hy - hs/2, hs, hs);
+    });
+    ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CANVAS EVENTS
+// ═══════════════════════════════════════════════════════════════
+function setupCanvasEvents() {
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseup',   onMouseUp);
+    canvas.addEventListener('wheel',     onWheel, { passive: false });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function canvasToWorld(cx, cy) {
+    return { x: cx / zoom + camX, y: cy / zoom + camY };
+}
+
+function onMouseDown(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const wx = mx / zoom + camX;
+    const wy = my / zoom + camY;
+
+    if (e.button === 1 || (e.button === 0 && e.altKey)) { // Middle click or Alt+click = pan
+        isPanning = true;
+        panStartX = e.clientX; panStartY = e.clientY;
+        panStartCamX = camX; panStartCamY = camY;
+        canvas.style.cursor = 'grabbing';
+        return;
+    }
+
+    if (tool === 'select' || tool === 'move') {
+        // Pick entity (reverse order for z-index)
+        let picked = null;
+        for (let i = entities.length - 1; i >= 0; i--) {
+            const ent = entities[i];
+            const ew = ent.width  || (ent.type === 'circle' ? ent.radius * 2 : 48) || 48;
+            const eh = ent.height || (ent.type === 'circle' ? ent.radius * 2 : 48) || 48;
+            if (wx >= (ent.x||0) && wx <= (ent.x||0) + ew && wy >= (ent.y||0) && wy <= (ent.y||0) + eh) {
+                picked = ent; break;
+            }
+        }
+        if (picked) {
+            selectEntity(picked.id);
+            isDragging = true;
+            dragOffX = wx - (picked.x || 0);
+            dragOffY = wy - (picked.y || 0);
+        } else {
+            selectEntity(null);
+        }
+    }
+}
+
+function onMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const wx = mx / zoom + camX;
+    const wy = my / zoom + camY;
+
+    document.getElementById('overlayInfo').textContent =
+        `x: ${Math.round(wx)}, y: ${Math.round(wy)} | zoom: ${Math.round(zoom * 100)}%`;
+
+    if (isPanning) {
+        camX = panStartCamX - (e.clientX - panStartX) / zoom;
+        camY = panStartCamY - (e.clientY - panStartY) / zoom;
+        return;
+    }
+    if (isDragging && selectedId !== null) {
+        const ent = entities.find(en => en.id === selectedId);
+        if (ent) {
+            let nx = wx - dragOffX;
+            let ny = wy - dragOffY;
+            if (snapToGrid) { nx = Math.round(nx / gridSize) * gridSize; ny = Math.round(ny / gridSize) * gridSize; }
+            ent.x = Math.round(nx); ent.y = Math.round(ny);
+            updateInspector(ent);
+            markUnsaved();
+        }
+    }
+}
+
+function onMouseUp(e) {
+    isDragging = false; isPanning = false;
+    canvas.style.cursor = tool === 'move' ? 'move' : 'crosshair';
+}
+
+function onWheel(e) {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.1 : 0.9;
+    zoom = Math.max(0.1, Math.min(8, zoom * factor));
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ENTITY MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+const ENTITY_DEFAULTS = {
+    rect:     { width: 80, height: 48, color: '#4ade80', rotation: 0, opacity: 1 },
+    circle:   { radius: 30, color: '#f472b6', rotation: 0, opacity: 1 },
+    text:     { text: 'Hello!', fontSize: 20, color: '#ffffff', fontFamily: 'sans-serif' },
+    sprite:   { width: 64, height: 64, assetName: '', rotation: 0, opacity: 1 },
+    player:   { width: 48, height: 64, color: '#00f5ff', speed: 200, jumpForce: -600, hasPhysics: true, rotation: 0, opacity: 1 },
+    platform: { width: 200, height: 24, color: '#6366f1', isSolid: true, rotation: 0 },
+    camera:   { width: 800, height: 600, followTarget: '' },
+    tilemap:  { width: 320, height: 320, tileSize: 32 },
+};
+
+function addEntity(type) {
+    entityCount++;
+    const id = Date.now();
+    const cx = camX + sceneSettings.width  / 2;
+    const cy = camY + sceneSettings.height / 2;
+    const ent = {
+        id, type, name: `${type}_${entityCount}`,
+        x: Math.round(cx - 32), y: Math.round(cy - 24),
+        components: ['Transform'],
+        ...(ENTITY_DEFAULTS[type] || {})
+    };
+    if (type === 'player')   ent.components.push('Physics', 'PlayerController');
+    if (type === 'platform') ent.components.push('Collider');
+    if (type === 'sprite')   ent.components.push('SpriteRenderer');
+    if (type === 'camera')   ent.components.push('CameraFollow');
+
+    entities.push(ent);
+    selectEntity(id);
+    document.getElementById('entityPalette').style.display = 'none';
+    renderHierarchy();
+    markUnsaved();
+    consoleLog('log', `[Editor] Entity qo'shildi: "${ent.name}"`);
+}
+
+function removeEntity(id) {
+    entities = entities.filter(e => e.id !== id);
+    if (selectedId === id) selectEntity(null);
+    renderHierarchy();
+    markUnsaved();
+}
+
+function selectEntity(id) {
+    selectedId = id;
+    renderHierarchy();
+    if (id === null) {
+        document.getElementById('inspectorBody').innerHTML =
+            '<div class="no-selection"><div style="font-size:2rem;margin-bottom:0.5rem;">👆</div><p>Entity tanlang</p></div>';
+        return;
+    }
+    const e = entities.find(en => en.id === id);
+    if (e) updateInspector(e);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INSPECTOR
+// ═══════════════════════════════════════════════════════════════
+function updateInspector(e) {
+    const comp_icons = { Transform: '📍', Physics: '⚙️', PlayerController: '🕹️', Collider: '🔲', SpriteRenderer: '🖼️', CameraFollow: '📷' };
+
+    let html = `
+    <div class="insp-section">
+        <div class="insp-section-title">🏷️ Entity</div>
+        <div class="insp-row">
+            <span class="insp-label">Nomi</span>
+            <input class="insp-input" value="${e.name}" oninput="updateEntityProp(${e.id},'name',this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Tur</span>
+            <span style="font-size:0.78rem;color:var(--accent)">${e.type}</span>
+        </div>
+    </div>
+
+    <div class="insp-section">
+        <div class="insp-section-title">📍 Transform</div>
+        <div class="insp-row">
+            <span class="insp-label">X</span>
+            <input class="insp-input" type="number" value="${Math.round(e.x||0)}" oninput="updateEntityProp(${e.id},'x',+this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Y</span>
+            <input class="insp-input" type="number" value="${Math.round(e.y||0)}" oninput="updateEntityProp(${e.id},'y',+this.value)">
+        </div>`;
+
+    if (e.type !== 'circle') html += `
+        <div class="insp-row">
+            <span class="insp-label">Kenglik</span>
+            <input class="insp-input" type="number" value="${e.width||64}" oninput="updateEntityProp(${e.id},'width',+this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Balandlik</span>
+            <input class="insp-input" type="number" value="${e.height||64}" oninput="updateEntityProp(${e.id},'height',+this.value)">
+        </div>`;
+
+    if (e.type === 'circle') html += `
+        <div class="insp-row">
+            <span class="insp-label">Radius</span>
+            <input class="insp-input" type="number" value="${e.radius||30}" oninput="updateEntityProp(${e.id},'radius',+this.value)">
+        </div>`;
+
+    html += `
+        <div class="insp-row">
+            <span class="insp-label">Rotation</span>
+            <input class="insp-input" type="number" value="${e.rotation||0}" oninput="updateEntityProp(${e.id},'rotation',+this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Opacity</span>
+            <input class="insp-input" type="range" min="0" max="1" step="0.05" value="${e.opacity!==undefined?e.opacity:1}" oninput="updateEntityProp(${e.id},'opacity',+this.value)" style="padding:4px 0;">
+        </div>
+    </div>`;
+
+    // Appearance
+    if (['rect','circle','platform','player'].includes(e.type)) {
+        html += `
+    <div class="insp-section">
+        <div class="insp-section-title">🎨 Appearance</div>
+        <div class="insp-row">
+            <span class="insp-label">Rang</span>
+            <input type="color" class="insp-color" value="${e.color||'#4ade80'}" oninput="updateEntityProp(${e.id},'color',this.value)">
+        </div>
+    </div>`;
+    }
+    if (e.type === 'text') {
+        html += `
+    <div class="insp-section">
+        <div class="insp-section-title">🔤 Text</div>
+        <div class="insp-row">
+            <span class="insp-label">Matn</span>
+            <input class="insp-input" value="${e.text||''}" oninput="updateEntityProp(${e.id},'text',this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Shrift</span>
+            <input class="insp-input" type="number" value="${e.fontSize||18}" oninput="updateEntityProp(${e.id},'fontSize',+this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Rang</span>
+            <input type="color" class="insp-color" value="${e.color||'#ffffff'}" oninput="updateEntityProp(${e.id},'color',this.value)">
+        </div>
+    </div>`;
+    }
+    if (e.type === 'sprite' || e.type === 'player') {
+        const assetOptions = assets.filter(a => a.type === 'sprite')
+            .map(a => `<option value="${a.name}" ${e.assetName===a.name?'selected':''}>${a.name}</option>`).join('');
+        html += `
+    <div class="insp-section">
+        <div class="insp-section-title">🖼️ Sprite</div>
+        <div class="insp-row">
+            <span class="insp-label">Asset</span>
+            <select class="insp-select" onchange="updateEntityProp(${e.id},'assetName',this.value)">
+                <option value="">— Tanlang —</option>${assetOptions}
+            </select>
+        </div>
+    </div>`;
+    }
+    if (e.type === 'player') {
+        html += `
+    <div class="insp-section">
+        <div class="insp-section-title">🕹️ Player Controller</div>
+        <div class="insp-row">
+            <span class="insp-label">Tezlik</span>
+            <input class="insp-input" type="number" value="${e.speed||200}" oninput="updateEntityProp(${e.id},'speed',+this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Sakrash</span>
+            <input class="insp-input" type="number" value="${e.jumpForce||-600}" oninput="updateEntityProp(${e.id},'jumpForce',+this.value)">
+        </div>
+        <div class="insp-row">
+            <span class="insp-label">Fizika</span>
+            <input type="checkbox" class="insp-checkbox" ${e.hasPhysics?'checked':''} onchange="updateEntityProp(${e.id},'hasPhysics',this.checked)">
+        </div>
+    </div>`;
+    }
+
+    // Components list
+    if (e.components && e.components.length) {
+        html += `
+    <div class="insp-section">
+        <div class="insp-section-title">⚙️ Components</div>
+        ${e.components.map(c => `<div class="insp-row"><span style="font-size:0.75rem;color:var(--text-muted);">${comp_icons[c]||'▪'} ${c}</span></div>`).join('')}
+    </div>`;
+    }
+
+    html += `<button class="add-component-btn" onclick="addComponent(${e.id})">+ Component Qo'shish</button>`;
+    html += `<button class="add-component-btn" style="margin-top:4px;border-color:rgba(239,68,68,0.3);color:#fca5a5;" onclick="removeEntity(${e.id})">🗑 Entity'ni O'chirish</button>`;
+
+    document.getElementById('inspectorBody').innerHTML = html;
+}
+
+function updateEntityProp(id, prop, value) {
+    const e = entities.find(en => en.id === id);
+    if (!e) return;
+    e[prop] = value;
+    markUnsaved();
+}
+
+function addComponent(id) {
+    const comps = ['Physics','Collider','SpriteRenderer','AudioSource','ParticleEmitter','Animator'];
+    const choice = prompt('Component tanlang:\n' + comps.map((c,i) => `${i+1}. ${c}`).join('\n'));
+    if (!choice) return;
+    const idx = parseInt(choice) - 1;
+    if (idx >= 0 && idx < comps.length) {
+        const e = entities.find(en => en.id === id);
+        if (e && !e.components.includes(comps[idx])) {
+            e.components.push(comps[idx]);
+            updateInspector(e);
+            markUnsaved();
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HIERARCHY
+// ═══════════════════════════════════════════════════════════════
+const ENTITY_ICONS = {
+    rect:'⬜',circle:'⬤',text:'𝐓',sprite:'🖼️',player:'🕹️',platform:'▬',camera:'📷',tilemap:'🗺️'
+};
+
+function renderHierarchy() {
+    const list = document.getElementById('hierarchyList');
+    if (!entities.length) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:1.5rem 0.5rem;">Entity yo\'q<br><small>+ Add tugmasini bosing</small></div>';
+        return;
+    }
+    list.innerHTML = entities.map(e => `
+        <div class="hierarchy-item ${selectedId===e.id?'selected':''}" onclick="selectEntity(${e.id})">
+            <span class="item-icon">${ENTITY_ICONS[e.type]||'▪'}</span>
+            <span class="item-name">${e.name||e.type}</span>
+            <button class="item-del" onclick="event.stopPropagation();removeEntity(${e.id})">✕</button>
+        </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ASSETS
+// ═══════════════════════════════════════════════════════════════
+function renderAssets() {
+    const list = document.getElementById('assetList');
+    if (!assets.length) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.75rem;padding:1.5rem 0.5rem;">Asset yo\'q<br><small>Upload tugmasini bosing</small></div>';
+        return;
+    }
+    const groups = {};
+    assets.forEach(a => { if (!groups[a.type]) groups[a.type] = []; groups[a.type].push(a); });
+
+    list.innerHTML = Object.entries(groups).map(([type, items]) => `
+        <div class="panel-sec-header"><span class="panel-sec-title">${type}</span></div>
+        ${items.map(a => `
+        <div class="asset-item" draggable="true" title="${a.name}" ondragstart="dragAsset(event,'${a.name}','${a.type}')">
+            <div class="asset-thumb">${a.type === 'sprite' && a.url ? `<img src="${a.url}" loading="lazy">` : assetTypeIcon(a.type)}</div>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</span>
+        </div>`).join('')}
+    `).join('');
+}
+
+function assetTypeIcon(t) {
+    return {sprite:'🖼️',audio:'🎵',tilemap:'🗺️',font:'𝐓',script:'📝',other:'📁'}[t]||'📁';
+}
+
+function loadAssetImages() {
+    assets.filter(a => a.type === 'sprite' && a.url).forEach(a => {
+        const img = new Image();
+        img.src = a.url;
+        img.onload = () => { assetImages[a.name] = img; };
+    });
+}
+
+function dragAsset(e, name, type) {
+    e.dataTransfer.setData('assetName', name);
+    e.dataTransfer.setData('assetType', type);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SCENE TABS
+// ═══════════════════════════════════════════════════════════════
+function renderSceneTabs() {
+    const bar = document.getElementById('sceneTabsBar');
+    bar.innerHTML = scenes.map(s => `
+        <button class="scene-tab-btn ${s.id === currentSceneId ? 'active' : ''}" onclick="switchScene(${s.id})">${s.name}</button>
+    `).join('') + `<button class="scene-tab-btn" onclick="createScene()" title="Yangi sahna">+</button>`;
+}
+
+async function switchScene(id) {
+    await saveScene();
+    currentSceneId = id;
+    const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/`);
+    const data = await res.json();
+    const sc   = data.scenes.find(s => s.id === id);
+    if (sc) {
+        sceneData = sc.scene_data;
+        if (sceneData.entities) entities = sceneData.entities.map(e => ({ ...e }));
+        if (sceneData.settings) Object.assign(sceneSettings, sceneData.settings);
+        selectEntity(null);
+        renderHierarchy();
+        renderSceneTabs();
+        consoleLog('info', `[Scene] "${sc.name}" yuklandi`);
+    }
+}
+
+async function createScene() {
+    const name = prompt('Yangi sahna nomi:');
+    if (!name) return;
+    const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/create-scene/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    scenes.push({ id: data.id, name: data.name });
+    renderSceneTabs();
+    consoleLog('info', `[Scene] "${data.name}" yaratildi`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SAVE / BUILD
+// ═══════════════════════════════════════════════════════════════
+async function saveScene() {
+    const payload = {
+        scene_id:   currentSceneId,
+        scene_data: { entities, settings: sceneSettings }
+    };
+    const res = await fetch(`${API_BASE}/projects/${PROJECT_ID}/save-scene/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify(payload)
+    });
+    return res.ok;
+}
+
+async function saveProject() {
+    const ok = await saveScene();
+    if (ok) { markSaved(); consoleLog('info', '[Save] Loyiha saqlandi ✓'); showToast('💾 Saqlandi', 'success'); }
+    else { showToast('Saqlashda xato', 'error'); }
+}
+
+function buildAndPublish() {
+    document.getElementById('buildModal').classList.add('show');
+}
+async function confirmBuild() {
+    await saveProject();
+    const version = document.getElementById('buildVersion').value;
+    const publish = document.getElementById('buildPublish').checked;
+    const res = await fetch(`${API_BASE}/projects/${PROJECT_ID}/build/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ version, publish })
+    });
+    const data = await res.json();
+    document.getElementById('buildModal').classList.remove('show');
+    if (data.ok) {
+        showToast(`📦 v${data.version} nashr qilindi!`, 'success');
+        consoleLog('info', `[Build] v${data.version} muvaffaqiyatli yaratildi`);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PLAY MODE
+// ═══════════════════════════════════════════════════════════════
+let playEngine = null;
+
+function launchPlay() {
+    document.getElementById('playModeOverlay').classList.add('show');
+    const pc = document.getElementById('playCanvas');
+    pc.width  = sceneSettings.width;
+    pc.height = sceneSettings.height;
+    const pctx = pc.getContext('2d');
+
+    // Clone entities for simulation
+    let simEntities = JSON.parse(JSON.stringify(entities));
+    const gravity   = sceneSettings.gravity * 60;
+    const fps       = sceneSettings.fps || 60;
+    let  lastTime   = performance.now();
+
+    // Load images for play canvas
+    const playImgs = {};
+    assets.filter(a => a.type === 'sprite' && a.url).forEach(a => {
+        const img = new Image(); img.src = a.url;
+        playImgs[a.name] = img;
+    });
+
+    const keys = {};
+    const keyH = e => { keys[e.code] = (e.type === 'keydown'); if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); };
+    document.addEventListener('keydown', keyH);
+    document.addEventListener('keyup',  keyH);
+
+    simEntities.forEach(e => { if (e.hasPhysics) { e.vx = 0; e.vy = 0; e.onGround = false; } });
+
+    function loop(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+
+        // Physics
+        const platforms = simEntities.filter(e => e.type === 'platform' && e.isSolid);
+        simEntities.forEach(e => {
+            if (!e.hasPhysics) return;
+            // Player input
+            if (e.type === 'player') {
+                const spd = e.speed || 200;
+                if (keys['ArrowLeft']  || keys['KeyA']) e.vx = -spd;
+                else if (keys['ArrowRight'] || keys['KeyD']) e.vx = spd;
+                else e.vx = 0;
+                if ((keys['ArrowUp'] || keys['KeyW'] || keys['Space']) && e.onGround) {
+                    e.vy = e.jumpForce || -600;
+                    e.onGround = false;
+                }
+            }
+            e.vy += gravity * dt;
+            e.x  += e.vx * dt;
+            e.y  += e.vy * dt;
+            e.onGround = false;
+
+            // Platform collision (AABB)
+            const ew = e.width || 48, eh = e.height || 64;
+            platforms.forEach(p => {
+                const pw = p.width || 200, ph = p.height || 24;
+                if (e.x + ew > p.x && e.x < p.x + pw && e.y + eh > p.y && e.y + eh < p.y + ph + 20 && e.vy >= 0) {
+                    e.y = p.y - eh; e.vy = 0; e.onGround = true;
+                }
+            });
+            // Floor
+            if (e.y + eh > sceneSettings.height) {
+                e.y = sceneSettings.height - eh; e.vy = 0; e.onGround = true;
+            }
+            if (e.y < 0) { e.y = 0; e.vy = 0; }
+            if (e.x < 0) e.x = 0;
+            if (e.x + ew > sceneSettings.width) e.x = sceneSettings.width - ew;
+        });
+
+        // Render
+        pctx.fillStyle = sceneSettings.backgroundColor || '#1a1a2e';
+        pctx.fillRect(0, 0, pc.width, pc.height);
+        simEntities.forEach(e => drawEntityOnCtx(pctx, e, playImgs));
+        playEngine = requestAnimationFrame(loop);
+    }
+    playEngine = requestAnimationFrame(loop);
+    document.addEventListener('keydown', escHandler);
+
+    // Record play
+    fetch(`${API_BASE}/projects/${PROJECT_ID}/play/`, {
+        method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+}
+
+function escHandler(e) { if (e.key === 'Escape') stopPlay(); }
+
+function stopPlay() {
+    if (playEngine) cancelAnimationFrame(playEngine); playEngine = null;
+    document.getElementById('playModeOverlay').classList.remove('show');
+    document.removeEventListener('keydown', escHandler);
+}
+
+function drawEntityOnCtx(c, e, imgs) {
+    c.save();
+    c.globalAlpha = e.opacity !== undefined ? e.opacity : 1;
+    switch (e.type) {
+        case 'rect': case 'platform':
+            c.fillStyle = e.color || '#4ade80';
+            c.fillRect(e.x||0, e.y||0, e.width||64, e.height||32);
+            break;
+        case 'circle':
+            c.beginPath(); c.arc((e.x||0)+(e.radius||24),(e.y||0)+(e.radius||24),e.radius||24,0,Math.PI*2);
+            c.fillStyle = e.color || '#f472b6'; c.fill(); break;
+        case 'text':
+            c.fillStyle = e.color||'#fff'; c.font = `${e.fontSize||18}px sans-serif`;
+            c.fillText(e.text||'', e.x||0, (e.y||0)+(e.fontSize||18)); break;
+        case 'sprite': case 'player':
+            const img = imgs[e.assetName];
+            if (img && img.complete) c.drawImage(img, e.x||0, e.y||0, e.width||48, e.height||48);
+            else { c.fillStyle = e.type==='player'?'#00f5ff':'#8b5cf6'; c.fillRect(e.x||0,e.y||0,e.width||48,e.height||48); }
+            break;
+    }
+    c.restore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ASSET UPLOAD
+// ═══════════════════════════════════════════════════════════════
+async function handleFileUpload(files) {
+    const progress = document.getElementById('uploadProgress');
+    const bar      = document.getElementById('uploadBar');
+    const status   = document.getElementById('uploadStatus');
+    progress.style.display = 'block';
+
+    for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        bar.style.width = `${((i + 1) / files.length) * 100}%`;
+        status.textContent = `Yuklanmoqda: ${f.name}`;
+
+        const fd = new FormData();
+        fd.append('file', f);
+        fd.append('name', f.name.replace(/\.[^.]+$/, ''));
+
+        const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/upload-asset/`, {
+            method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+        });
+        const data = await res.json();
+        if (data.id) {
+            assets.push({ id: data.id, name: data.name, type: data.asset_type, url: data.file_url });
+            if (data.asset_type === 'sprite') {
+                const img = new Image(); img.src = data.file_url;
+                img.onload = () => { assetImages[data.name] = img; };
+            }
+            consoleLog('info', `[Assets] "${data.name}" yuklandi`);
+        }
+    }
+    status.textContent = 'Yuklash tugadi ✓';
+    setTimeout(() => { progress.style.display = 'none'; document.getElementById('uploadModal').classList.remove('show'); }, 1500);
+    renderAssets();
+}
+
+// Drop zone
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop',      e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFileUpload(e.dataTransfer.files); });
+
+// ═══════════════════════════════════════════════════════════════
+//  TOOL CONTROLS
+// ═══════════════════════════════════════════════════════════════
+function setTool(t) {
+    tool = t;
+    ['select','move','add'].forEach(n => document.getElementById('mode'+n.charAt(0).toUpperCase()+n.slice(1)).classList.toggle('active', n === t));
+    canvas.style.cursor = t === 'move' ? 'move' : 'crosshair';
+    if (t !== 'add') document.getElementById('entityPalette').style.display = 'none';
+}
+function showAddEntityMenu() {
+    const pal = document.getElementById('entityPalette');
+    pal.style.display = pal.style.display === 'grid' ? 'none' : 'grid';
+}
+function toggleSnap() {
+    snapToGrid = !snapToGrid;
+    document.getElementById('snapBtn').classList.toggle('active', snapToGrid);
+}
+function toggleGrid() {
+    showGrid = !showGrid;
+    document.getElementById('gridBtn').classList.toggle('active', !showGrid);
+}
+function zoomIn()  { zoom = Math.min(8, zoom * 1.2); }
+function zoomOut() { zoom = Math.max(0.1, zoom / 1.2); }
+function resetCamera() { camX = 0; camY = 0; zoom = 1; }
+function fitToScreen() {
+    const cont = document.getElementById('canvasContainer');
+    const scaleX = (cont.clientWidth - 40) / sceneSettings.width;
+    const scaleY = (cont.clientHeight - 40) / sceneSettings.height;
+    zoom = Math.min(scaleX, scaleY, 1);
+    camX = 0; camY = 0;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PANEL SWITCHING
+// ═══════════════════════════════════════════════════════════════
+function switchPanel(p) {
+    document.getElementById('panelHierarchy').style.display = p === 'hierarchy' ? '' : 'none';
+    document.getElementById('panelAssets').style.display    = p === 'assets'    ? '' : 'none';
+    document.getElementById('tabHierarchy').classList.toggle('active', p === 'hierarchy');
+    document.getElementById('tabAssets').classList.toggle('active',    p === 'assets');
+}
+function switchBottom(p) {
+    ['script','console','scene'].forEach(n => {
+        document.getElementById('bottom'+n.charAt(0).toUpperCase()+n.slice(1)).style.display = n===p?'':'none';
+        document.getElementById('bt'+n.charAt(0).toUpperCase()+n.slice(1)).classList.toggle('active', n===p);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SCENE SETTINGS
+// ═══════════════════════════════════════════════════════════════
+function updateSceneSetting(key, value) {
+    if (['width','height','fps'].includes(key)) value = parseInt(value);
+    if (key === 'gravity') value = parseFloat(value);
+    sceneSettings[key] = value;
+    if (key === 'width' || key === 'height') {
+        canvas.width  = sceneSettings.width;
+        canvas.height = sceneSettings.height;
+        document.getElementById('vpRes').textContent = `${sceneSettings.width} × ${sceneSettings.height}`;
+    }
+    markUnsaved();
+}
+function showSceneSettings() { switchBottom('scene'); }
+
+// ═══════════════════════════════════════════════════════════════
+//  SAVE STATE INDICATORS
+// ═══════════════════════════════════════════════════════════════
+function markUnsaved() {
+    unsaved = true;
+    document.getElementById('saveDot').classList.add('unsaved');
+    document.getElementById('saveText').textContent = 'Saqlanmagan';
+}
+function markSaved() {
+    unsaved = false;
+    document.getElementById('saveDot').classList.remove('unsaved');
+    document.getElementById('saveText').textContent = 'Saqlangan';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CONSOLE
+// ═══════════════════════════════════════════════════════════════
+function consoleLog(type, msg) {
+    const out  = document.getElementById('consoleOutput');
+    const line = document.createElement('div');
+    line.className = `console-line ${type}`;
+    line.textContent = `${new Date().toLocaleTimeString()} ${msg}`;
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveProject(); }
+    if (e.key === 'F5') { e.preventDefault(); launchPlay(); }
+    if (e.key === 'Delete' && selectedId !== null) removeEntity(selectedId);
+    if (e.key === 'v' || e.key === 'V') setTool('select');
+    if (e.key === 'm' || e.key === 'M') setTool('move');
+    if (e.key === 'g' || e.key === 'G') toggleGrid();
+});
+
+// Auto-save every 60 seconds
+setInterval(() => { if (unsaved) saveProject(); }, 60000);
+
+// ═══════════════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════════════
+init();
+fitToScreen();
+</script>
+{% endblock %}

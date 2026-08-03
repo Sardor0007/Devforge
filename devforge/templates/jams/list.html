@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Game Jams - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .jams-hero {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-radius: var(--radius-lg);
+        padding: 3rem 2.5rem;
+        margin-bottom: 2.5rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+    }
+
+    .jams-hero::before {
+        content: '🎮';
+        position: absolute;
+        right: 2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 8rem;
+        opacity: 0.07;
+    }
+
+    .jams-hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 60%);
+    }
+
+    .jams-hero-content { position: relative; z-index: 1; }
+
+    .section-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #818cf8;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .jam-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.75rem;
+    }
+
+    .jam-card {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .jam-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--border-bright);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    .jam-card-banner {
+        height: 130px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: flex-end;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .jam-card-banner.active-banner {
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #9333ea 100%);
+    }
+
+    .jam-card-banner.past-banner {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    }
+
+    .jam-card-banner::before {
+        content: '';
+        position: absolute;
+        bottom: -30px; right: -30px;
+        width: 130px; height: 130px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+
+    .jam-status-badge {
+        padding: 0.3rem 0.85rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border: 1px solid rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(8px);
+        color: #fff;
+    }
+
+    .jam-status-badge.live {
+        background: rgba(16, 185, 129, 0.25);
+        border-color: rgba(16, 185, 129, 0.4);
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+    }
+
+    .jam-card-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .jam-theme-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(99,102,241,0.1);
+        color: #818cf8;
+        border: 1px solid rgba(99,102,241,0.2);
+        padding: 0.25rem 0.7rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .jam-meta {
+        display: flex;
+        gap: 1rem;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .jam-meta-item { display: flex; align-items: center; gap: 0.35rem; }
+
+    .timer-bar {
+        height: 4px;
+        background: rgba(255,255,255,0.07);
+        border-radius: 2px;
+        overflow: hidden;
+        margin: 0.75rem 0;
+    }
+
+    .timer-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #10b981, #06b6d4);
+        transition: width 0.5s ease;
+    }
+
+    .jam-submitted-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(16,185,129,0.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,0.25);
+        padding: 0.25rem 0.7rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--surface);
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-lg);
+    }
+
+    .countdown-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        padding: 0.3rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 2rem 3rem;">
+
+    <!-- Hero -->
+    <div class="jams-hero">
+        <div class="jams-hero-content">
+            <h1 style="font-size: 2.25rem; font-weight: 900; color: #fff; margin-bottom: 0.75rem; line-height: 1.2;">
+                🎮 Game Jams
+            </h1>
+            <p style="color: rgba(255,255,255,0.65); font-size: 1rem; max-width: 520px; line-height: 1.65; margin-bottom: 1.5rem;">
+                Qisqa muddatda o'yin yarating, hamjamiyat bilan raqobatlashing va g'olib bo'ling!
+                Har jam o'ziga xos mavzu va shartlarga ega.
+            </p>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                {% if user.is_authenticated %}
+                    {% if user.is_staff or user.subscription_type in 'gold,platinum' %}
+                    <a href="{% url 'jams:create' %}" class="btn btn-primary">
+                        ➕ Yangi Jam Yaratish
+                    </a>
+                    {% endif %}
+                {% endif %}
+                <a href="{% url 'challenges_list' %}" class="btn btn-secondary">
+                    🏆 Challenges
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Jams -->
+    <div class="section-label">🔴 Aktiv Jam'lar</div>
+
+    {% if active_jams %}
+    <div class="jam-grid" style="margin-bottom: 3rem;">
+        {% for jam in active_jams %}
+        <a href="{% url 'jams:detail' jam.pk %}" class="jam-card">
+            <div class="jam-card-banner active-banner">
+                <div style="display: flex; align-items: center; gap: 0.6rem; position: relative; z-index: 1;">
+                    {% if jam.is_running %}
+                    <span class="jam-status-badge live">🔴 Live</span>
+                    {% else %}
+                    <span class="jam-status-badge">⏳ Tez orada</span>
+                    {% endif %}
+                    {% if user_submissions|get_item:jam.id %}
+                    <span class="jam-submitted-badge">✅ Topshirildi</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="jam-card-body">
+                {% if jam.theme %}
+                <span class="jam-theme-tag">🎯 {{ jam.theme }}</span>
+                {% endif %}
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                    {{ jam.title }}
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; flex-grow: 1;">
+                    {{ jam.description|truncatechars:120 }}
+                </p>
+
+                {% if jam.is_running %}
+                <div class="countdown-chip" style="margin-top: 0.75rem; display: inline-flex;">
+                    ⏱ {{ jam.end_date|timeuntil }} qoldi
+                </div>
+                {% else %}
+                <div style="margin-top: 0.75rem; font-size: 0.78rem; color: #818cf8; font-weight: 600;">
+                    🚀 Boshlanadi: {{ jam.start_date|date:"d M Y, H:i" }}
+                </div>
+                {% endif %}
+
+                <div class="jam-meta">
+                    <span class="jam-meta-item">👤 {{ jam.created_by.username }}</span>
+                    <span class="jam-meta-item">🎮 {{ jam.submission_count }} topshiriq</span>
+                    <span class="jam-meta-item">📅 {{ jam.end_date|date:"d M" }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="margin-bottom: 3rem;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🕹️</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+            Hozircha aktiv jam'lar yo'q
+        </h3>
+        <p style="color: var(--text-muted);">Tez orada yangi jam e'lon qilinadi!</p>
+    </div>
+    {% endif %}
+
+    <!-- Past Jams -->
+    {% if past_jams %}
+    <div class="section-label">📜 O'tgan Jam'lar</div>
+    <div class="jam-grid">
+        {% for jam in past_jams %}
+        <a href="{% url 'jams:detail' jam.pk %}" class="jam-card">
+            <div class="jam-card-banner past-banner">
+                <div style="position: relative; z-index: 1;">
+                    <span class="jam-status-badge">⏹ Yakunlandi</span>
+                </div>
+            </div>
+            <div class="jam-card-body">
+                {% if jam.theme %}
+                <span class="jam-theme-tag">🎯 {{ jam.theme }}</span>
+                {% endif %}
+                <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">
+                    {{ jam.title }}
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6; flex-grow: 1;">
+                    {{ jam.description|truncatechars:100 }}
+                </p>
+                <div class="jam-meta">
+                    <span class="jam-meta-item">👤 {{ jam.created_by.username }}</span>
+                    <span class="jam-meta-item">🎮 {{ jam.submission_count }} topshiriq</span>
+                    <span class="jam-meta-item">📅 {{ jam.end_date|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

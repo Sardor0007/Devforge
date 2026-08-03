@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+{% load sub_tags %}
+
+{% block title %}Studio Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--surface);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+    }
+
+    .progress-track {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: var(--accent-gradient);
+        box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .item-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        transition: var(--transition);
+    }
+
+    .item-row:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--border-bright);
+    }
+
+    .sidebar-block {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .profile-header {
+        text-align: center;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 style="font-family: var(--font-display); font-size: 2rem; font-weight: 700;">Studio Terminal</h1>
+        <p style="color: var(--text-secondary);">Welcome back, Commander <span style="color: var(--accent);">{{ user.username }}</span>.</p>
+    </div>
+    <div class="flex gap-4">
+        <a href="{% url 'project_create' %}" class="btn btn-primary">+ Create Project</a>
+        <a href="{% url 'asset_upload' %}" class="btn btn-secondary">+ Upload Asset</a>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Main Content -->
+    <div class="animate-fade">
+        <!-- Stats -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Reputation Level</span>
+                <div style="font-size: 1.75rem; font-weight: 800; font-family: var(--font-display); margin: 0.5rem 0;">Lvl {{ user_stats.level|default:"1" }}</div>
+                <div class="progress-track">
+                    <div class="progress-bar" style="width: {{ user_stats.progress|default:'25' }}%;"></div>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">{{ user_stats.xp|default:"120" }} XP / Next level in {{ user_stats.xp_to_next|default:"80" }} XP</span>
+            </div>
+            
+            <div class="stat-card">
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Revenue</span>
+                <div style="font-size: 1.75rem; font-weight: 800; font-family: var(--font-display); margin: 0.5rem 0; color: var(--success);">${{ user_stats.total_earned|floatformat:2|default:"0.00" }}</div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Lifetime earnings</span>
+            </div>
+
+            <div class="stat-card">
+                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Active Projects</span>
+                <div style="font-size: 1.75rem; font-weight: 800; font-family: var(--font-display); margin: 0.5rem 0;">{{ user_stats.projects_created|default:"0" }}</div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Management workload</span>
+            </div>
+        </div>
+
+        <!-- My Projects -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 style="font-family: var(--font-display);">Project Pipeline</h3>
+                <a href="{% url 'project_list' %}" style="font-size: 0.8rem; color: var(--accent);">View All</a>
+            </div>
+            
+            <div class="item-list">
+                {% for project in my_projects %}
+                <div class="item-row" onclick="window.location.href='{% url 'workspace' pk=project.pk %}'" style="cursor: pointer;">
+                    <div class="flex items-center gap-4">
+                        <div style="width: 40px; height: 40px; background: var(--surface-hover); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                            🎮
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">{{ project.title }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ project.get_status_display }} • {{ project.involved_users_count }} members</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{% url 'workspace' pk=project.pk %}" class="btn btn-secondary btn-sm" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Workspace</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    No projects in your pipeline.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Latest Assets -->
+        <div class="card">
+            <div class="flex justify-between items-center mb-4">
+                <h3 style="font-family: var(--font-display);">Recent Assets</h3>
+                <a href="{% url 'asset_list' %}" style="font-size: 0.8rem; color: var(--accent);">Marketplace</a>
+            </div>
+            <div class="item-list">
+                {% for asset in my_assets %}
+                <div class="item-row">
+                    <div class="flex items-center gap-4">
+                        <div style="width: 40px; height: 40px; background: var(--surface-hover); border-radius: 8px; overflow: hidden;">
+                            {% if asset.thumbnail %}<img src="{{ asset.thumbnail.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}📦{% endif %}
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">{{ asset.title }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ asset.format|upper }} • {{ asset.downloads }} downloads</div>
+                        </div>
+                    </div>
+                    <div class="badge {% if asset.price == 0 %}badge-accent{% endif %}">
+                        {% if asset.price == 0 %}Free{% else %}${{ asset.price }}{% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    No assets uploaded yet.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar-block">
+        <div class="card">
+            <div class="profile-header">
+                <div class="avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto 1rem;">
+                    {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.username|first|upper }}{% endif %}
+                </div>
+                <h3 style="font-family: var(--font-display);">{{ user.username }}</h3>
+                <div class="badge badge-accent mt-2">{{ user.get_role_display }}</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="flex justify-between items-center">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Wallet Balance</span>
+                    <span style="font-weight: 700; color: var(--success);">${{ user.balance|floatformat:2 }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Subscription</span>
+                    {% sub_badge user.subscription_type 'small' %}
+                </div>
+            </div>
+            
+            <div class="mt-8 flex flex-direction-column gap-2">
+                <a href="{% url 'profile' username=user.username %}" class="btn btn-secondary w-full" style="justify-content: center;">Public Profile</a>
+                <a href="{% url 'wallet' %}" class="btn btn-ghost w-full" style="justify-content: center;">Manage Wallet</a>
+            </div>
+        </div>
+        <!-- Weekly Leaderboard Card -->
+        {% if leaderboard %}
+        <div class="card">
+            <h3 style="font-family: var(--font-display); margin-bottom: 1rem;">Haftalik Faollar 🏆</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                {% for entry in leaderboard %}
+                <div class="flex items-center justify-between" style="padding: 4px 0;">
+                    <div class="flex items-center gap-3">
+                        <div style="font-weight: 700; font-size: 0.9rem; width: 20px; text-align: center; color: {% if entry.rank == 1 %}#ffd700{% elif entry.rank == 2 %}#c0c0c0{% elif entry.rank == 3 %}#cd7f32{% else %}var(--text-muted){% endif %};">
+                            #{{ entry.rank }}
+                        </div>
+                        <a href="{% url 'profile' username=entry.user.username %}" class="flex items-center gap-2" style="text-decoration: none; color: inherit;">
+                            <div class="avatar" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                {% if entry.user.avatar %}
+                                <img src="{{ entry.user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">
+                                {% else %}
+                                {{ entry.user.username|first|upper }}
+                                {% endif %}
+                            </div>
+                            <span style="font-size: 0.85rem; font-weight: 600;">{{ entry.user.username }}</span>
+                        </a>
+                    </div>
+                    <span style="font-size: 0.8rem; color: var(--accent); font-weight: 700;">+{{ entry.xp_gained }} XP</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h3 style="font-family: var(--font-display); margin-bottom: 1.5rem;">Quick Tools</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="{% url 'service_create' %}" class="btn btn-ghost" style="justify-content: flex-start; width: 100%;">
+                    <span>💼</span> List a Service
+                </a>
+                <a href="{% url 'notification_list' %}" class="btn btn-ghost" style="justify-content: flex-start; width: 100%;">
+                    <span>🔔</span> Notifications
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── ONBOARDING TOUR MODAL ── -->
+{% if not user.onboarding_completed %}
+<div id="onboardingTourModal" class="modal-backdrop" style="display: flex;">
+  <div class="modal-box" style="max-width: 540px; border-radius: 24px; background: linear-gradient(135deg, #0d121f 0%, #171e33 100%); border: 1px solid rgba(56, 189, 248, 0.25); box-shadow: 0 25px 70px rgba(0,0,0,0.8), 0 0 50px rgba(56,189,248,0.1);">
+    <button onclick="skipTour()" style="position: absolute; top: 1.25rem; right: 1.25rem; background: rgba(255,255,255,0.08); border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; color: #94a3b8; font-size: 1rem; font-weight: 700;">×</button>
+
+    <!-- Tour Steps -->
+    <div id="tourStep1" class="tour-step">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem; text-align: center;">🚀</div>
+      <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #38bdf8; letter-spacing: 1.5px; text-align: center; margin-bottom: 0.25rem;">1 / 5-qadam</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: #fff; text-align: center; margin-bottom: 0.75rem;">DevForge-ga Xush Kelibsiz!</h2>
+      <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; text-align: center; margin-bottom: 1.5rem;">
+        DevForge — bu game developerlar, 3D rassomlar va dasturchilar uchun yagona professional ekotizim. Bu yerda siz loyihalar yaratishingiz, jamoa yig'ishingiz va daromad qilishingiz mumkin.
+      </p>
+    </div>
+
+    <div id="tourStep2" class="tour-step" style="display: none;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem; text-align: center;">🎨</div>
+      <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #c084fc; letter-spacing: 1.5px; text-align: center; margin-bottom: 0.25rem;">2 / 5-qadam</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: #fff; text-align: center; margin-bottom: 0.75rem;">Studio Suite Toollari</h2>
+      <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; text-align: center; margin-bottom: 1.5rem;">
+        Veb-brauzeringizning o'zida 3D Modellashtirish studio, Audio Lab (DAW), Video Lab va World Builder toollaridan to'g'ridan-to'g'ri foydalaning.
+      </p>
+    </div>
+
+    <div id="tourStep3" class="tour-step" style="display: none;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem; text-align: center;">💼</div>
+      <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #fbbf24; letter-spacing: 1.5px; text-align: center; margin-bottom: 0.25rem;">3 / 5-qadam</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: #fff; text-align: center; margin-bottom: 0.75rem;">Jobs va Escrow Himoyasi</h2>
+      <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; text-align: center; margin-bottom: 1.5rem;">
+        Freelance topshiriqlar oling yoki buyurtma bering. Barcha to'lovlar Escrow tizimi orqali 100% kafolatlangan va xavfsiz amalga oshiriladi.
+      </p>
+    </div>
+
+    <div id="tourStep4" class="tour-step" style="display: none;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem; text-align: center;">📦</div>
+      <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #34d399; letter-spacing: 1.5px; text-align: center; margin-bottom: 0.25rem;">4 / 5-qadam</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: #fff; text-align: center; margin-bottom: 0.75rem;">Marketplace va Portfolio</h2>
+      <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; text-align: center; margin-bottom: 1.5rem;">
+        O'z 3D modellantiz, skriptingiz va aktivlaringizni sotuvga qo'ying. Behance/LinkedIn uslubidagi ommaviy portfoliongizni namoyish eting.
+      </p>
+    </div>
+
+    <div id="tourStep5" class="tour-step" style="display: none;">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem; text-align: center;">💰</div>
+      <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #38bdf8; letter-spacing: 1.5px; text-align: center; margin-bottom: 0.25rem;">5 / 5-qadam</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: #fff; text-align: center; margin-bottom: 0.75rem;">Ikki Hamyon Tizimi</h2>
+      <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; text-align: center; margin-bottom: 1.5rem;">
+        Sizda Depazit va Foyda hamyonlari mavjud. Ishlab topilgan foydangizni osongina bank kartangizga yechib oling yoki depazitga o'tkazing.
+      </p>
+    </div>
+
+    <!-- Tour Footer Controls -->
+    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.25rem;">
+      <div id="tourDots" style="display: flex; gap: 6px;">
+        <span class="tour-dot active" style="width: 10px; height: 10px; border-radius: 50%; background: #38bdf8;"></span>
+        <span class="tour-dot" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></span>
+        <span class="tour-dot" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></span>
+        <span class="tour-dot" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></span>
+        <span class="tour-dot" style="width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.2);"></span>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="btnTourPrev" onclick="prevTourStep()" class="btn btn-secondary btn-sm" style="display: none;">← Orqaga</button>
+        <button id="btnTourNext" onclick="nextTourStep()" class="btn btn-primary btn-sm">Keyingisi →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentTourStep = 1;
+const totalTourSteps = 5;
+
+function updateTourUI() {
+  for (let i = 1; i <= totalTourSteps; i++) {
+    const stepEl = document.getElementById('tourStep' + i);
+    if (stepEl) stepEl.style.display = (i === currentTourStep) ? 'block' : 'none';
+  }
+
+  const dots = document.querySelectorAll('#tourDots .tour-dot');
+  dots.forEach((dot, idx) => {
+    dot.style.background = (idx + 1 === currentTourStep) ? '#38bdf8' : 'rgba(255,255,255,0.2)';
+  });
+
+  const prevBtn = document.getElementById('btnTourPrev');
+  const nextBtn = document.getElementById('btnTourNext');
+
+  if (prevBtn) prevBtn.style.display = (currentTourStep > 1) ? 'inline-flex' : 'none';
+  if (nextBtn) {
+    nextBtn.textContent = (currentTourStep === totalTourSteps) ? 'Tugatish ✨' : 'Keyingisi →';
+  }
+}
+
+function nextTourStep() {
+  if (currentTourStep < totalTourSteps) {
+    currentTourStep++;
+    updateTourUI();
+  } else {
+    finishTour();
+  }
+}
+
+function prevTourStep() {
+  if (currentTourStep > 1) {
+    currentTourStep--;
+    updateTourUI();
+  }
+}
+
+function finishTour() {
+  fetch('/auth/onboarding/complete-tour/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/json'
+    }
+  }).finally(() => {
+    const modal = document.getElementById('onboardingTourModal');
+    if (modal) modal.style.display = 'none';
+  });
+}
+
+function skipTour() {
+  finishTour();
+}
+</script>
+{% endif %}
+{% endblock %}

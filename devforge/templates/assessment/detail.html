@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ test.skill_name }} Assessment - DevForge{% endblock %}
+
+{% block content %}
+<div class="container py-12">
+    <div class="max-w-4xl mx-auto">
+        <nav class="flex mb-8 text-sm text-slate-500">
+            <a href="{% url 'assessment_list' %}" class="hover:text-indigo-600">Assessments</a>
+            <span class="mx-2">/</span>
+            <span class="text-slate-900 font-medium">{{ test.skill_name }}</span>
+        </nav>
+
+        <div class="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100">
+            <div class="flex flex-col md:flex-row gap-8 items-start mb-12">
+                <div class="w-24 h-24 bg-slate-50 rounded-2xl flex items-center justify-center text-5xl shrink-0">
+                    {{ test.icon }}
+                </div>
+                <div class="flex-grow">
+                    <div class="flex flex-wrap items-center gap-3 mb-4">
+                        <h1 class="text-4xl font-bold text-slate-900">{{ test.skill_name }}</h1>
+                        <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-sm font-bold border border-indigo-100">
+                            {{ test.get_difficulty_display }}
+                        </span>
+                    </div>
+                    <p class="text-slate-600 text-lg leading-relaxed">{{ test.description }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="text-slate-400 text-sm mb-1">Savollar</div>
+                    <div class="text-2xl font-bold text-slate-900">{{ test.questions.count }} ta</div>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="text-slate-400 text-sm mb-1">Vaqt</div>
+                    <div class="text-2xl font-bold text-slate-900">{{ test.time_limit }} daqiqa</div>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="text-slate-400 text-sm mb-1">O'tish bali</div>
+                    <div class="text-2xl font-bold text-slate-900">{{ test.passing_score }}%</div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50 rounded-2xl p-6 mb-12">
+                <h3 class="font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                    <span>🏆</span> Mukofotlar
+                </h3>
+                <div class="flex flex-wrap gap-4">
+                    <div class="bg-white px-4 py-2 rounded-lg border border-indigo-100 flex items-center gap-2">
+                        <span class="font-bold text-indigo-600">+{{ test.xp_reward }}</span>
+                        <span class="text-slate-500 text-sm">Tajriba (XP)</span>
+                    </div>
+                    {% if test.badge_reward %}
+                    <div class="bg-white px-4 py-2 rounded-lg border border-indigo-100 flex items-center gap-2">
+                        <img src="{{ test.badge_reward.image.url }}" class="w-6 h-6 object-contain" alt="">
+                        <span class="font-bold text-slate-700">{{ test.badge_reward.name }}</span>
+                        <span class="text-slate-500 text-sm">Badge</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="border-t border-slate-100 pt-12 text-center">
+                {% if certificate and certificate.passed %}
+                    <div class="mb-8">
+                        <div class="inline-flex items-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-full font-bold border border-green-100 mb-4">
+                            <span>✅</span>
+                            <span>Siz bu testdan o'tgansiz ({{ certificate.score }}%)</span>
+                        </div>
+                        <p class="text-slate-500">Sertifikat profilingizda ko'rinib turibdi.</p>
+                    </div>
+                {% else %}
+                    <div class="max-w-md mx-auto">
+                        <p class="text-slate-500 mb-8">
+                            Tayyormisiz? Test boshlanganidan keyin vaqt hisoblana boshlaydi. 
+                            O'tish uchun kamida {{ test.passing_score }}% to'g'ri javob berishingiz kerak.
+                        </p>
+                        <a href="{% url 'assessment_start' test.pk %}" class="block w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-xl hover:bg-indigo-700 transition shadow-xl shadow-indigo-100">
+                            Hozir boshlash
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if attempts %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Oxirgi urinishlar</h2>
+            <div class="space-y-4">
+                {% for attempt in attempts %}
+                <div class="bg-white p-4 rounded-xl flex items-center justify-between border border-slate-100">
+                    <div class="flex items-center gap-4">
+                        <div class="text-sm text-slate-400">{{ attempt.started_at|date:"d.m.Y H:i" }}</div>
+                        <div class="font-medium text-slate-700">Urinish #{{ forloop.revcounter }}</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        {% if attempt.finished %}
+                            <span class="text-slate-500 text-sm">Yakunlangan</span>
+                        {% else %}
+                            <span class="text-amber-500 text-sm font-medium">Tugallanmagan</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

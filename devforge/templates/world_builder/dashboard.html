@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}World Builder — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.wb-hero {
+    background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(16,185,129,0.08) 100%);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem; margin-bottom: 2.5rem; text-align: center; position: relative; overflow: hidden;
+}
+.wb-hero::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(245,158,11,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 40%, rgba(16,185,129,0.1) 0%, transparent 60%);
+    pointer-events:none;
+}
+.wb-hero-title { font-family:var(--font-display); font-size:2.6rem; font-weight:900;
+    background:linear-gradient(135deg,#f59e0b,#10b981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:.4rem; }
+.wb-hero-sub { color:var(--text-secondary); margin-bottom:1.5rem; }
+
+/* Pixel art decoration */
+.wb-pixel-art { display:inline-grid; grid-template-columns:repeat(8,10px); gap:1px; margin:0 auto 1rem; }
+.px { width:10px; height:10px; border-radius:1px; }
+
+.wb-stats { display:flex; gap:1rem; margin-bottom:2.5rem; }
+.wb-stat { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; text-align:center; }
+.wb-stat-val { font-family:var(--font-display); font-size:2rem; font-weight:800;
+    background:linear-gradient(135deg,#f59e0b,#10b981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.wb-stat-lbl { color:var(--text-muted); font-size:.78rem; }
+
+.wb-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.5rem; }
+.wb-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; transition:var(--transition); }
+.wb-card:hover { transform:translateY(-4px); border-color:#f59e0b; box-shadow:0 12px 36px rgba(245,158,11,.12); }
+.wb-card-map { height:140px; background:#0a0b0f; position:relative; overflow:hidden; }
+.wb-mini-map { width:100%; height:100%; }
+.wb-card-overlay { position:absolute; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:var(--transition); }
+.wb-card:hover .wb-card-overlay { opacity:1; }
+.wb-card-body { padding:1rem; }
+.wb-card-title { font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:.3rem; }
+.wb-card-meta { font-size:.72rem; color:var(--text-muted); display:flex; gap:.75rem; flex-wrap:wrap; }
+.wb-badge { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:99px; font-size:.65rem; font-weight:700; }
+.wb-card-actions { display:flex; gap:.5rem; padding:.75rem 1rem; border-top:1px solid var(--border); }
+.wb-btn { flex:1; padding:.4rem; border-radius:var(--radius-sm); font-size:.78rem; font-weight:500;
+    border:1px solid var(--border); background:var(--surface-hover); color:var(--text-secondary);
+    cursor:pointer; transition:var(--transition); text-decoration:none; text-align:center; display:flex; align-items:center; justify-content:center; gap:3px; }
+.wb-btn:hover { background:#f59e0b; color:#000; border-color:#f59e0b; }
+.wb-btn.danger:hover { background:var(--danger); color:#fff; border-color:var(--danger); }
+.wb-empty { text-align:center; padding:4rem 2rem; border:2px dashed var(--border); border-radius:var(--radius-lg); }
+
+/* Modal */
+.modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+.modal-backdrop.show { display:flex; }
+.modal-box { background:#0d1117; border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; width:100%; max-width:480px; position:relative; }
+.modal-title { font-family:var(--font-display); font-size:1.3rem; font-weight:700; margin-bottom:1.5rem; }
+.form-label { display:block; font-size:.83rem; font-weight:500; margin-bottom:.4rem; color:var(--text-secondary); }
+.form-input, .form-select { width:100%; padding:.65rem 1rem; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:var(--radius-sm);
+    color:var(--text-primary); font-size:.9rem; outline:none; transition:var(--transition); font-family:var(--font-main); }
+.form-input:focus, .form-select:focus { border-color:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,.1); }
+.form-select option { background:#0d1117; }
+.form-group { margin-bottom:1.25rem; }
+
+/* Map type selector */
+.map-types { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; }
+.map-type-btn { padding:.75rem .5rem; border:1px solid var(--border); border-radius:var(--radius-sm);
+    background:rgba(255,255,255,.03); cursor:pointer; text-align:center; transition:all .15s; }
+.map-type-btn:hover, .map-type-btn.active { border-color:#f59e0b; background:rgba(245,158,11,.1); }
+.map-type-icon { font-size:1.6rem; display:block; margin-bottom:4px; }
+.map-type-label { font-size:.7rem; color:var(--text-muted); }
+.map-type-btn.active .map-type-label { color:#fbbf24; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wb-hero">
+    <!-- Pixel art map preview -->
+    <div class="wb-pixel-art">
+        {% for c in "00112233445566778899aabbccddeeff" %}
+        <div class="px" style="background: {% cycle '#22c55e' '#16a34a' '#064e3b' '#10b981' '#f59e0b' '#92400e' '#3b82f6' '#1e3a5f' '#8b5cf6' '#ef4444' '#1e293b' '#374151' '#10b981' '#f59e0b' '#22c55e' '#3b82f6' '#16a34a' '#f59e0b' '#10b981' '#ef4444' '#3b82f6' '#8b5cf6' '#22c55e' '#f59e0b' '#16a34a' '#22c55e' '#064e3b' '#f59e0b' '#3b82f6' '#22c55e' '#16a34a' '#10b981' %}"></div>
+        {% endfor %}
+    </div>
+    <div class="wb-hero-title">🏰 World Builder</div>
+    <p class="wb-hero-sub">Tile-based dungeon, level va xarita dizayneri — o'yinlaringiz uchun dunyolar yarating</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newMapModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#f59e0b,#10b981);border:none;">🏗️ Yangi Xarita</button>
+</div>
+
+{% if maps %}
+<div class="wb-stats">
+    <div class="wb-stat"><div class="wb-stat-val">{{ maps.count }}</div><div class="wb-stat-lbl">Xaritalar</div></div>
+    <div class="wb-stat"><div class="wb-stat-val" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">JSON</div><div class="wb-stat-lbl">Export</div></div>
+    <div class="wb-stat"><div class="wb-stat-val" style="background:linear-gradient(135deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">4</div><div class="wb-stat-lbl">Layer turi</div></div>
+</div>
+<div style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;">🗺 Mening Xaritalarim</h2>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('newMapModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#f59e0b,#10b981);border:none;">+ Yangi</button>
+</div>
+<div class="wb-grid">
+    {% for map in maps %}
+    <div class="wb-card">
+        <div class="wb-card-map">
+            <canvas class="wb-mini-map" id="minimap_{{ map.id }}" width="260" height="140"
+                data-map='{{ map.data|default:"{}" }}'></canvas>
+            <div class="wb-card-overlay">
+                <a href="{% url 'world_builder:editor' map.id %}" style="background:rgba(245,158,11,.9);color:#000;padding:.5rem 1.25rem;border-radius:99px;font-weight:800;font-size:.85rem;text-decoration:none;">✏️ Tahrirlash</a>
+            </div>
+        </div>
+        <div class="wb-card-body">
+            <div class="wb-card-title">{{ map.title }}</div>
+            <div class="wb-card-meta">
+                <span class="wb-badge" style="background:rgba(245,158,11,.1);color:#fbbf24;">{{ map.get_map_type_display }}</span>
+                <span>🕐 {{ map.updated_at|timesince }} avval</span>
+            </div>
+        </div>
+        <div class="wb-card-actions">
+            <a href="{% url 'world_builder:editor' map.id %}" class="wb-btn">✏️ Edit</a>
+            <a href="{% url 'world_builder:delete' map.id %}" class="wb-btn danger" onclick="return confirm('Xaritani o\'chirishni tasdiqlaysizmi?')">🗑️ Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="wb-empty">
+    <div style="font-size:4rem;margin-bottom:1rem;">🏰</div>
+    <p style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem;">Hali xaritalar yo'q</p>
+    <p style="color:var(--text-muted);margin-bottom:1.5rem;">Birinchi dunyangi yarating</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newMapModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#f59e0b,#10b981);border:none;">🏗️ Birinchi Xarita</button>
+</div>
+{% endif %}
+
+<!-- New Map Modal -->
+<div class="modal-backdrop" id="newMapModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('newMapModal').classList.remove('show')"
+            style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+        <div class="modal-title">🏗️ Yangi Xarita</div>
+        <div class="form-group">
+            <label class="form-label">Xarita nomi</label>
+            <input type="text" id="mapTitle" class="form-input" placeholder="Misol: Dark Dungeon Level 1" autofocus>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Xarita turi</label>
+            <div class="map-types">
+                <div class="map-type-btn active" onclick="setMapType('dungeon',this)"><span class="map-type-icon">⚔️</span><span class="map-type-label">Dungeon</span></div>
+                <div class="map-type-btn" onclick="setMapType('village',this)"><span class="map-type-icon">🏘️</span><span class="map-type-label">Village</span></div>
+                <div class="map-type-btn" onclick="setMapType('castle',this)"><span class="map-type-icon">🏰</span><span class="map-type-label">Castle</span></div>
+                <div class="map-type-btn" onclick="setMapType('level',this)"><span class="map-type-icon">🎮</span><span class="map-type-label">Level</span></div>
+                <div class="map-type-btn" onclick="setMapType('architecture',this)"><span class="map-type-icon">🏗️</span><span class="map-type-label">Architecture</span></div>
+                <div class="map-type-btn" onclick="setMapType('overworld',this)"><span class="map-type-icon">🗺️</span><span class="map-type-label">Overworld</span></div>
+            </div>
+            <input type="hidden" id="mapType" value="dungeon">
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('newMapModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary" id="createMapBtn" onclick="createMap()"
+                style="background:linear-gradient(135deg,#f59e0b,#10b981);border:none;color:#000;">🏗️ Yaratish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Minimap render
+document.querySelectorAll('.wb-mini-map').forEach(canvas => {
+    try {
+        const data = JSON.parse(canvas.dataset.map);
+        const objects = data.objects || [];
+        const gridSize = data.gridSize || 20;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0d1117'; ctx.fillRect(0, 0, 260, 140);
+        if (objects.length === 0) {
+            ctx.fillStyle = 'rgba(255,255,255,.05)';
+            for (let x = 0; x < 260; x += gridSize/4) {
+                for (let y = 0; y < 140; y += gridSize/4) {
+                    if ((Math.floor(x/(gridSize/4)) + Math.floor(y/(gridSize/4))) % 2 === 0)
+                        ctx.fillRect(x, y, gridSize/4, gridSize/4);
+                }
+            }
+            ctx.fillStyle = 'rgba(245,158,11,.15)';
+            ctx.font = '11px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('Bo\'sh xarita', 130, 75);
+        } else {
+            objects.forEach(obj => {
+                ctx.fillStyle = obj.color || '#f59e0b';
+                ctx.fillRect(obj.x / 10, obj.y / 10, (obj.w || gridSize) / 10, (obj.h || gridSize) / 10);
+            });
+        }
+    } catch(e) {}
+});
+
+let selectedMapType = 'dungeon';
+function setMapType(t, btn) {
+    selectedMapType = t;
+    document.getElementById('mapType').value = t;
+    document.querySelectorAll('.map-type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+async function createMap() {
+    const title = document.getElementById('mapTitle').value.trim() || 'Untitled Map';
+    const mapType = document.getElementById('mapType').value;
+    const btn = document.getElementById('createMapBtn');
+    btn.disabled = true; btn.textContent = 'Yaratilmoqda...';
+    const form = document.createElement('form');
+    form.method = 'POST'; form.action = '/studio/world-builder/create/';
+    const csrf = document.createElement('input'); csrf.type='hidden'; csrf.name='csrfmiddlewaretoken'; csrf.value=getCookie('csrftoken');
+    const t = document.createElement('input'); t.type='hidden'; t.name='title'; t.value=title;
+    const mt = document.createElement('input'); mt.type='hidden'; mt.name='map_type'; mt.value=mapType;
+    form.appendChild(csrf); form.appendChild(t); form.appendChild(mt);
+    document.body.appendChild(form); form.submit();
+}
+document.getElementById('newMapModal').addEventListener('click', e => { if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
+document.getElementById('mapTitle').addEventListener('keydown', e => { if(e.key==='Enter') createMap(); });
+</script>
+{% endblock %}

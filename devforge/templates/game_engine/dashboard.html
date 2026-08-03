@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% block title %}Game Engine{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Dashboard Layout ── */
+.ge-hero {
+    position: relative;
+    background: linear-gradient(135deg, rgba(0,245,255,0.08) 0%, rgba(139,92,246,0.08) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 3rem 2rem;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+    text-align: center;
+}
+.ge-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(0,245,255,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(139,92,246,0.12) 0%, transparent 60%);
+    pointer-events: none;
+}
+.ge-hero-title {
+    font-family: var(--font-display);
+    font-size: 3rem; font-weight: 900;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+.ge-hero-sub {
+    color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem;
+}
+.ge-hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+/* ── Section ── */
+.ge-section { margin-bottom: 3rem; }
+.ge-section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+.ge-section-title {
+    font-family: var(--font-display); font-size: 1.3rem; font-weight: 700;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* ── Genre Tabs ── */
+.genre-tabs {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.genre-tab {
+    padding: 0.4rem 1rem; border-radius: 99px; font-size: 0.85rem; font-weight: 500;
+    border: 1px solid var(--border); cursor: pointer; color: var(--text-secondary);
+    background: var(--surface); transition: var(--transition); text-decoration: none;
+}
+.genre-tab:hover, .genre-tab.active {
+    background: var(--accent); color: #000; border-color: var(--accent);
+}
+
+/* ── Game Cards Grid ── */
+.ge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+.ge-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: var(--transition);
+    position: relative;
+    cursor: pointer;
+}
+.ge-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 20px 50px rgba(0,245,255,0.1);
+}
+.ge-card-thumb {
+    width: 100%; height: 160px;
+    background: linear-gradient(135deg, #0d1117, #1a1a2e);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem;
+    position: relative; overflow: hidden;
+}
+.ge-card-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+}
+.ge-card-thumb .play-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: var(--transition);
+}
+.ge-card:hover .play-overlay { opacity: 1; }
+.ge-card-body { padding: 1rem; }
+.ge-card-title {
+    font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ge-card-meta {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 0.78rem; color: var(--text-muted);
+}
+.ge-card-genre {
+    display: inline-block; padding: 2px 8px; border-radius: 99px;
+    background: rgba(0,245,255,0.1); color: var(--accent);
+    font-size: 0.72rem; font-weight: 600; margin-bottom: 0.5rem;
+}
+.ge-card-actions {
+    display: flex; gap: 0.5rem; padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+}
+.ge-card-actions a, .ge-card-actions button {
+    flex: 1; text-align: center; padding: 0.4rem;
+    border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 500;
+    background: var(--surface-hover); color: var(--text-secondary);
+    border: 1px solid var(--border); cursor: pointer;
+    transition: var(--transition); text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+}
+.ge-card-actions a:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+.ge-card-actions button:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+/* My Games — empty state */
+.ge-empty {
+    text-align: center; padding: 4rem 2rem;
+    border: 2px dashed var(--border); border-radius: var(--radius-lg);
+    color: var(--text-muted);
+}
+.ge-empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+/* Stats strip */
+.ge-stats {
+    display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;
+}
+.ge-stat-card {
+    flex: 1; min-width: 140px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+}
+.ge-stat-val { font-family: var(--font-display); font-size: 2rem; font-weight: 800; }
+.ge-stat-lbl { color: var(--text-muted); font-size: 0.8rem; margin-top: 2px; }
+
+/* Featured badge */
+.featured-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff; font-size: 0.7rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 99px; z-index: 1;
+}
+
+/* New project modal */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+.modal-backdrop.show { display: flex; }
+.modal-box { background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 2rem; width: 100%; max-width: 460px; position: relative; }
+.modal-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; }
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--text-secondary); }
+.form-input, .form-select {
+    width: 100%; padding: 0.7rem 1rem; background: var(--surface-hover);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-primary); font-size: 0.9rem; font-family: var(--font-main);
+    outline: none; transition: var(--transition);
+}
+.form-input:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,245,255,0.1); }
+.form-select option { background: var(--surface); }
+
+@media (max-width: 600px) {
+    .ge-hero-title { font-size: 2rem; }
+    .ge-stats { gap: 0.75rem; }
+    .ge-stat-card { min-width: 120px; padding: 1rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="ge-hero">
+    <div class="ge-hero-title">🎮 Game Engine</div>
+    <p class="ge-hero-sub">Brauzerda o'yin yarating, o'ynang va ulashing — hech qanday o'rnatishlarsiz</p>
+    <div class="ge-hero-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('newGameModal').classList.add('show')">
+            ✨ Yangi O'yin Yaratish
+        </button>
+        <a href="#public-gallery" class="btn btn-secondary">🌍 O'yinlar Galereyasi</a>
+    </div>
+</div>
+
+<!-- Stats -->
+{% if my_games %}
+<div class="ge-stats">
+    <div class="ge-stat-card">
+        <div class="ge-stat-val" style="background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">{{ my_games.count }}</div>
+        <div class="ge-stat-lbl">Mening O'yinlarim</div>
+    </div>
+    <div class="ge-stat-card">
+        <div class="ge-stat-val" style="color:var(--success);">{{ my_games|length }}</div>
+        <div class="ge-stat-lbl">Nashr Qilingan</div>
+    </div>
+    <div class="ge-stat-card">
+        <div class="ge-stat-val" style="color:var(--warning);">
+            {% with total=0 %}
+            {% for g in my_games %}{{ g.play_count }}{% endfor %}
+            {% endwith %}
+            —
+        </div>
+        <div class="ge-stat-lbl">Umumiy O'yinlar</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- My Games -->
+<div class="ge-section">
+    <div class="ge-section-header">
+        <div class="ge-section-title">🗂️ Mening O'yinlarim</div>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('newGameModal').classList.add('show')">
+            + Yangi
+        </button>
+    </div>
+
+    {% if my_games %}
+    <div class="ge-grid">
+        {% for game in my_games %}
+        <div class="ge-card">
+            {% if game.is_featured %}<div class="featured-badge">⭐ Featured</div>{% endif %}
+            <div class="ge-card-thumb">
+                {% if game.thumbnail %}
+                    <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}">
+                {% else %}
+                    🎮
+                {% endif %}
+                <div class="play-overlay">
+                    <a href="{% url 'game_engine:play' game.pk %}" style="background:rgba(0,245,255,0.9);color:#000;padding:0.5rem 1.25rem;border-radius:99px;font-weight:700;font-size:0.9rem;text-decoration:none;">▶ O'ynash</a>
+                </div>
+            </div>
+            <div class="ge-card-body">
+                <div class="ge-card-genre">{{ game.get_genre_display }}</div>
+                <div class="ge-card-title">{{ game.title }}</div>
+                <div class="ge-card-meta">
+                    <span>▶ {{ game.play_count }}</span>
+                    <span>♥ {{ game.like_count }}</span>
+                    <span>{% if game.is_public %}🌍 Public{% else %}🔒 Private{% endif %}</span>
+                </div>
+            </div>
+            <div class="ge-card-actions">
+                <a href="{% url 'game_engine:editor' game.pk %}">✏️ Edit</a>
+                <a href="{% url 'game_engine:play' game.pk %}">▶ Play</a>
+                <a href="{% url 'game_engine:detail' game.pk %}">👁️ View</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ge-empty">
+        <div class="ge-empty-icon">🎮</div>
+        <p style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;">Hali o'yinlaringiz yo'q</p>
+        <p style="margin-bottom:1.5rem;">Birinchi o'yiningizni yarating va brauzerda o'ynang!</p>
+        <button class="btn btn-primary" onclick="document.getElementById('newGameModal').classList.add('show')">
+            ✨ Birinchi O'yinni Yarating
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Public Gallery -->
+<div class="ge-section" id="public-gallery">
+    <div class="ge-section-header">
+        <div class="ge-section-title">🌍 Ommaviy O'yinlar</div>
+    </div>
+
+    <!-- Genre Filter -->
+    <div class="genre-tabs">
+        <a href="{% url 'game_engine:dashboard' %}" class="genre-tab {% if not active_genre %}active{% endif %}">Hammasi</a>
+        {% for val, label in genre_choices %}
+        <a href="?genre={{ val }}" class="genre-tab {% if active_genre == val %}active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </div>
+
+    {% if public_games %}
+    <div class="ge-grid">
+        {% for game in public_games %}
+        <div class="ge-card" onclick="window.location='{% url 'game_engine:detail' game.pk %}'">
+            {% if game.is_featured %}<div class="featured-badge">⭐ Featured</div>{% endif %}
+            <div class="ge-card-thumb">
+                {% if game.thumbnail %}
+                    <img src="{{ game.thumbnail.url }}" alt="{{ game.title }}">
+                {% else %}
+                    🎮
+                {% endif %}
+                <div class="play-overlay">
+                    <a href="{% url 'game_engine:play' game.pk %}" onclick="event.stopPropagation();" style="background:rgba(0,245,255,0.9);color:#000;padding:0.5rem 1.25rem;border-radius:99px;font-weight:700;font-size:0.9rem;text-decoration:none;">▶ O'ynash</a>
+                </div>
+            </div>
+            <div class="ge-card-body">
+                <div class="ge-card-genre">{{ game.get_genre_display }}</div>
+                <div class="ge-card-title">{{ game.title }}</div>
+                <div class="ge-card-meta">
+                    <span>👤 {{ game.owner.username }}</span>
+                    <span>▶ {{ game.play_count }}</span>
+                    <span>♥ {{ game.like_count }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ge-empty">
+        <div class="ge-empty-icon">🌍</div>
+        <p>Bu janrda hali o'yinlar yo'q.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- New Game Modal -->
+<div class="modal-backdrop" id="newGameModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('newGameModal').classList.remove('show')"
+                style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">✕</button>
+        <div class="modal-title">🎮 Yangi O'yin Yaratish</div>
+        <div class="form-group">
+            <label class="form-label">O'yin nomi</label>
+            <input type="text" id="newGameTitle" class="form-input" placeholder="Misol: Super Platformer" autofocus>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Janr</label>
+            <select id="newGameGenre" class="form-select">
+                {% for val, label in genre_choices %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Tavsif (ixtiyoriy)</label>
+            <textarea id="newGameDesc" class="form-input" rows="3" placeholder="O'yin haqida qisqacha..."></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('newGameModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary" id="createGameBtn" onclick="createNewGame()">✨ Yaratish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_BASE = '/game-engine/api';
+
+async function createNewGame() {
+    const title = document.getElementById('newGameTitle').value.trim() || 'Untitled Game';
+    const genre = document.getElementById('newGameGenre').value;
+    const desc  = document.getElementById('newGameDesc').value.trim();
+    const btn   = document.getElementById('createGameBtn');
+    btn.disabled = true; btn.textContent = 'Yaratilmoqda...';
+
+    try {
+        const res = await fetch(`${API_BASE}/projects/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify({title, genre, description: desc})
+        });
+        const data = await res.json();
+        if (data.id) {
+            window.location.href = `/game-engine/editor/${data.id}/`;
+        } else {
+            showToast('Xato yuz berdi', 'error');
+            btn.disabled = false; btn.textContent = '✨ Yaratish';
+        }
+    } catch(e) {
+        showToast('Server bilan bog\'lanib bo\'lmadi', 'error');
+        btn.disabled = false; btn.textContent = '✨ Yaratish';
+    }
+}
+
+// Close modal on backdrop click
+document.getElementById('newGameModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+});
+
+// Enter key on title
+document.getElementById('newGameTitle').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createNewGame();
+});
+</script>
+{% endblock %}

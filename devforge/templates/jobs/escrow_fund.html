@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}To'lovni amalga oshirish — {{ job.title }}{% endblock %}
+{% block content %}
+<div class="container" style="padding:3rem 1rem; max-width:500px; margin:0 auto;">
+  <div class="card" style="text-align:center; padding:1.5rem;">
+    <div style="font-size:3rem; margin-bottom:1rem;">💰</div>
+    <h2 style="font-weight:800; margin-bottom:.5rem;">Escrow To'lovi</h2>
+    <p style="color:var(--text2); margin-bottom:2rem;">Mablag'ni escrow'ga qo'ying. Bu ishchini ishni boshlashga undaydi va har ikki tomon uchun xavfsizlikni ta'minlaydi.</p>
+    
+    <div style="background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:2rem; text-align:left;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:.75rem;">
+        <span>Ish narxi:</span>
+        <span style="font-weight:700;">${{ escrow.amount }}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:.75rem;">
+        <span>Xizmat haqi (6%):</span>
+        <span style="font-weight:700;">${{ escrow.platform_fee }}</span>
+      </div>
+      <div style="border-top:1px solid var(--border); margin-top:.75rem; padding-top:.75rem; display:flex; justify-content:space-between; font-size:1.2rem; font-weight:800;">
+        <span>Jami:</span>
+        <span style="color:var(--accent);">${{ escrow.amount|add:escrow.platform_fee }}</span>
+      </div>
+    </div>
+    
+    <form method="post">
+      {% csrf_token %}
+      <p style="font-size:.75rem; color:var(--text3); margin-bottom:1rem;">Hozircha bu to'lov simulyatsiyasi. "To'lash" tugmasini bossangiz, pul escrow'da deb hisoblanadi.</p>
+      <button type="submit" class="btn btn-primary w-full" style="justify-content:center; padding:1rem; font-size:1rem; font-weight:700;">To'lovni amalga oshirish</button>
+    </form>
+    
+    <a href="{% url 'job_detail' pk=job.pk %}" style="display:block; margin-top:1.5rem; color:var(--text3); text-decoration:none; font-size:.85rem;">Keyinroq to'lash</a>
+  </div>
+</div>
+{% endblock %}

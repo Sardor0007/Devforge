@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Asset Marketplace — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .marketplace-hero {
+        padding: 4rem 0;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 3rem;
+    }
+
+    .category-scroll {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+        scrollbar-width: none;
+    }
+
+    .category-scroll::-webkit-scrollbar { display: none; }
+
+    .category-pill {
+        white-space: nowrap;
+        padding: 8px 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: var(--transition);
+    }
+
+    .category-pill:hover, .category-pill.active {
+        background: var(--surface-hover);
+        border-color: var(--accent);
+        color: var(--text-primary);
+    }
+
+    .asset-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .asset-thumb {
+        aspect-ratio: 1/1;
+        background: #1e293b;
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .asset-thumb img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .card:hover .asset-thumb img {
+        transform: scale(1.08);
+    }
+
+    .format-tag {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(4px);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.8);
+    }
+
+    .price-tag {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: var(--accent-gradient);
+        color: #000;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .price-tag.free {
+        background: var(--success);
+        color: #fff;
+    }
+
+    .filter-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="marketplace-hero">
+        <span class="section-label">Digital Assets</span>
+        <h1 style="font-family: var(--font-display); font-size: 3rem; font-weight: 800;">Asset Marketplace</h1>
+        <p style="color: var(--text-secondary); max-width: 600px;">
+            High-fidelity 3D models, textures, and UI kits ready for your next project. 
+            Built for Unreal Engine, Unity, and Godot.
+        </p>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="category-scroll">
+        <a href="{% url 'asset_list' %}" class="category-pill {% if not request.GET.category %}active{% endif %}">All Assets</a>
+        {% for cat in categories %}
+        <a href="?category={{ cat.slug }}" class="category-pill {% if request.GET.category == cat.slug %}active{% endif %}">
+            {{ cat.icon }} {{ cat.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Advanced Filters -->
+    <form method="get" class="filter-section">
+        <div class="flex gap-4 flex-wrap">
+            <div style="flex: 2; min-width: 200px;">
+                <input type="text" name="q" value="{{ query }}" class="input-field" placeholder="Search models, materials, tags...">
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <select name="price" class="input-field">
+                    <option value="">Any Price</option>
+                    <option value="free" {% if request.GET.price == 'free' %}selected{% endif %}>Free Assets</option>
+                    <option value="paid" {% if request.GET.price == 'paid' %}selected{% endif %}>Premium Assets</option>
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <select name="format" class="input-field">
+                    <option value="">Any Format</option>
+                    {% for val, label in format_choices %}
+                    <option value="{{ val }}" {% if request.GET.format == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary">Apply Filters</button>
+        </div>
+    </form>
+
+    <div class="asset-grid">
+        {% for asset in assets %}
+        <div class="card">
+            <div class="asset-thumb">
+                {% if asset.thumbnail %}
+                    <img src="{{ asset.thumbnail.url }}" alt="{{ asset.title }}">
+                {% else %}
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">📦</div>
+                {% endif %}
+                
+                <div class="format-tag">{{ asset.format|upper }}</div>
+                <div class="price-tag {% if asset.price == 0 %}free{% endif %}">
+                    {% if asset.price == 0 %}FREE{% else %}${{ asset.price }}{% endif %}
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 0.25rem;">{{ asset.title }}</h3>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">by @{{ asset.creator.username }}</span>
+                {% if asset.category %}
+                <span class="badge" style="font-size: 0.65rem;">{{ asset.category.name }}</span>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center justify-between pt-4" style="border-top: 1px solid var(--border);">
+                <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
+                    <span>⬇️ {{ asset.downloads }}</span>
+                    <span>❤️ {{ asset.like_count }}</span>
+                </div>
+                <a href="{% url 'asset_detail' pk=asset.pk %}" class="btn btn-ghost btn-sm" style="padding: 0.4rem 0.8rem;">View</a>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 6rem 0;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+            <h3 style="font-family: var(--font-display);">No assets matching your criteria</h3>
+            <p style="color: var(--text-muted);">Try a different category or search term.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if assets.has_other_pages %}
+    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 4rem;">
+        {% if assets.has_previous %}
+        <a href="?page={{ assets.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-secondary btn-sm">Prev</a>
+        {% endif %}
+        
+        <span class="btn btn-ghost btn-sm" style="color: var(--accent);">Page {{ assets.number }} of {{ assets.paginator.num_pages }}</span>
+        
+        {% if assets.has_next %}
+        <a href="?page={{ assets.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-secondary btn-sm">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

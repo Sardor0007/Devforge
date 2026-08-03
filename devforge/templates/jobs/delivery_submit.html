@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Ishni topshirish — {{ job.title }}{% endblock %}
+{% block content %}
+<div class="container" style="padding:3rem 1rem; max-width:700px; margin:0 auto;">
+  <div class="card">
+    <div class="card-header">🚀 Ishni topshirish (Secure Delivery)</div>
+    <div class="card-body">
+      <p style="color:var(--text2); margin-bottom:2rem; font-size:.9rem; line-height:1.6;">
+        Ishni sifatli topshiring. Mijoz ishni tasdiqlamaguncha faylni yuklab ololmaydi, lekin preview orqali natijani ko'ra oladi. Tasdiqlangandan so'ng pul avtomatik ravishda balansingizga chiqadi.
+      </p>
+      
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Asosiy fayl (.zip, .rar, .unitypackage va h.k.) *</label>
+          <input type="file" name="file" class="form-input" required>
+          <small style="color:var(--text3);">Ushbu fayl faqat tasdiqlangandan so'ng ochiladi.</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Preview rasm (Screenshot) *</label>
+          <input type="file" name="preview" class="form-input" accept="image/*" required>
+          <small style="color:var(--text3);">Mijoz natijani tekshirishi uchun rasm.</small>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Demo havola (GitHub, Youtube, Demo link)</label>
+          <input type="url" name="demo_link" class="form-input" placeholder="https://...">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Xabar / Izoh</label>
+          <textarea name="message" class="form-input" rows="5" required placeholder="Ish haqida qisqacha ma'lumot..."></textarea>
+        </div>
+        
+        <div style="display:flex; gap:1rem; margin-top:2rem;">
+          <button type="submit" class="btn btn-primary" style="flex:1; justify-content:center; padding:1rem; font-weight:700;">🚀 Ishni topshirish</button>
+          <a href="{% url 'job_detail' pk=job.pk %}" class="btn btn-secondary" style="flex:1; justify-content:center; text-decoration:none; padding:1rem;">Bekor qilish</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

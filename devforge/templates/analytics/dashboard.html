@@ -1,0 +1,714 @@
+{% extends "base.html" %}
+{% block title %}Admin Analitika Paneli{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Make admin dashboard full-screen, removing container limitations */
+.nav-wrapper { max-width: 100% !important; padding: 0.5rem 1rem !important; }
+.navbar { border-radius: 0 !important; border-left: none !important; border-right: none !important; border-top: none !important; margin: 0 !important; }
+main.container { max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; min-height: 100vh; min-height: calc(100dvh - 68px); display: flex; flex-direction: column; }
+
+/* ── LAYOUT ── */
+.analytics-wrap { display: grid; grid-template-columns: 220px 1fr; min-height: 100% !important; flex: 1; }
+
+.aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    position: sticky; top: 68px;
+    height: calc(100vh - 68px);
+    height: calc(100dvh - 68px);
+    overflow-y: auto;
+}
+.aside-title {
+    font-size: .65rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text3); padding: 0 1.25rem .5rem;
+    margin-top: 1rem;
+}
+.aside-link {
+    display: flex; align-items: center; gap: .65rem;
+    padding: .55rem 1.25rem;
+    color: var(--text2); text-decoration: none;
+    font-size: .85rem; font-weight: 500;
+    transition: .15s; border-left: 3px solid transparent;
+}
+.aside-link:hover  { background: var(--surface2); color: var(--text); }
+.aside-link.active { background: rgba(59,130,246,.1); color: var(--accent); border-left-color: var(--accent); }
+
+.main { padding: 2rem; overflow-x: hidden; }
+
+/* ── KPI CARDS ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s;
+}
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.kpi-blue::before   { background: var(--accent); }
+.kpi-green::before  { background: var(--green); }
+.kpi-orange::before { background: var(--orange); }
+.kpi-purple::before { background: var(--accent2); }
+.kpi-red::before    { background: var(--red); }
+.kpi-teal::before   { background: #14b8a6; }
+
+.kpi-icon  { font-size: 1.5rem; margin-bottom: .5rem; }
+.kpi-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); }
+.kpi-value { font-size: 2rem; font-weight: 900; font-family: 'Space Mono', monospace; line-height: 1.1; margin: .2rem 0; }
+.kpi-sub   { font-size: .75rem; color: var(--text2); margin-top: .25rem; display: flex; align-items: center; gap: .3rem; }
+.growth-up   { color: var(--green); font-weight: 700; }
+.growth-down { color: var(--red);   font-weight: 700; }
+
+/* ── SECTION HEADERS ── */
+.section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+}
+.section-title { font-size: 1rem; font-weight: 700; }
+.section-sub   { font-size: .8rem; color: var(--text2); margin-top: .1rem; }
+
+/* ── CHARTS ── */
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+.chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+}
+.chart-title { font-size: .875rem; font-weight: 700; margin-bottom: 1rem; color: var(--text2); }
+canvas { max-height: 220px; }
+
+/* ── TABLES ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.data-table th {
+    text-align: left; padding: .6rem .85rem;
+    font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    color: var(--text3); border-bottom: 1px solid var(--border);
+}
+.data-table td {
+    padding: .65rem .85rem;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+    color: var(--text);
+    vertical-align: middle;
+}
+.data-table tr:hover td { background: rgba(255,255,255,.02); }
+.data-table tr:last-child td { border-bottom: none; }
+
+/* ── MINI BAR ── */
+.mini-bar-wrap { display: flex; align-items: center; gap: .6rem; }
+.mini-bar-bg   { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.mini-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+
+/* ── PERIOD SELECTOR ── */
+.period-btns { display: flex; gap: .35rem; }
+.period-btn {
+    padding: .3rem .75rem; border-radius: 6px;
+    font-size: .78rem; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border);
+    background: transparent; color: var(--text2); transition: .15s;
+}
+.period-btn:hover,
+.period-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── ACTIVITY FEED ── */
+.activity-item {
+    display: flex; align-items: flex-start; gap: .85rem;
+    padding: .65rem 0; border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-icon {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; flex-shrink: 0;
+}
+.activity-text { font-size: .83rem; }
+.activity-time { font-size: .72rem; color: var(--text3); margin-top: .15rem; }
+
+/* ── ALERT BOX ── */
+.alert-admin {
+    background: rgba(245,158,11,.08);
+    border: 1px solid rgba(245,158,11,.25);
+    border-radius: var(--radius);
+    padding: .85rem 1.1rem;
+    display: flex; align-items: center; gap: .75rem;
+    font-size: .875rem; margin-bottom: 2rem;
+}
+
+/* ── DONUT ── */
+.donut-legend { display: flex; flex-direction: column; gap: .4rem; margin-top: .75rem; }
+.donut-leg-item { display: flex; align-items: center; gap: .5rem; font-size: .78rem; }
+.donut-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-wrap">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="aside">
+    <div style="padding: 0 1.25rem 1rem; border-bottom: 1px solid var(--border);">
+      <div style="font-family:'Space Mono',monospace; font-size:.9rem; font-weight:700; color:var(--accent);">
+        📊 Admin Panel
+      </div>
+      <div style="font-size:.75rem; color:var(--text3); margin-top:.2rem;">DevForge Analytics</div>
+    </div>
+
+    <div class="aside-title" style="margin-top:1rem;">Asosiy</div>
+    <a href="{% url 'analytics_dashboard' %}" class="aside-link active">🏠 Dashboard</a>
+    <a href="{% url 'user_management' %}" class="aside-link">👥 Foydalanuvchilar</a>
+    <a href="{% url 'admin_projects' %}" class="aside-link">🚀 Loyihalar</a>
+
+    <div class="aside-title">Tezkor Havolalar</div>
+    <a href="{% url 'project_list' %}" class="aside-link">📋 Barcha Loyihalar</a>
+    <a href="{% url 'asset_list' %}" class="aside-link">📦 Barcha Aktivlar</a>
+    <a href="{% url 'service_list' %}" class="aside-link">💼 Marketplace</a>
+    <a href="{% url 'order_list' %}" class="aside-link">🛒 Buyurtmalar</a>
+    <a href="{% url 'notification_list' %}" class="aside-link">🔔 Bildirishnomalar</a>
+
+    <div class="aside-title">Tizim</div>
+    <a href="/admin/" class="aside-link">⚙️ Django Admin</a>
+    <a href="{% url 'home' %}" class="aside-link">🌐 Saytga qaytish</a>
+
+    <!-- Quick stats -->
+    <div style="margin: 1.5rem 1rem 0; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); padding:.85rem;">
+      <div style="font-size:.7rem; color:var(--text3); font-weight:700; text-transform:uppercase; letter-spacing:.5px; margin-bottom:.6rem;">Joriy holat</div>
+      {% if pending_approvals > 0 %}
+      <div style="display:flex; justify-content:space-between; font-size:.78rem; margin-bottom:.35rem;">
+        <span style="color:var(--text2);">⏳ Kutilayotgan arizalar</span>
+        <span style="color:var(--orange); font-weight:700;">{{ pending_approvals }}</span>
+      </div>
+      {% endif %}
+      <div style="display:flex; justify-content:space-between; font-size:.78rem; margin-bottom:.35rem;">
+        <span style="color:var(--text2);">👤 Jami foydalanuvchi</span>
+        <span style="font-weight:700;">{{ total_users }}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:.78rem;">
+        <span style="color:var(--text2);">💰 Jami daromad</span>
+        <span style="color:var(--green); font-weight:700;">${{ total_revenue }}</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main">
+
+    <!-- HEADER -->
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.75rem; flex-wrap:wrap; gap:1rem;">
+      <div>
+        <h1 style="font-size:1.5rem; font-weight:800;">Analitika Paneli</h1>
+        <p style="color:var(--text2); font-size:.875rem; margin-top:.2rem;">
+          Real vaqt statistika va tizim holati
+        </p>
+      </div>
+      <div class="period-btns" id="periodBtns">
+        <button class="period-btn {% if period == 7 %}active{% endif %}"  onclick="setPeriod(7, this)">7 kun</button>
+        <button class="period-btn {% if period == 30 %}active{% endif %}" onclick="setPeriod(30, this)">30 kun</button>
+        <button class="period-btn {% if period == 90 %}active{% endif %}" onclick="setPeriod(90, this)">90 kun</button>
+      </div>
+    </div>
+
+    <!-- PENDING APPROVALS ALERT -->
+    {% if pending_approvals > 0 %}
+    <div class="alert-admin">
+      <span style="font-size:1.3rem;">⚠️</span>
+      <div>
+        <strong>{{ pending_approvals }} ta ariza</strong> ko'rib chiqilishini kutmoqda.
+        <a href="{% url 'project_list' %}" style="color:var(--accent); margin-left:.5rem;">Ko'rish →</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-label">Foydalanuvchilar</div>
+        <div class="kpi-value">{{ total_users }}</div>
+        <div class="kpi-sub">
+          <span class="{% if user_growth >= 0 %}growth-up{% else %}growth-down{% endif %}">
+            {% if user_growth >= 0 %}▲{% else %}▼{% endif %} {{ user_growth|floatformat:1 }}%
+          </span>
+          <span>· oxirgi {{ period }} kun: +{{ new_users }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">🚀</div>
+        <div class="kpi-label">Loyihalar</div>
+        <div class="kpi-value">{{ total_projects }}</div>
+        <div class="kpi-sub">
+          <span class="{% if project_growth >= 0 %}growth-up{% else %}growth-down{% endif %}">
+            {% if project_growth >= 0 %}▲{% else %}▼{% endif %} {{ project_growth|floatformat:1 }}%
+          </span>
+          <span>· +{{ new_projects }} yangi</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-label">3D Aktivlar</div>
+        <div class="kpi-value">{{ total_assets }}</div>
+        <div class="kpi-sub">
+          <span class="{% if asset_growth >= 0 %}growth-up{% else %}growth-down{% endif %}">
+            {% if asset_growth >= 0 %}▲{% else %}▼{% endif %} {{ asset_growth|floatformat:1 }}%
+          </span>
+          <span>· +{{ new_assets }} yangi</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-orange">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-label">Jami Daromad</div>
+        <div class="kpi-value">${{ total_revenue|floatformat:0 }}</div>
+        <div class="kpi-sub">
+          <span>{{ total_orders }} buyurtma</span>
+          <span>· {{ new_orders }} yangi</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-teal">
+        <div class="kpi-icon">💼</div>
+        <div class="kpi-label">Xizmatlar</div>
+        <div class="kpi-value">{{ total_services }}</div>
+        <div class="kpi-sub"><span>Freelance marketplace</span></div>
+      </div>
+
+      <div class="kpi-card kpi-red">
+        <div class="kpi-icon">⏳</div>
+        <div class="kpi-label">Kutilayotgan</div>
+        <div class="kpi-value">{{ pending_approvals }}</div>
+        <div class="kpi-sub"><span>Loyiha arizalari</span></div>
+      </div>
+
+      {% for ts in tasks_by_status %}
+      {% if ts.status == 'inprogress' %}
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">⚡</div>
+        <div class="kpi-label">Jarayondagi Vazifalar</div>
+        <div class="kpi-value">{{ ts.count }}</div>
+        <div class="kpi-sub"><span>Aktiv vazifalar</span></div>
+      </div>
+      {% endif %}
+      {% endfor %}
+
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-icon">📡</div>
+        <div class="kpi-label">Feed Postlar</div>
+        <div class="kpi-value">{{ total_posts }}</div>
+        <div class="kpi-sub"><span>Ijtimoiy feed</span></div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">💼</div>
+        <div class="kpi-label">Ish O'rinlari</div>
+        <div class="kpi-value">{{ open_jobs }}</div>
+        <div class="kpi-sub"><span>{{ total_jobs }} jami · {{ open_jobs }} ochiq</span></div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-icon">📊</div>
+        <div class="kpi-label">Faol Loyihalar</div>
+        <div class="kpi-value">{% for ps in projects_by_status %}{% if ps.status == 'active' %}{{ ps.count }}{% endif %}{% endfor %}</div>
+        <div class="kpi-sub"><span>Status: active</span></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">👥 Yangi Foydalanuvchilar</div>
+        <canvas id="chartUsers"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🚀 Yangi Loyihalar</div>
+        <canvas id="chartProjects"></canvas>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 2 -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">📦 Aktiv Yuklamalar</div>
+        <canvas id="chartAssets"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">🛒 Buyurtmalar</div>
+        <canvas id="chartOrders"></canvas>
+      </div>
+    </div>
+
+    <!-- PIE CHARTS ROW -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; margin-bottom:2rem;">
+
+      <!-- Foydalanuvchi rollari -->
+      <div class="chart-card">
+        <div class="chart-title">👤 Foydalanuvchi Rollari</div>
+        <canvas id="chartRoles" style="max-height:180px;"></canvas>
+        <div class="donut-legend">
+          {% for r in users_by_role %}
+          <div class="donut-leg-item">
+            <div class="donut-dot" style="background: hsl({{ forloop.counter0|add:200 }}, 70%, 60%);"></div>
+            <span style="color:var(--text2);">{{ r.role }}</span>
+            <span style="margin-left:auto; font-weight:700;">{{ r.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Loyiha janrlari -->
+      <div class="chart-card">
+        <div class="chart-title">🎮 Loyiha Janrlari</div>
+        <canvas id="chartGenres" style="max-height:180px;"></canvas>
+        <div class="donut-legend">
+          {% for g in projects_by_genre|slice:":5" %}
+          <div class="donut-leg-item">
+            <div class="donut-dot" style="background: hsl({{ forloop.counter0|add:140 }}, 65%, 55%);"></div>
+            <span style="color:var(--text2);">{{ g.genre }}</span>
+            <span style="margin-left:auto; font-weight:700;">{{ g.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Aktiv formatlar -->
+      <div class="chart-card">
+        <div class="chart-title">📁 Aktiv Formatlari</div>
+        <canvas id="chartFormats" style="max-height:180px;"></canvas>
+        <div class="donut-legend">
+          {% for f in assets_by_format %}
+          <div class="donut-leg-item">
+            <div class="donut-dot" style="background: hsl({{ forloop.counter0|add:270 }}, 65%, 60%);"></div>
+            <span style="color:var(--text2);">{{ f.format|upper }}</span>
+            <span style="margin-left:auto; font-weight:700;">{{ f.count }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLES ROW -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;">
+
+      <!-- Top Aktivlar -->
+      <div class="chart-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">🏆 Top Aktivlar</div>
+            <div class="section-sub">Eng ko'p yuklab olingan</div>
+          </div>
+          <a href="{% url 'asset_list' %}" class="btn btn-ghost btn-sm">Barchasi →</a>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Nomi</th><th>Format</th><th>Yuklamalar</th></tr></thead>
+          <tbody>
+          {% for a in top_assets %}
+          <tr>
+            <td style="color:var(--text3); width:30px;">{{ forloop.counter }}</td>
+            <td><a href="{% url 'asset_detail' pk=a.pk %}" style="color:var(--text); text-decoration:none; font-weight:600;">{{ a.title|truncatechars:22 }}</a></td>
+            <td><span class="badge badge-gray">{{ a.format|upper }}</span></td>
+            <td>
+              <div class="mini-bar-wrap">
+                <span style="font-weight:700; min-width:30px;">{{ a.downloads }}</span>
+                {% if top_assets.0.downloads > 0 %}
+                <div class="mini-bar-bg">
+                  <div class="mini-bar-fill" style="width:{{ a.downloads|add:0 }}%;"></div>
+                </div>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="color:var(--text3); text-align:center; padding:1.5rem;">Ma'lumot yo'q</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Top Xizmatlar -->
+      <div class="chart-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">💼 Top Xizmatlar</div>
+            <div class="section-sub">Eng ko'p buyurtma olgan</div>
+          </div>
+          <a href="{% url 'service_list' %}" class="btn btn-ghost btn-sm">Barchasi →</a>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Xizmat</th><th>Buyurtma</th><th>Daromad</th></tr></thead>
+          <tbody>
+          {% for s in top_services %}
+          <tr>
+            <td style="color:var(--text3); width:30px;">{{ forloop.counter }}</td>
+            <td>
+              <a href="{% url 'service_detail' pk=s.pk %}" style="color:var(--text); text-decoration:none; font-weight:600;">{{ s.title|truncatechars:20 }}</a>
+              <div style="font-size:.72rem; color:var(--text3);">{{ s.seller.username }}</div>
+            </td>
+            <td><span class="badge badge-blue">{{ s.order_count }}</span></td>
+            <td style="color:var(--green); font-weight:700;">${{ s.total_rev|default:0|floatformat:0 }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="color:var(--text3); text-align:center; padding:1.5rem;">Ma'lumot yo'q</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:2rem;">
+
+      <!-- So'nggi foydalanuvchilar -->
+      <div class="chart-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">👤 Yangi Foydalanuvchilar</div>
+            <div class="section-sub">Oxirgi ro'yxatdan o'tganlar</div>
+          </div>
+          <a href="{% url 'user_management' %}" class="btn btn-ghost btn-sm">Barchasi →</a>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Foydalanuvchi</th><th>Rol</th><th>Sana</th><th>Holat</th></tr></thead>
+          <tbody>
+          {% for u in recent_users %}
+          <tr>
+            <td>
+              <div style="font-weight:600; font-size:.85rem;">{{ u.username }}</div>
+              <div style="font-size:.72rem; color:var(--text3);">{{ u.email }}</div>
+            </td>
+            <td><span class="badge badge-purple" style="font-size:.68rem;">{{ u.get_role_display }}</span></td>
+            <td style="font-size:.78rem; color:var(--text2);">{{ u.created_at|date:"d M" }}</td>
+            <td>
+              {% if u.is_active %}
+              <span class="badge badge-green">Faol</span>
+              {% else %}
+              <span class="badge badge-red">Bloklangan</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- So'nggi buyurtmalar -->
+      <div class="chart-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">🛒 So'nggi Buyurtmalar</div>
+            <div class="section-sub">Oxirgi marketplace faoliyati</div>
+          </div>
+          <a href="{% url 'order_list' %}" class="btn btn-ghost btn-sm">Barchasi →</a>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Xizmat</th><th>Buyurtmachi</th><th>Summa</th><th>Holat</th></tr></thead>
+          <tbody>
+          {% for o in recent_orders %}
+          <tr>
+            <td style="font-weight:600; font-size:.83rem;">{{ o.service.title|truncatechars:18 }}</td>
+            <td style="font-size:.8rem; color:var(--text2);">{{ o.buyer.username }}</td>
+            <td style="color:var(--green); font-weight:700;">${{ o.amount }}</td>
+            <td>
+              <span class="badge {% if o.status == 'completed' %}badge-green{% elif o.status == 'active' %}badge-blue{% elif o.status == 'cancelled' %}badge-red{% else %}badge-orange{% endif %}" style="font-size:.68rem;">
+                {{ o.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="color:var(--text3); text-align:center; padding:1.5rem;">Buyurtma yo'q</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ACTIVITY FEED + TOP SELLERS -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+
+      <!-- Tizim faoliyati -->
+      <div class="chart-card">
+        <div class="section-head">
+          <div class="section-title">⚡ So'nggi Faoliyat</div>
+        </div>
+        {% for n in recent_notifs %}
+        <div class="activity-item">
+          <div class="activity-icon">{{ n.icon }}</div>
+          <div>
+            <div class="activity-text">
+              <strong>{{ n.recipient.username }}</strong> — {{ n.title|truncatechars:45 }}
+            </div>
+            <div class="activity-time">{{ n.created_at|timesince }} avval</div>
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text3); text-align:center; padding:2rem;">Faoliyat yo'q</p>
+        {% endfor %}
+      </div>
+
+      <!-- Top sotuvchilar -->
+      <div class="chart-card">
+        <div class="section-head">
+          <div>
+            <div class="section-title">⭐ Top Sotuvchilar</div>
+            <div class="section-sub">Eng ko'p buyurtma olganlar</div>
+          </div>
+        </div>
+        {% for u in top_sellers %}
+        <div style="display:flex; align-items:center; gap:.75rem; padding:.6rem 0; border-bottom:1px solid rgba(255,255,255,.04);">
+          <div style="font-family:'Space Mono',monospace; font-size:.75rem; color:var(--text3); width:20px; text-align:center; font-weight:700;">
+            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+          </div>
+          <div class="avatar-sm">{{ u.username|first|upper }}</div>
+          <div style="flex:1;">
+            <a href="{% url 'profile' username=u.username %}" style="font-weight:700; font-size:.85rem; color:var(--text); text-decoration:none;">
+              {{ u.username }}
+            </a>
+            <div style="font-size:.72rem; color:var(--text3);">{{ u.service_count }} xizmat</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700; font-size:.85rem; color:var(--accent);">{{ u.order_count }}</div>
+            <div style="font-size:.7rem; color:var(--text3);">buyurtma</div>
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:var(--text3); text-align:center; padding:2rem;">Ma'lumot yo'q</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── DATA FROM DJANGO ──────────────────────────────────────────────────────────
+const userDays    = {{ user_days_json|safe }};
+const userVals    = {{ user_vals_json|safe }};
+const projectDays = {{ project_days_json|safe }};
+const projectVals = {{ project_vals_json|safe }};
+const assetDays   = {{ asset_days_json|safe }};
+const assetVals   = {{ asset_vals_json|safe }};
+const orderDays   = {{ order_days_json|safe }};
+const orderVals   = {{ order_vals_json|safe }};
+
+const roleLabels = [{% for r in users_by_role %}"{{ r.role }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const roleVals   = [{% for r in users_by_role %}{{ r.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+const genreLabels = [{% for g in projects_by_genre %}"{{ g.genre }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const genreVals   = [{% for g in projects_by_genre %}{{ g.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+const fmtLabels = [{% for f in assets_by_format %}"{{ f.format|upper }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+const fmtVals   = [{% for f in assets_by_format %}{{ f.count }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+// ── CHART DEFAULTS ────────────────────────────────────────────────────────────
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#1e2d45';
+Chart.defaults.font.family = 'Inter, sans-serif';
+
+const lineOpts = (label, color) => ({
+    type: 'line',
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: { size: 10 } } },
+            y: { grid: { color: '#1e2d45' }, ticks: { font: { size: 10 }, stepSize: 1 }, beginAtZero: true }
+        },
+        elements: { point: { radius: 3, hoverRadius: 6 } }
+    }
+});
+
+function makeLineChart(id, labels, vals, label, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label,
+                data: vals,
+                borderColor: color,
+                backgroundColor: color + '18',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointBackgroundColor: color,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 7, font: { size: 10 } } },
+                y: { grid: { color: '#1e2d45' }, ticks: { font: { size: 10 }, stepSize: 1 }, beginAtZero: true }
+            },
+            elements: { point: { radius: 3, hoverRadius: 6 } }
+        }
+    });
+}
+
+function makeDoughnut(id, labels, vals, colors) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    return new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{ data: vals, backgroundColor: colors, borderWidth: 2, borderColor: '#111827' }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}` } }
+            },
+            cutout: '65%'
+        }
+    });
+}
+
+// ── INIT CHARTS ───────────────────────────────────────────────────────────────
+const BLUE   = '#3b82f6';
+const GREEN  = '#10b981';
+const PURPLE = '#8b5cf6';
+const ORANGE = '#f59e0b';
+
+const shortDays = labels => labels.map(l => l.slice(5)); // MM-DD
+
+makeLineChart('chartUsers',    shortDays(userDays),    userVals,    'Foydalanuvchilar', BLUE);
+makeLineChart('chartProjects', shortDays(projectDays), projectVals, 'Loyihalar',        GREEN);
+makeLineChart('chartAssets',   shortDays(assetDays),   assetVals,   'Aktivlar',         PURPLE);
+makeLineChart('chartOrders',   shortDays(orderDays),   orderVals,   'Buyurtmalar',      ORANGE);
+
+const pieColors = (n, hOffset=200) => Array.from({length:n}, (_,i) =>
+    `hsl(${(i * 45 + hOffset) % 360}, 65%, 58%)`
+);
+
+makeDoughnut('chartRoles',   roleLabels,  roleVals,  pieColors(roleLabels.length, 200));
+makeDoughnut('chartGenres',  genreLabels, genreVals, pieColors(genreLabels.length, 140));
+makeDoughnut('chartFormats', fmtLabels,   fmtVals,   pieColors(fmtLabels.length, 270));
+
+// ── PERIOD SWITCHER ───────────────────────────────────────────────────────────
+function setPeriod(days, btn) {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    window.location.href = `?period=${days}`;
+}
+</script>
+{% endblock %}

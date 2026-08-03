@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}Audio Lab — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.al-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(6,182,212,0.08) 100%);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem; margin-bottom: 2.5rem; text-align: center; position: relative; overflow: hidden;
+}
+.al-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(16,185,129,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 40%, rgba(6,182,212,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+/* Vinyl animation */
+.al-vinyl { width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(#0d1117 0deg, #1a1a2e 90deg, #0d1117 180deg, #1a1a2e 270deg); border: 3px solid rgba(16,185,129,0.4); animation: spin 4s linear infinite; margin: 0 auto 1rem; position: relative; box-shadow: 0 0 20px rgba(16,185,129,0.3); }
+.al-vinyl::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 20px; height: 20px; background: #10b981; border-radius: 50%; }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.al-hero-title { font-family: var(--font-display); font-size: 2.6rem; font-weight: 900;
+    background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.4rem; }
+.al-hero-sub { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+.al-stats { display: flex; gap: 1rem; margin-bottom: 2.5rem; }
+.al-stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; }
+.al-stat-val { font-family: var(--font-display); font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.al-stat-lbl { color: var(--text-muted); font-size: 0.78rem; }
+
+.al-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+.al-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; transition: var(--transition); }
+.al-card:hover { transform: translateY(-4px); border-color: #10b981; box-shadow: 0 12px 36px rgba(16,185,129,0.12); }
+.al-card-header { padding: 1.25rem 1.25rem 0.75rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+.al-card-icon { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg,rgba(16,185,129,0.2),rgba(6,182,212,0.15));
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; border: 1px solid rgba(16,185,129,0.2); }
+.al-card-info { flex: 1; min-width: 0; }
+.al-card-title { font-weight: 700; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.al-card-meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 0.75rem; margin-top: 3px; flex-wrap: wrap; }
+/* Waveform preview */
+.al-waveform { height: 48px; margin: 0 1.25rem; border-radius: 6px; background: rgba(16,185,129,0.05); overflow: hidden; }
+.al-waveform-svg { width: 100%; height: 100%; }
+.al-card-actions { display: flex; gap: 0.5rem; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); }
+.al-btn { flex: 1; padding: 0.4rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 500;
+    border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-secondary);
+    cursor: pointer; transition: var(--transition); text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 3px; }
+.al-btn:hover { background: #10b981; color: #fff; border-color: #10b981; }
+.al-btn.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+.al-empty { text-align: center; padding: 4rem 2rem; border: 2px dashed var(--border); border-radius: var(--radius-lg); }
+
+/* Modal */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.modal-backdrop.show { display: flex; }
+.modal-box { background: #0d1117; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; width: 100%; max-width: 440px; position: relative; }
+.modal-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 0.83rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--text-secondary); }
+.form-input { width: 100%; padding: 0.65rem 1rem; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);
+    font-size: 0.9rem; outline: none; transition: var(--transition); font-family: var(--font-main); }
+.form-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+.bpm-display { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 700;
+    background: linear-gradient(135deg,#10b981,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    text-align: center; margin-bottom: 0.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="al-hero">
+    <div class="al-vinyl"></div>
+    <div class="al-hero-title">🎵 Audio Lab</div>
+    <p class="al-hero-sub">Professional DAW — Web Audio API asosida to'liq studiya</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newProjectModal').classList.add('show')"
+        style="background: linear-gradient(135deg, #10b981, #06b6d4); border: none;">
+        + Yangi Loyiha
+    </button>
+</div>
+
+{% if projects %}
+<div class="al-stats">
+    <div class="al-stat">
+        <div class="al-stat-val">{{ projects.count }}</div>
+        <div class="al-stat-lbl">Loyihalar</div>
+    </div>
+    <div class="al-stat">
+        <div class="al-stat-val" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">{{ tracks.count }}</div>
+        <div class="al-stat-lbl">Audio Fayllar</div>
+    </div>
+    <div class="al-stat">
+        <div class="al-stat-val" style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">DAW</div>
+        <div class="al-stat-lbl">Rejim</div>
+    </div>
+</div>
+
+<div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+    <h2 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;">🎛️ Loyihalarim</h2>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('newProjectModal').classList.add('show')"
+        style="background: linear-gradient(135deg, #10b981, #06b6d4); border: none;">+ Yangi</button>
+</div>
+
+<div class="al-grid">
+    {% for project in projects %}
+    <div class="al-card">
+        <div class="al-card-header">
+            <div class="al-card-icon">🎵</div>
+            <div class="al-card-info">
+                <div class="al-card-title">{{ project.title }}</div>
+                <div class="al-card-meta">
+                    <span>🎸 {{ project.bpm }} BPM</span>
+                    <span>🕐 {{ project.updated_at|timesince }} avval</span>
+                </div>
+            </div>
+        </div>
+        <!-- Animated waveform preview -->
+        <div class="al-waveform">
+            <svg class="al-waveform-svg" viewBox="0 0 300 48" preserveAspectRatio="none">
+                {% for i in "12345678901234567890123456789012345678901234567890" %}
+                <rect x="{{ forloop.counter0|add:0 }}%" y="50%" width="1.5%" height="0" rx="1" fill="rgba(16,185,129,0.4)"
+                    style="transform-origin: center; animation: wvBar {{ forloop.counter|add:10 }}00ms ease-in-out infinite alternate;"></rect>
+                {% endfor %}
+            </svg>
+        </div>
+        <div class="al-card-actions">
+            <a href="{% url 'audio_lab:editor' project.id %}" class="al-btn">🎛️ Edit</a>
+            <a href="{% url 'audio_lab:delete' project.id %}" class="al-btn danger"
+               onclick="return confirm('Bu loyihani o\'chirishni tasdiqlaysizmi?')">🗑️ Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="al-empty">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">🎵</div>
+    <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Hali loyihalar yo'q</p>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Birinchi audio loyihangizni yarating</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newProjectModal').classList.add('show')"
+        style="background: linear-gradient(135deg, #10b981, #06b6d4); border: none;">
+        🎵 Birinchi Loyiha
+    </button>
+</div>
+{% endif %}
+
+<!-- New Project Modal -->
+<div class="modal-backdrop" id="newProjectModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('newProjectModal').classList.remove('show')"
+            style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+        <div class="modal-title">🎵 Yangi Audio Loyiha</div>
+        <div class="form-group">
+            <label class="form-label">Loyiha nomi</label>
+            <input type="text" id="projTitle" class="form-input" placeholder="Misol: Epic Game OST" autofocus>
+        </div>
+        <div class="form-group">
+            <label class="form-label">BPM (Beats Per Minute)</label>
+            <div class="bpm-display" id="bpmDisplay">120</div>
+            <input type="range" id="bpmSlider" min="60" max="240" value="120" style="width:100%;accent-color:#10b981;"
+                oninput="document.getElementById('bpmDisplay').textContent=this.value">
+            <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);margin-top:4px;">
+                <span>60 (Slow)</span><span>120 (Normal)</span><span>180 (Fast)</span><span>240 (Ultra)</span>
+            </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('newProjectModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary" id="createProjBtn" onclick="createProject()"
+                style="background:linear-gradient(135deg,#10b981,#06b6d4);border:none;">🎵 Yaratish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+@keyframes wvBar {
+    from { height: 4px; transform: translateY(-2px); }
+    to   { height: 40px; transform: translateY(-20px); }
+}
+</style>
+<script>
+document.getElementById('newProjectModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+async function createProject() {
+    const title = document.getElementById('projTitle').value.trim() || 'Untitled Project';
+    const bpm = parseInt(document.getElementById('bpmSlider').value);
+    const btn = document.getElementById('createProjBtn');
+    btn.disabled = true; btn.textContent = 'Yaratilmoqda...';
+    try {
+        const res = await fetch('/studio/audio-lab/create/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ title, bpm })
+        });
+        const data = await res.json();
+        if (data.redirect) window.location.href = data.redirect;
+        else { showToast('Xato: ' + (data.error || ''), 'error'); btn.disabled = false; btn.textContent = '🎵 Yaratish'; }
+    } catch(e) { showToast('Server xatosi', 'error'); btn.disabled = false; btn.textContent = '🎵 Yaratish'; }
+}
+document.getElementById('projTitle').addEventListener('keydown', e => { if(e.key==='Enter') createProject(); });
+</script>
+{% endblock %}

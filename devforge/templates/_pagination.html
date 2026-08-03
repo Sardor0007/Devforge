@@ -1,0 +1,38 @@
+{% if page_obj.has_other_pages %}
+<div style="display:flex; align-items:center; justify-content:center; gap:.4rem; margin-top:2rem; flex-wrap:wrap;">
+  {% if page_obj.has_previous %}
+  <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+     style="padding:.45rem .85rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);
+            color:var(--text2); text-decoration:none; font-size:.875rem; font-weight:600; transition:.15s;"
+     onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">← Oldingi</a>
+  {% endif %}
+
+  {% for num in page_obj.paginator.page_range %}
+    {% if page_obj.number == num %}
+    <span style="padding:.45rem .85rem; border-radius:8px; background:var(--accent); color:#fff;
+                 font-size:.875rem; font-weight:700;">{{ num }}</span>
+    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}"
+       style="padding:.45rem .85rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);
+              color:var(--text2); text-decoration:none; font-size:.875rem; font-weight:600; transition:.15s;"
+       onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">{{ num }}</a>
+    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+    <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ num }}"
+       style="padding:.45rem .85rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);
+              color:var(--text2); text-decoration:none; font-size:.875rem; font-weight:600;">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+  <a href="?{% if request.GET.urlencode %}{{ request.GET.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+     style="padding:.45rem .85rem; border-radius:8px; border:1px solid var(--border); background:var(--surface);
+            color:var(--text2); text-decoration:none; font-size:.875rem; font-weight:600; transition:.15s;"
+     onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Keyingi →</a>
+  {% endif %}
+
+  <span style="font-size:.78rem; color:var(--text3); margin-left:.5rem;">
+    {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} sahifa
+    ({{ page_obj.paginator.count }} ta natija)
+  </span>
+</div>
+{% endif %}

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — {{ course.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.lesson-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    height: calc(100vh - 56px);
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+}
+/* LEFT: Video + Info */
+.lesson-main {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: #050810;
+}
+.video-wrap {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+    position: relative;
+    flex-shrink: 0;
+}
+.video-wrap iframe,
+.video-wrap video {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
+}
+.lesson-info-area {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    flex: 1;
+}
+.lesson-nav-btns {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+.nav-btn-prev { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.nav-btn-prev:hover { border-color: #6366f1; color: #a5b4fc; }
+.nav-btn-next { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+.nav-btn-next:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.4); transform: translateY(-1px); }
+.nav-btn-done { background: linear-gradient(135deg, var(--green), #059669); color: #fff; }
+
+/* Comments */
+.comment-form-area { margin-top: 1.5rem; }
+.comment-input-row { display: flex; gap: 0.75rem; }
+.comment-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.comment-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.comment-submit-btn {
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.comment-submit-btn:hover { background: #4f46e5; }
+.comment-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.75rem;
+    transition: border-color 0.2s;
+}
+.comment-item:hover { border-color: rgba(99,102,241,0.2); }
+.comment-meta { display: flex; justify-content: space-between; margin-bottom: 0.4rem; }
+.comment-author { font-size: 0.8rem; font-weight: 700; color: #a5b4fc; }
+.comment-time { font-size: 0.72rem; color: var(--text3); }
+.comment-text { font-size: 0.875rem; color: var(--text2); line-height: 1.5; }
+
+/* RIGHT: Sidebar */
+.lesson-sidebar {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sidebar-head {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.sidebar-course-title { font-size: 0.85rem; font-weight: 800; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-progress-label { font-size: 0.72rem; color: var(--text3); }
+.sidebar-progress-bar { background: var(--surface2); border-radius: 99px; height: 4px; margin-top: 0.5rem; overflow: hidden; }
+.sidebar-progress-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 99px; }
+.lesson-list {
+    flex: 1;
+    overflow-y: auto;
+}
+.lesson-list::-webkit-scrollbar { width: 4px; }
+.lesson-list::-webkit-scrollbar-track { background: transparent; }
+.lesson-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.sidebar-lesson-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: var(--text);
+}
+.sidebar-lesson-row:hover { background: rgba(99,102,241,0.05); }
+.sidebar-lesson-row.active {
+    background: rgba(99,102,241,0.08);
+    border-left: 3px solid #6366f1;
+}
+.sl-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    color: var(--text2);
+}
+.sidebar-lesson-row.active .sl-num { background: rgba(99,102,241,0.2); border-color: #6366f1; color: #a5b4fc; }
+.sl-title { font-size: 0.82rem; font-weight: 600; flex: 1; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sl-dur { font-size: 0.68rem; color: var(--text3); white-space: nowrap; }
+.sidebar-foot {
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .lesson-layout { grid-template-columns: 1fr; height: auto; overflow: visible; }
+    .lesson-main { overflow: visible; }
+    .lesson-sidebar { height: auto; max-height: 300px; border-left: none; border-top: 1px solid var(--border); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lesson-layout">
+    <!-- LEFT: Video + Info -->
+    <div class="lesson-main">
+        <!-- Video -->
+        <div class="video-wrap">
+            {% if lesson.video_file %}
+            <video controls controlsList="nodownload">
+                <source src="{{ lesson.video_file.url }}" type="video/mp4">
+            </video>
+            {% elif lesson.video_url %}
+                {% if "watch?v=" in lesson.video_url %}
+                <iframe src="https://www.youtube.com/embed/{{ lesson.video_url|cut:'https://www.youtube.com/watch?v='|cut:'&' }}" frameborder="0" allowfullscreen></iframe>
+                {% elif "youtu.be" in lesson.video_url %}
+                <iframe src="https://www.youtube.com/embed/{{ lesson.video_url|cut:'https://youtu.be/' }}" frameborder="0" allowfullscreen></iframe>
+                {% elif "vimeo.com" in lesson.video_url %}
+                <iframe src="https://player.vimeo.com/video/{{ lesson.video_url|cut:'https://vimeo.com/' }}" frameborder="0" allowfullscreen></iframe>
+                {% else %}
+                <video controls><source src="{{ lesson.video_url }}" type="video/mp4"></video>
+                {% endif %}
+            {% else %}
+            <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text3); flex-direction:column; gap:1rem; background:#080d18;">
+                <span style="font-size:3rem; opacity:0.4;">📹</span>
+                <span style="font-size:0.875rem;">Bu dars uchun video mavjud emas</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Lesson Info -->
+        <div class="lesson-info-area">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+                <div>
+                    <h2 style="font-size:1.25rem; font-weight:800; margin-bottom:0.35rem;">{{ lesson.title }}</h2>
+                    {% if lesson.duration %}
+                    <span style="font-size:0.78rem; color:var(--text3);">⏱ {{ lesson.duration }}</span>
+                    {% endif %}
+                </div>
+                <div class="lesson-nav-btns">
+                    {% if prev_lesson %}
+                    <a href="{% url 'lesson_detail' course.slug prev_lesson.id %}" class="nav-btn nav-btn-prev">← Oldingi</a>
+                    {% endif %}
+                    {% if next_lesson %}
+                    <a href="{% url 'lesson_detail' course.slug next_lesson.id %}" class="nav-btn nav-btn-next">Keyingi →</a>
+                    {% else %}
+                    <button class="nav-btn nav-btn-done" disabled>✅ Kurs Tugadi</button>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if lesson.content %}
+            <div style="color:var(--text2); line-height:1.8; font-size:0.9rem; margin-bottom:1.5rem; padding:1rem; background:var(--surface2); border-radius:10px; border:1px solid var(--border);">
+                {{ lesson.content }}
+            </div>
+            {% endif %}
+
+            <!-- Comments -->
+            <div style="border-top:1px solid var(--border); padding-top:1.25rem;">
+                <h3 style="font-size:1rem; font-weight:800; margin-bottom:1rem;">💬 Savollar & Muhokama</h3>
+                {% if user.is_authenticated %}
+                <div class="comment-form-area">
+                    <form action="{% url 'add_comment' lesson.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="comment-input-row">
+                            <input type="text" name="text" class="comment-input" placeholder="Bu dars haqida savol yoki fikr yozing..." required>
+                            <button type="submit" class="comment-submit-btn">Yuborish</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+                <div style="margin-top:1.25rem;">
+                    {% for comment in comments %}
+                    <div class="comment-item">
+                        <div class="comment-meta">
+                            <span class="comment-author">{{ comment.user.username }}</span>
+                            <span class="comment-time">{{ comment.created_at|timesince }} oldin</span>
+                        </div>
+                        <div class="comment-text">{{ comment.text }}</div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--text3); font-size:0.85rem; text-align:center; padding:1.5rem;">Hali savollar yo'q. Birinchi bo'lib yozing! 💬</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Lesson Sidebar -->
+    <div class="lesson-sidebar">
+        <div class="sidebar-head">
+            <div class="sidebar-course-title">{{ course.title }}</div>
+            <div class="sidebar-progress-label">{{ lessons.count }} ta dars</div>
+            <div class="sidebar-progress-bar">
+                <div class="sidebar-progress-fill" style="width:{{ enrollment.progress_percent|default:0 }}%;"></div>
+            </div>
+        </div>
+        <div class="lesson-list">
+            {% for l in lessons %}
+            <a href="{% url 'lesson_detail' course.slug l.id %}" class="sidebar-lesson-row {% if l.id == lesson.id %}active{% endif %}">
+                <div class="sl-num">{{ forloop.counter }}</div>
+                <div class="sl-title">{{ l.title }}</div>
+                {% if l.duration %}<span class="sl-dur">{{ l.duration }}</span>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        <div class="sidebar-foot">
+            <a href="{% url 'course_detail' course.slug %}" class="btn btn-ghost w-full" style="justify-content:center; font-size:0.8rem;">← Kurs sahifasiga</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

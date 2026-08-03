@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Yangi Game Jam Yaratish - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .create-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 2rem 2rem 3rem;
+    }
+
+    .form-section {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .date-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    @media (max-width: 600px) { .date-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-container">
+    <nav style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; font-weight: 600;">
+        <a href="{% url 'jams:list' %}" style="color: #818cf8; text-decoration: none;">🎮 Game Jams</a>
+        <span style="margin: 0 0.5rem;">›</span>
+        <span>Yangi Jam</span>
+    </nav>
+
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.5rem;">
+            🎮 Yangi Game Jam Yaratish
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Hamjamiyat uchun yangi game jam tashkil eting.
+        </p>
+    </div>
+
+    <form method="post" id="createForm">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h2 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem;">
+                📝 Jam ma'lumotlari
+            </h2>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Jam nomi *</label>
+                <input type="text" name="title" class="form-control" required
+                       placeholder="Masalan: DevForge Indie Game Jam #1"
+                       value="{{ request.POST.title }}">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Mavzu (ixtiyoriy)</label>
+                <input type="text" name="theme" class="form-control"
+                       placeholder="Masalan: Ikkilik, Vaqt, Qorong'ulik..."
+                       value="{{ request.POST.theme }}">
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                    Mavzu jam boshlanishida e'lon qilinishi mumkin
+                </p>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Tavsif *</label>
+                <textarea name="description" class="form-control" rows="5" required
+                          placeholder="Jam qoidalari, texnologiya cheklovlari, g'alaba mezonlari...">{{ request.POST.description }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2 style="font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem;">
+                📅 Sana va Vaqt
+            </h2>
+
+            <div class="date-grid">
+                <div class="form-group">
+                    <label class="form-label">Boshlanish vaqti *</label>
+                    <input type="datetime-local" name="start_date" class="form-control" required
+                           value="{{ request.POST.start_date }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tugash vaqti *</label>
+                    <input type="datetime-local" name="end_date" class="form-control" required
+                           value="{{ request.POST.end_date }}">
+                </div>
+            </div>
+
+            <div style="background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: var(--radius-md); padding: 1rem; margin-top: 1rem; font-size: 0.82rem; color: #fcd34d;">
+                💡 Tavsiya: Qisqa jam'lar (48-72 soat) ko'proq ishtirok uchun rag'batlantiradi.
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.875rem;">
+                🚀 Jam Yaratish
+            </button>
+            <a href="{% url 'jams:list' %}" class="btn btn-secondary">
+                Bekor qilish
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

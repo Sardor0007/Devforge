@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Ish E'loni Qo'shish{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem; max-width:760px; margin:0 auto;">
+  <h1 style="font-size:1.6rem; font-weight:800; margin-bottom:1.5rem;">💼 Yangi Ish E'loni (Escrow)</h1>
+  <form method="post" class="card">
+    {% csrf_token %}
+    <div class="card-body" style="display:flex; flex-direction:column; gap:1.25rem;">
+      <div class="form-group">
+        <label class="form-label">E'lon sarlavhasi *</label>
+        <input type="text" name="title" class="form-input" required placeholder="masalan: Unity C# Inventory System yaratish">
+      </div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div class="form-group">
+          <label class="form-label">Byudjet ($) *</label>
+          <input type="number" name="budget" class="form-input" required placeholder="masalan: 100">
+          <small style="color:var(--text3);">Pul escrow'da bloklanadi va faqat ishni tasdiqlaganingizdan so'ng chiqariladi.</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ko'rinish (Visibility) *</label>
+          <select name="visibility" class="form-input">
+            <option value="public">Ommaviy (Hamma ko'radi)</option>
+            <option value="private">Maxsus (Faqat tanlangan worker)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <div class="form-group">
+          <label class="form-label">Muddati (Deadline)</label>
+          <input type="date" name="deadline" class="form-input">
+        </div>
+        {% if user_projects %}
+        <div class="form-group">
+          <label class="form-label">Loyiha (ixtiyoriy)</label>
+          <select name="project" class="form-input">
+            <option value="">— Loyihasiz —</option>
+            {% for p in user_projects %}
+            <option value="{{ p.pk }}">🚀 {{ p.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Ish tavsifi *</label>
+        <textarea name="description" class="form-input" rows="8" required placeholder="Bajarilishi kerak bo'lgan vazifalarni batafsil yozing..."></textarea>
+      </div>
+
+      <div style="display:flex; gap:.75rem; justify-content:flex-end; margin-top:1rem;">
+        <a href="{% url 'job_list' %}" class="btn btn-ghost">Bekor qilish</a>
+        <button type="submit" class="btn btn-primary" style="padding:.75rem 1.5rem; font-weight:700;">E'lonni e'lon qilish →</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

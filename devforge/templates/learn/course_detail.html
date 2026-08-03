@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} — DevForge Learn{% endblock %}
+
+{% block extra_css %}
+<style>
+.course-hero {
+    background: linear-gradient(135deg, #06091a 0%, #0d1024 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+.course-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 60%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, transparent 60%);
+    pointer-events: none;
+}
+.course-hero-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 2.5rem;
+    align-items: start;
+}
+.breadcrumb-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text3);
+    margin-bottom: 1rem;
+}
+.breadcrumb-row a { color: var(--text3); text-decoration: none; transition: color 0.2s; }
+.breadcrumb-row a:hover { color: #a5b4fc; }
+.course-hero-title {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.85rem;
+    line-height: 1.25;
+}
+.course-hero-desc { color: var(--text2); line-height: 1.7; margin-bottom: 1.25rem; font-size: 0.95rem; }
+.course-meta-row { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+.course-meta-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--text2); }
+.course-meta-item strong { color: var(--text); }
+
+/* Enroll Card */
+.enroll-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: sticky;
+    top: 76px;
+}
+.enroll-thumb {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #0d1024, #1a1040);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    overflow: hidden;
+    position: relative;
+}
+.enroll-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.enroll-body { padding: 1.5rem; }
+.enroll-price {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 1.25rem;
+    line-height: 1;
+}
+.enroll-price.free { color: var(--green); }
+.enroll-price.paid { color: #a5b4fc; }
+.enroll-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-family: inherit;
+    transition: all 0.25s;
+    margin-bottom: 0.85rem;
+}
+.enroll-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
+.continue-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(135deg, var(--green), #059669);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-family: inherit;
+    transition: all 0.25s;
+    margin-bottom: 0.85rem;
+}
+.continue-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(16,185,129,0.35); }
+.enroll-perks { list-style: none; padding: 0; margin: 0; }
+.enroll-perks li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    font-size: 0.82rem;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+}
+.enroll-perks li:last-child { border-bottom: none; }
+
+/* Curriculum */
+.curriculum-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+.curriculum-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.lesson-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+    color: var(--text);
+}
+.lesson-row:last-child { border-bottom: none; }
+.lesson-row:hover { background: rgba(99,102,241,0.05); }
+.lesson-row.locked { cursor: default; opacity: 0.6; }
+.lesson-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    color: var(--text2);
+}
+.lesson-row:hover .lesson-num { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.3); color: #a5b4fc; }
+.lesson-title-text { font-size: 0.875rem; font-weight: 600; flex: 1; }
+.lesson-duration { font-size: 0.75rem; color: var(--text3); white-space: nowrap; }
+.lesson-lock { font-size: 0.85rem; color: var(--text3); }
+.lesson-play { font-size: 0.85rem; color: #a5b4fc; }
+
+/* Add Lesson (owner) */
+.add-lesson-card {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Progress Bar */
+.progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 99px;
+    height: 6px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 99px;
+    transition: width 0.4s;
+}
+
+@media (max-width: 900px) {
+    .course-hero-layout { grid-template-columns: 1fr; }
+    .enroll-card { position: static; }
+    .course-hero-title { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="course-hero">
+    <div class="container" style="position:relative; z-index:1;">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb-row">
+            <a href="{% url 'course_list' %}">📚 Learn</a>
+            <span>›</span>
+            {% if course.category %}
+            <a href="{% url 'course_list' %}?cat={{ course.category.id }}">{{ course.category.name }}</a>
+            <span>›</span>
+            {% endif %}
+            <span style="color:var(--text2);">{{ course.title|truncatechars:40 }}</span>
+        </div>
+
+        <div class="course-hero-layout">
+            <!-- LEFT -->
+            <div>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.85rem;">
+                    <span class="badge {% if course.level == 'beginner' %}badge-green{% elif course.level == 'intermediate' %}badge-orange{% else %}badge-red{% endif %}">{{ course.get_level_display }}</span>
+                    {% if course.is_free %}<span class="badge badge-green">🆓 Bepul</span>
+                    {% else %}<span class="badge badge-purple">💰 ${{ course.price }}</span>{% endif %}
+                    {% if course.category %}<span class="badge badge-blue">{{ course.category.icon }} {{ course.category.name }}</span>{% endif %}
+                </div>
+
+                <h1 class="course-hero-title">{{ course.title }}</h1>
+                <p class="course-hero-desc">{{ course.description }}</p>
+
+                <div class="course-meta-row">
+                    <div class="course-meta-item">👤 <strong>{{ course.author.username }}</strong></div>
+                    <div class="course-meta-item">📹 <strong>{{ lessons.count }}</strong> dars</div>
+                    <div class="course-meta-item">🗓 <strong>{{ course.created_at|date:"d M Y" }}</strong></div>
+                </div>
+
+                {% if is_enrolled and enrollment %}
+                <div style="margin-top:1.25rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text2); margin-bottom:0.4rem;">
+                        <span>Sizning progress:</span>
+                        <span style="color:#a5b4fc; font-weight:700;">{{ enrollment.progress_percent }}%</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" style="width:{{ enrollment.progress_percent }}%;"></div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- RIGHT: Enroll Card -->
+            <div class="enroll-card">
+                <div class="enroll-thumb">
+                    {% if course.thumbnail %}<img src="{{ course.thumbnail.url }}" alt="{{ course.title }}">
+                    {% else %}🎓{% endif %}
+                </div>
+                <div class="enroll-body">
+                    {% if is_enrolled %}
+                        <div class="enroll-price free">✅ Yozilgansiz</div>
+                        {% if lessons.first %}
+                        <a href="{% url 'lesson_detail' course.slug lessons.first.id %}" class="continue-btn">▶ O'qishni Davom Ettirish</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="enroll-price {% if course.is_free %}free{% else %}paid{% endif %}">
+                            {% if course.is_free %}Bepul{% else %}${{ course.price }}{% endif %}
+                        </div>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'enroll_course' course.slug %}" class="enroll-btn">
+                            {% if course.is_free %}📖 Bepul Yozilish{% else %}💳 Sotib Olib Yozilish{% endif %}
+                        </a>
+                        {% else %}
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="enroll-btn">🔐 Kirish kerak</a>
+                        {% endif %}
+                    {% endif %}
+
+                    <ul class="enroll-perks">
+                        <li>📹 {{ lessons.count }} ta dars</li>
+                        <li>♾️ Muddatsiz kirish huquqi</li>
+                        <li>📱 Istalgan qurilmada</li>
+                        <li>🏆 Tugatish sertifikati</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Curriculum -->
+<div class="container" style="padding-top:2rem; padding-bottom:3rem;">
+    <div style="max-width: 760px;">
+        <div class="curriculum-card">
+            <div class="curriculum-header">
+                <span>📋 Kurs Dasturi</span>
+                <span style="font-size:0.8rem; color:var(--text2); font-weight:400;">{{ lessons.count }} ta dars</span>
+            </div>
+            {% for lesson in lessons %}
+            {% if is_enrolled %}
+            <a href="{% url 'lesson_detail' course.slug lesson.id %}" class="lesson-row">
+                <div class="lesson-num">{{ forloop.counter }}</div>
+                <div class="lesson-title-text">{{ lesson.title }}</div>
+                {% if lesson.duration %}<span class="lesson-duration">⏱ {{ lesson.duration }}</span>{% endif %}
+                <span class="lesson-play">▶</span>
+            </a>
+            {% else %}
+            <div class="lesson-row locked">
+                <div class="lesson-num">{{ forloop.counter }}</div>
+                <div class="lesson-title-text">{{ lesson.title }}</div>
+                {% if lesson.duration %}<span class="lesson-duration">⏱ {{ lesson.duration }}</span>{% endif %}
+                <span class="lesson-lock">🔒</span>
+            </div>
+            {% endif %}
+            {% empty %}
+            <div style="padding:2rem; text-align:center; color:var(--text3);">Hali darslar qo'shilmagan.</div>
+            {% endfor %}
+        </div>
+
+        {% if user == course.author %}
+        <a href="{% url 'add_lesson' course.slug %}" class="add-lesson-card" style="text-decoration:none; color:var(--text2); transition:border-color 0.2s;" onmouseover="this.style.borderColor='#6366f1'; this.style.color='#a5b4fc'" onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text2)'">
+            <span style="font-size:1.5rem;">➕</span>
+            <div>
+                <div style="font-weight:700; font-size:0.9rem;">Yangi Dars Qo'shish</div>
+                <div style="font-size:0.78rem; margin-top:0.2rem;">Video yoki matn dars yarating</div>
+            </div>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

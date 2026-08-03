@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mening Challenge'larim - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .my-challenge-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        transition: border-color 0.2s, transform 0.2s;
+        margin-bottom: 1.25rem;
+    }
+
+    .my-challenge-card:hover {
+        border-color: var(--border-bright);
+        transform: translateX(4px);
+    }
+
+    .challenge-icon-box {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--radius-md);
+        background: rgba(99,102,241,0.1);
+        border: 1px solid rgba(99,102,241,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        flex-shrink: 0;
+    }
+
+    .challenge-icon-box.done {
+        background: rgba(16,185,129,0.1);
+        border-color: rgba(16,185,129,0.2);
+    }
+
+    .my-progress-track {
+        height: 7px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.65rem 0;
+    }
+
+    .my-progress-fill {
+        height: 100%;
+        background: linear-gradient(to right, #6366f1, #9333ea);
+        border-radius: 4px;
+        box-shadow: 0 0 6px rgba(99,102,241,0.4);
+        transition: width 0.8s ease;
+    }
+
+    .my-progress-fill.done-fill {
+        background: linear-gradient(to right, #10b981, #34d399);
+        box-shadow: 0 0 6px rgba(16,185,129,0.4);
+    }
+
+    .reward-badge {
+        padding: 0.4rem 0.85rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .reward-badge.done {
+        background: rgba(16,185,129,0.12);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,0.25);
+    }
+
+    .reward-badge.pending {
+        background: rgba(99,102,241,0.12);
+        color: #818cf8;
+        border: 1px solid rgba(99,102,241,0.25);
+    }
+
+    .empty-challenges-box {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--surface);
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-lg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 2rem 3rem; max-width: 860px;">
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2.5rem;">
+        <a href="{% url 'challenges_list' %}" class="btn btn-ghost btn-sm">← Orqaga</a>
+        <div>
+            <h1 class="page-title">Mening ishtirokim</h1>
+            <p class="page-subtitle">Qatnashayotgan barcha challenge'laringiz</p>
+        </div>
+    </div>
+
+    {% for p in participations %}
+    <div class="my-challenge-card">
+        <div class="challenge-icon-box {% if p.completed %}done{% endif %}">
+            {% if p.completed %}🏆{% else %}⏳{% endif %}
+        </div>
+
+        <div style="flex: 1; min-width: 0;">
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+                <h3 style="font-size: 1rem; font-weight: 800; color: var(--text-primary);">{{ p.challenge.title }}</h3>
+                <span class="badge badge-gray" style="font-size: 0.65rem;">{{ p.challenge.get_challenge_type_display }}</span>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.6rem;">{{ p.challenge.description }}</p>
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; margin-bottom: 0.3rem;">
+                <span style="color: var(--text-muted);">Progress: {{ p.current_count }} / {{ p.challenge.target_count }}</span>
+                {% if p.completed %}
+                    <span style="color: #34d399;">✅ Bajarildi — {{ p.completed_at|date:"d.m.Y" }}</span>
+                {% else %}
+                    <span style="color: #818cf8;">{% widthratio p.current_count p.challenge.target_count 100 %}%</span>
+                {% endif %}
+            </div>
+            <div class="my-progress-track">
+                <div class="my-progress-fill {% if p.completed %}done-fill{% endif %}"
+                     style="width: {% widthratio p.current_count p.challenge.target_count 100 %}%">
+                </div>
+            </div>
+        </div>
+
+        <div style="flex-shrink: 0; text-align: center;">
+            {% if p.completed %}
+                <div class="reward-badge done">Yutildi 🥇</div>
+            {% else %}
+                <div class="reward-badge pending">+{{ p.challenge.xp_reward }} XP</div>
+                <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 0.35rem;">Yutish imkoniyati</div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-challenges-box">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🎯</div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+            Hali hech qanday challenge'da qatnashmadingiz
+        </h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Challenge'larga qo'shiling va sovrinlarni yutib oling!</p>
+        <a href="{% url 'challenges_list' %}" class="btn btn-primary">Challenge'larni ko'rish</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

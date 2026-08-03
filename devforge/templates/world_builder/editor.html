@@ -1,0 +1,820 @@
+{% extends 'base.html' %}
+{% block title %}{{ map.title }} — World Builder{% endblock %}
+
+{% block extra_css %}
+<style>
+body { overflow:hidden; }
+main.container { max-width:100%!important; padding:0!important; margin:0!important; }
+
+/* Shell */
+.wb-shell {
+    display:grid;
+    grid-template-columns: 64px 240px 1fr 260px;
+    height:100vh; background:#08090d; font-family:var(--font-mono);
+}
+
+/* ── Top Toolbar ── */
+.wb-topbar {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    height:44px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:.4rem; padding:0 .75rem;
+}
+.wb-brand { font-family:var(--font-display); font-weight:800; font-size:.9rem;
+    background:linear-gradient(135deg,#f59e0b,#10b981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-right:.5rem; }
+.tb-btn { display:inline-flex; align-items:center; gap:4px; padding:.28rem .6rem; border-radius:5px; font-size:.75rem;
+    background:transparent; border:none; color:var(--text-secondary); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.tb-btn:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
+.tb-btn.primary { background:linear-gradient(135deg,#f59e0b,#10b981); color:#000; font-weight:700; border:none; }
+.tb-sep { width:1px; height:22px; background:rgba(255,255,255,.08); margin:0 .35rem; }
+.save-dot { width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block; }
+.save-dot.unsaved { background:#f59e0b; animation:blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── Left Tool Icons ── */
+.wb-tool-icons {
+    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; align-items:center; padding:.5rem 0; gap:2px;
+    margin-top:44px; overflow-y:auto;
+}
+.wb-tool { width:46px; height:40px; display:flex; align-items:center; justify-content:center;
+    border-radius:7px; cursor:pointer; font-size:1rem; transition:all .15s;
+    background:none; border:none; color:var(--text-muted); }
+.wb-tool:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
+.wb-tool.active { background:rgba(245,158,11,.2); color:#fbbf24; box-shadow:0 0 0 1px rgba(245,158,11,.4); }
+.wb-tool-sep { width:30px; height:1px; background:rgba(255,255,255,.06); margin:3px 0; }
+
+/* ── Left Tile Palette ── */
+.wb-palette {
+    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+}
+.palette-header { padding:.5rem .75rem; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; gap:.4rem; }
+.palette-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; }
+.palette-category { padding:.4rem .75rem; font-size:.62rem; text-transform:uppercase; letter-spacing:.5px; font-weight:700;
+    color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,.04); }
+.palette-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; padding:.5rem; }
+.tile-btn {
+    aspect-ratio:1; border-radius:5px; border:2px solid transparent; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+    transition:all .1s; background:rgba(255,255,255,.04);
+}
+.tile-btn:hover { transform:scale(1.1); border-color:rgba(245,158,11,.5); }
+.tile-btn.selected { border-color:#f59e0b; box-shadow:0 0 0 1px #f59e0b; }
+.palette-body { flex:1; overflow-y:auto; }
+.palette-body::-webkit-scrollbar { width:4px; }
+.palette-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+
+/* ── Canvas Viewport ── */
+.wb-viewport {
+    margin-top:44px; display:flex; flex-direction:column; overflow:hidden; background:#0c0e15; position:relative;
+}
+.viewport-bar { height:30px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; padding:0 .75rem; gap:.75rem; font-size:.68rem; color:var(--text-muted); flex-shrink:0; }
+.canvas-scroll { flex:1; overflow:auto; position:relative; display:flex; align-items:flex-start; justify-content:flex-start; padding:20px; }
+.canvas-scroll::-webkit-scrollbar { width:6px; height:6px; }
+.canvas-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:3px; }
+#mapCanvas { display:block; cursor:crosshair; box-shadow:0 0 0 1px rgba(245,158,11,.2), 0 8px 32px rgba(0,0,0,.8); }
+.canvas-info { position:absolute; bottom:8px; left:8px; font-size:.62rem; color:rgba(255,255,255,.25); font-family:var(--font-mono); pointer-events:none; }
+.zoom-controls { position:absolute; bottom:8px; right:8px; display:flex; gap:4px; }
+.zoom-btn { width:26px; height:26px; border-radius:5px; background:rgba(13,17,23,.9); border:1px solid rgba(255,255,255,.1);
+    color:var(--text-muted); cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; }
+.zoom-btn:hover { color:#fbbf24; border-color:#f59e0b; }
+
+/* ── Right Props Panel ── */
+.wb-right {
+    background:#0a0b10; border-left:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+}
+.right-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.06); }
+.rt { flex:1; padding:.4rem; text-align:center; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+    color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.rt.active { color:#fbbf24; border-bottom-color:#f59e0b; background:rgba(245,158,11,.05); }
+.right-body { flex:1; overflow-y:auto; padding:.75rem; }
+.right-body::-webkit-scrollbar { width:4px; }
+.right-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+.r-sec { margin-bottom:1.25rem; }
+.r-sec-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:.5rem; }
+.r-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+.r-label { font-size:.7rem; color:var(--text-muted); min-width:70px; }
+.r-input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
+    padding:3px 6px; color:var(--text-primary); font-size:.75rem; outline:none; font-family:var(--font-mono); }
+.r-input:focus { border-color:#f59e0b; }
+.r-select { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
+    padding:3px 6px; color:var(--text-primary); font-size:.75rem; outline:none; }
+.r-select option { background:#0d1117; }
+.r-range { flex:1; accent-color:#f59e0b; cursor:pointer; }
+
+/* Layer list */
+.layer-item { display:flex; align-items:center; gap:6px; padding:.35rem .5rem; border-radius:5px; cursor:pointer; transition:all .15s; margin-bottom:2px; }
+.layer-item:hover { background:rgba(255,255,255,.04); }
+.layer-item.active { background:rgba(245,158,11,.1); }
+.layer-color { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+.layer-name { flex:1; font-size:.75rem; }
+.layer-vis { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.75rem; }
+
+/* Object Inspector */
+.obj-info { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:6px; padding:.6rem; font-size:.72rem; margin-bottom:.75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Top Toolbar -->
+<div class="wb-topbar">
+    <a href="{% url 'world_builder:dashboard' %}" class="tb-btn">◀</a>
+    <span class="wb-brand">🏰</span>
+    <input type="text" id="mapTitle" value="{{ map.title }}"
+        style="background:none;border:none;color:var(--text-primary);font-size:.85rem;font-weight:600;outline:none;width:160px;"
+        onchange="markUnsaved()">
+    <div class="tb-sep"></div>
+    <!-- Grid settings -->
+    <span style="font-size:.68rem;color:var(--text-muted);">Grid</span>
+    <select id="gridSizeSelect" onchange="changeGridSize(+this.value)" style="background:#050607;border:1px solid rgba(255,255,255,.08);border-radius:4px;color:var(--text-secondary);font-size:.72rem;padding:2px 4px;">
+        <option value="16">16px</option>
+        <option value="32" selected>32px</option>
+        <option value="48">48px</option>
+        <option value="64">64px</option>
+    </select>
+    <span style="font-size:.68rem;color:var(--text-muted);">Show grid</span>
+    <input type="checkbox" id="showGrid" checked onchange="redraw()" style="accent-color:#f59e0b;cursor:pointer;">
+    <div class="tb-sep"></div>
+    <!-- Undo/Redo -->
+    <button class="tb-btn" onclick="undo()" title="Ctrl+Z">↩ Undo</button>
+    <button class="tb-btn" onclick="redo()" title="Ctrl+Y">↪ Redo</button>
+    <button class="tb-btn" onclick="clearMap()" style="color:#fca5a5;">🗑 Clear</button>
+    <div class="tb-sep"></div>
+    <!-- Export -->
+    <button class="tb-btn" onclick="exportJSON()">📄 JSON</button>
+    <button class="tb-btn" onclick="exportPNG()">🖼️ PNG</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:.68rem;color:var(--text-muted);">
+            <span class="save-dot" id="saveDot"></span>
+            <span id="saveLabel">Saqlangan</span>
+        </span>
+        <button class="tb-btn primary" onclick="saveMap()">💾 Save</button>
+    </div>
+</div>
+
+<div class="wb-shell">
+    <!-- ── TOOL ICONS ── -->
+    <div class="wb-tool-icons">
+        <button class="wb-tool active" id="tool-draw" onclick="setTool('draw')" title="Draw (B)">✏️</button>
+        <button class="wb-tool" id="tool-erase" onclick="setTool('erase')" title="Erase (E)">🧹</button>
+        <button class="wb-tool" id="tool-fill" onclick="setTool('fill')" title="Fill (G)">🪣</button>
+        <button class="wb-tool" id="tool-select" onclick="setTool('select')" title="Select (V)">⊹</button>
+        <div class="wb-tool-sep"></div>
+        <button class="wb-tool" id="tool-rect" onclick="setTool('rect')" title="Rectangle (R)">⬜</button>
+        <button class="wb-tool" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse (C)">⬤</button>
+        <button class="wb-tool" id="tool-line" onclick="setTool('line')" title="Line (L)">╱</button>
+        <div class="wb-tool-sep"></div>
+        <button class="wb-tool" id="tool-spawn" onclick="setTool('spawn')" title="Spawn Point">🚩</button>
+        <button class="wb-tool" id="tool-enemy" onclick="setTool('enemy')" title="Enemy">👾</button>
+        <button class="wb-tool" id="tool-item" onclick="setTool('item')" title="Item">💎</button>
+        <button class="wb-tool" id="tool-trigger" onclick="setTool('trigger')" title="Trigger Zone">⚡</button>
+    </div>
+
+    <!-- ── TILE PALETTE ── -->
+    <div class="wb-palette">
+        <div class="palette-header">
+            <span class="palette-title">🎨 Tiles</span>
+        </div>
+        <div class="palette-body" id="paletteBody">
+            <!-- Terrain -->
+            <div class="palette-category">🌍 Terrain</div>
+            <div class="palette-grid" id="tileGrid"></div>
+            <!-- Structures -->
+            <div class="palette-category">🏗 Structures</div>
+            <div class="palette-grid" id="structGrid"></div>
+            <!-- Objects -->
+            <div class="palette-category">🎁 Objects</div>
+            <div class="palette-grid" id="objectGrid"></div>
+            <!-- Entities -->
+            <div class="palette-category">👾 Entities</div>
+            <div class="palette-grid" id="entityGrid"></div>
+        </div>
+    </div>
+
+    <!-- ── CANVAS ── -->
+    <div class="wb-viewport">
+        <div class="viewport-bar">
+            <span id="vpLabel">🗺 World Map</span>
+            <button class="tb-btn" style="font-size:.65rem;" onclick="resetView()">⊹ Reset</button>
+            <button class="tb-btn" style="font-size:.65rem;" onclick="fitCanvas()">⊞ Fit</button>
+            <span style="margin-left:auto;font-size:.68rem;color:#f59e0b;" id="zoomLabel">100%</span>
+        </div>
+        <div class="canvas-scroll" id="canvasScroll">
+            <canvas id="mapCanvas"></canvas>
+        </div>
+        <div class="canvas-info" id="canvasInfo">x: 0, y: 0 | Tile: (0,0)</div>
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <button class="zoom-btn" onclick="zoomOut()">−</button>
+        </div>
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="wb-right">
+        <div class="right-tabs">
+            <div class="rt active" id="rtLayers" onclick="switchRightTab('layers')">Layers</div>
+            <div class="rt" id="rtProps" onclick="switchRightTab('props')">Props</div>
+            <div class="rt" id="rtMinimap" onclick="switchRightTab('minimap')">Map</div>
+        </div>
+
+        <!-- LAYERS -->
+        <div class="right-body" id="panelLayers">
+            <div class="r-sec">
+                <div class="r-sec-title">📑 Layers</div>
+                <div id="layersList"></div>
+                <div style="display:flex;gap:4px;margin-top:.5rem;">
+                    <button onclick="addLayer()" style="flex:1;padding:.3rem;border-radius:5px;font-size:.72rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15);color:#fbbf24;cursor:pointer;">+ Layer</button>
+                    <button onclick="deleteActiveLayer()" style="flex:1;padding:.3rem;border-radius:5px;font-size:.72rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-muted);cursor:pointer;">Del</button>
+                </div>
+            </div>
+            <div class="r-sec">
+                <div class="r-sec-title">📍 Selected Object</div>
+                <div class="obj-info" id="objInfo">Object tanlanmagan</div>
+            </div>
+        </div>
+
+        <!-- PROPS -->
+        <div class="right-body" id="panelProps" style="display:none;">
+            <div class="r-sec">
+                <div class="r-sec-title">🗺 Map Settings</div>
+                <div class="r-row"><span class="r-label">Width</span><input type="number" class="r-input" id="mapW" value="40" min="10" max="200" onchange="resizeMap()"></div>
+                <div class="r-row"><span class="r-label">Height</span><input type="number" class="r-input" id="mapH" value="25" min="10" max="200" onchange="resizeMap()"></div>
+                <div class="r-row"><span class="r-label">BG Color</span><input type="color" id="mapBg" value="#0d1a0d" style="width:32px;height:22px;border:1px solid var(--border);border-radius:4px;" onchange="redraw()"></div>
+                <div class="r-row"><span class="r-label">Ambient</span>
+                    <select class="r-select" id="ambientLight" onchange="redraw()">
+                        <option value="day">Day ☀️</option>
+                        <option value="night">Night 🌙</option>
+                        <option value="cave">Cave 🕯️</option>
+                        <option value="dungeon">Dungeon ⚔️</option>
+                    </select>
+                </div>
+            </div>
+            <div class="r-sec">
+                <div class="r-sec-title">🔲 Grid</div>
+                <div class="r-row"><span class="r-label">Color</span><input type="color" id="gridColor" value="#1a2a1a" style="width:32px;height:22px;border:1px solid var(--border);border-radius:4px;" onchange="redraw()"></div>
+                <div class="r-row"><span class="r-label">Opacity</span><input type="range" class="r-range" id="gridOpacity" min="0" max="100" value="30" oninput="redraw()"><span style="font-size:.68rem;color:#fbbf24;min-width:28px;" id="gridOpVal">30%</span></div>
+            </div>
+        </div>
+
+        <!-- MINIMAP -->
+        <div class="right-body" id="panelMinimap" style="display:none;">
+            <div class="r-sec">
+                <div class="r-sec-title">🗺 Minimap</div>
+                <canvas id="minimapCanvas" width="236" height="148"
+                    style="width:100%;border-radius:6px;background:#050607;border:1px solid rgba(255,255,255,.06);display:block;"></canvas>
+            </div>
+            <div class="r-sec">
+                <div class="r-sec-title">📊 Stats</div>
+                <div id="mapStats" style="font-size:.72rem;color:var(--text-muted);line-height:2;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══════════════════════════════════════════════════════════
+//  TILES DEFINITION
+// ═══════════════════════════════════════════════════════════
+const TERRAIN_TILES = [
+    {id:'grass',emoji:'🟩',color:'#166534',label:'Grass'},
+    {id:'dirt',emoji:'🟫',color:'#78350f',label:'Dirt'},
+    {id:'stone',emoji:'⬛',color:'#374151',label:'Stone'},
+    {id:'water',emoji:'🟦',color:'#1d4ed8',label:'Water'},
+    {id:'sand',emoji:'🟨',color:'#92400e',label:'Sand'},
+    {id:'snow',emoji:'⬜',color:'#e2e8f0',label:'Snow'},
+    {id:'lava',emoji:'🟥',color:'#991b1b',label:'Lava'},
+    {id:'void',emoji:'🔲',color:'#000000',label:'Void'},
+];
+const STRUCT_TILES = [
+    {id:'wall',emoji:'🧱',color:'#374151',label:'Wall'},
+    {id:'door',emoji:'🚪',color:'#7c3aed',label:'Door'},
+    {id:'floor',emoji:'⬜',color:'#1e293b',label:'Floor'},
+    {id:'path',emoji:'🟫',color:'#92400e',label:'Path'},
+    {id:'stairs',emoji:'🪜',color:'#6b7280',label:'Stairs'},
+    {id:'pillar',emoji:'🏛️',color:'#4b5563',label:'Pillar'},
+    {id:'bridge',emoji:'🌉',color:'#78350f',label:'Bridge'},
+    {id:'fence',emoji:'🚧',color:'#9a3412',label:'Fence'},
+];
+const OBJECT_TILES = [
+    {id:'chest',emoji:'📦',color:'#d97706',label:'Chest'},
+    {id:'tree',emoji:'🌲',color:'#15803d',label:'Tree'},
+    {id:'rock',emoji:'🪨',color:'#6b7280',label:'Rock'},
+    {id:'barrel',emoji:'🛢️',color:'#92400e',label:'Barrel'},
+    {id:'torch',emoji:'🔥',color:'#f97316',label:'Torch'},
+    {id:'crystal',emoji:'💎',color:'#818cf8',label:'Crystal'},
+    {id:'sign',emoji:'📋',color:'#fbbf24',label:'Sign'},
+    {id:'skull',emoji:'💀',color:'#9ca3af',label:'Skull'},
+];
+const ENTITY_TILES = [
+    {id:'spawn',emoji:'🚩',color:'#10b981',label:'Spawn'},
+    {id:'enemy',emoji:'👾',color:'#ef4444',label:'Enemy'},
+    {id:'boss',emoji:'🐲',color:'#8b5cf6',label:'Boss'},
+    {id:'npc',emoji:'🧙',color:'#06b6d4',label:'NPC'},
+];
+const ALL_TILES = [...TERRAIN_TILES, ...STRUCT_TILES, ...OBJECT_TILES, ...ENTITY_TILES];
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+const PROJECT_ID = {{ map.pk }};
+let savedData    = {{ map_data_json|safe }};
+let gridSize     = 32;
+let cols         = parseInt(document.getElementById('mapW').value);
+let rows         = parseInt(document.getElementById('mapH').value);
+let zoom         = 1;
+let tool         = 'draw';
+let selectedTile = TERRAIN_TILES[2];  // stone default
+let activeLayer  = 0;
+let showGrid     = true;
+let unsaved      = false;
+
+// Layer data: array of {name, visible, locked, cells: {}}
+// cells key = "col,row" -> tile id
+let layers = [];
+
+// History
+const MAX_HIST = 40;
+let historyArr = [], histIdx = -1;
+
+const canvas = document.getElementById('mapCanvas');
+const ctx    = canvas.getContext('2d');
+
+let isDrawing = false, shapeStart = null, shapeSnapshot = null;
+let lastTileX = -1, lastTileY = -1;
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+function init() {
+    buildPalette();
+    if (savedData && savedData.layers && savedData.layers.length > 0) {
+        layers = savedData.layers;
+        layers.forEach(l => {
+            if (!l.cells) l.cells = {};
+        });
+        cols = savedData.cols || cols;
+        rows = savedData.rows || rows;
+        gridSize = savedData.gridSize || gridSize;
+        document.getElementById('mapW').value = cols;
+        document.getElementById('mapH').value = rows;
+        const select = document.getElementById('gridSizeSelect');
+        if (select) select.value = gridSize;
+    } else {
+        addLayer('Ground', false);
+        addLayer('Structures', false);
+        addLayer('Objects', false);
+    }
+    activeLayer = 0;
+    resizeCanvas();
+    redraw();
+    pushHistory();
+    fitCanvas();
+    renderLayersList();
+    updateStats();
+}
+
+function resizeCanvas() {
+    canvas.width  = cols * gridSize;
+    canvas.height = rows * gridSize;
+}
+
+function buildPalette() {
+    buildGrid('tileGrid', TERRAIN_TILES);
+    buildGrid('structGrid', STRUCT_TILES);
+    buildGrid('objectGrid', OBJECT_TILES);
+    buildGrid('entityGrid', ENTITY_TILES);
+}
+
+function buildGrid(containerId, tiles) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = tiles.map(t => `
+        <div class="tile-btn ${t.id === selectedTile.id ? 'selected' : ''}" id="tile_${t.id}"
+            onclick="selectTile('${t.id}')" title="${t.label}"
+            style="background:${t.color}44;">
+            <span style="font-size:1.2rem;">${t.emoji}</span>
+        </div>
+    `).join('');
+}
+
+function selectTile(id) {
+    selectedTile = ALL_TILES.find(t => t.id === id);
+    document.querySelectorAll('.tile-btn').forEach(b => b.classList.remove('selected'));
+    const btn = document.getElementById('tile_' + id);
+    if (btn) btn.classList.add('selected');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DRAW
+// ═══════════════════════════════════════════════════════════
+function redraw() {
+    const bg = document.getElementById('mapBg').value;
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Ambient overlay
+    const ambient = document.getElementById('ambientLight').value;
+    if (ambient !== 'day') {
+        const overlays = { night:'rgba(0,0,50,.5)', cave:'rgba(0,0,0,.6)', dungeon:'rgba(20,0,0,.5)' };
+        ctx.fillStyle = overlays[ambient] || 'transparent';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Draw layers
+    layers.forEach(layer => {
+        if (!layer.visible) return;
+        Object.entries(layer.cells || {}).forEach(([key, tileId]) => {
+            const [col, row] = key.split(',').map(Number);
+            const tile = ALL_TILES.find(t => t.id === tileId);
+            if (!tile) return;
+            const x = col * gridSize, y = row * gridSize;
+            ctx.fillStyle = tile.color;
+            ctx.fillRect(x, y, gridSize, gridSize);
+            ctx.font = `${gridSize * 0.7}px serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(tile.emoji, x + gridSize/2, y + gridSize/2 + 1);
+        });
+    });
+
+    // Grid
+    if (document.getElementById('showGrid').checked) {
+        const gc = document.getElementById('gridColor')?.value || '#1a2a1a';
+        const go = (document.getElementById('gridOpacity')?.value || 30) / 100;
+        ctx.strokeStyle = gc; ctx.globalAlpha = go; ctx.lineWidth = 0.5;
+        for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(c*gridSize,0); ctx.lineTo(c*gridSize,canvas.height); ctx.stroke(); }
+        for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(0,r*gridSize); ctx.lineTo(canvas.width,r*gridSize); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+        document.getElementById('gridOpVal').textContent = Math.round(go*100) + '%';
+    }
+
+    updateMinimap();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MOUSE EVENTS
+// ═══════════════════════════════════════════════════════════
+canvas.addEventListener('mousedown', e => {
+    isDrawing = true;
+    const {tc, tr} = getTile(e);
+    if (tool === 'select') { selectObjectAt(tc, tr); return; }
+    if (tool === 'fill') { floodFill(tc, tr); return; }
+    if (tool === 'rect' || tool === 'ellipse' || tool === 'line') {
+        shapeStart = {tc, tr};
+        shapeSnapshot = JSON.parse(JSON.stringify(layers[activeLayer].cells));
+        return;
+    }
+    paintAt(tc, tr);
+    lastTileX = tc; lastTileY = tr;
+});
+
+canvas.addEventListener('mousemove', e => {
+    const {tx, ty, tc, tr} = getTile(e);
+    document.getElementById('canvasInfo').textContent = `x: ${tx}, y: ${ty} | Tile: (${tc},${tr})`;
+    if (!isDrawing) return;
+    if (tool === 'select') { selectObjectAt(tc, tr); return; }
+    if (tool === 'rect' || tool === 'ellipse' || tool === 'line') {
+        if (!shapeStart) return;
+        layers[activeLayer].cells = JSON.parse(JSON.stringify(shapeSnapshot));
+        drawShape(shapeStart.tc, shapeStart.tr, tc, tr);
+        redraw(); return;
+    }
+    if (tc !== lastTileX || tr !== lastTileY) { paintAt(tc, tr); lastTileX = tc; lastTileY = tr; }
+});
+
+canvas.addEventListener('mouseup', e => {
+    isDrawing = false; shapeStart = null; shapeSnapshot = null;
+    redraw(); pushHistory(); updateStats();
+});
+
+canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+canvas.addEventListener('wheel', e => { if(e.ctrlKey) { e.preventDefault(); setZoom(zoom*(e.deltaY<0?1.15:0.85)); } }, {passive:false});
+
+function getTile(e) {
+    const rect = canvas.getBoundingClientRect();
+    const tx = (e.clientX - rect.left) / zoom;
+    const ty = (e.clientY - rect.top) / zoom;
+    return { tx: Math.round(tx), ty: Math.round(ty), tc: Math.floor(tx/gridSize), tr: Math.floor(ty/gridSize) };
+}
+
+function selectObjectAt(tc, tr) {
+    if (tc < 0 || tc >= cols || tr < 0 || tr >= rows) return;
+    let foundTile = null;
+    let foundLayer = null;
+    for (let i = layers.length - 1; i >= 0; i--) {
+        const layer = layers[i];
+        if (layer.visible && layer.cells && layer.cells[tc + ',' + tr]) {
+            const tileId = layer.cells[tc + ',' + tr];
+            foundTile = ALL_TILES.find(t => t.id === tileId);
+            foundLayer = layer;
+            break;
+        }
+    }
+
+    const objInfo = document.getElementById('objInfo');
+    if (foundTile) {
+        objInfo.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="font-size:2rem;background:rgba(255,255,255,0.05);padding:6px;border-radius:6px;">${foundTile.emoji}</span>
+                <div>
+                    <div style="font-weight:bold;color:var(--text-primary);font-size:0.85rem;">${foundTile.label}</div>
+                    <div style="color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;">ID: ${foundTile.id}</div>
+                </div>
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;margin-top:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;color:var(--text-secondary);font-size:0.7rem;">
+                <span style="color:var(--text-muted);">Katak:</span> <span>(${tc}, ${tr})</span>
+                <span style="color:var(--text-muted);">Layer:</span> <span>${foundLayer.name}</span>
+                <span style="color:var(--text-muted);">Rang:</span> <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${foundTile.color}"></span>${foundTile.color}</span>
+            </div>
+        `;
+    } else {
+        objInfo.innerHTML = `<span style="color:var(--text-muted);">Bo'sh katak (${tc}, ${tr})</span>`;
+    }
+}
+
+function paintAt(tc, tr) {
+    if (tool === 'select') return;
+    if (tc < 0 || tc >= cols || tr < 0 || tr >= rows) return;
+    const layer = layers[activeLayer];
+    if (!layer || layer.locked) return;
+    const key = tc + ',' + tr;
+    if (tool === 'erase') { delete layer.cells[key]; }
+    else { layer.cells[key] = selectedTile.id; }
+    redraw();
+    markUnsaved();
+}
+
+function drawShape(c1, r1, c2, r2) {
+    const layer = layers[activeLayer];
+    if (!layer || layer.locked) return;
+    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
+    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
+    if (tool === 'rect') {
+        for (let c = minC; c <= maxC; c++) for (let r = minR; r <= maxR; r++) {
+            if (c===minC||c===maxC||r===minR||r===maxR) layer.cells[c+','+r] = selectedTile.id;
+        }
+    } else if (tool === 'line') {
+        let dc = Math.abs(c2-c1), dr = Math.abs(r2-r1), sc = c1<c2?1:-1, sr = r1<r2?1:-1, err = dc-dr;
+        let cc = c1, rr = r1;
+        while (true) {
+            layer.cells[cc+','+rr] = selectedTile.id;
+            if (cc===c2 && rr===r2) break;
+            const e2 = 2*err;
+            if (e2 > -dr) { err -= dr; cc += sc; }
+            if (e2 < dc)  { err += dc; rr += sr; }
+        }
+    } else if (tool === 'ellipse') {
+        const cx = (c1+c2)/2, cy = (r1+r2)/2, rx = Math.abs(c2-c1)/2, ry = Math.abs(r2-r1)/2;
+        for (let c = minC; c <= maxC; c++) for (let r = minR; r <= maxR; r++) {
+            if (rx === 0 || ry === 0) continue;
+            const norm = Math.pow((c-cx)/rx,2) + Math.pow((r-cy)/ry,2);
+            if (norm >= 0.7 && norm <= 1.3) layer.cells[c+','+r] = selectedTile.id;
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FLOOD FILL
+// ═══════════════════════════════════════════════════════════
+function floodFill(startC, startR) {
+    const layer = layers[activeLayer];
+    if (!layer || layer.locked) return;
+    const key = startC + ',' + startR;
+    const target = layer.cells[key] || null;
+    if (target === selectedTile.id) return;
+    const stack = [[startC, startR]];
+    const visited = new Set();
+    while (stack.length) {
+        const [c, r] = stack.pop();
+        if (c < 0 || c >= cols || r < 0 || r >= rows) continue;
+        const k = c + ',' + r;
+        if (visited.has(k)) continue;
+        if ((layer.cells[k] || null) !== target) continue;
+        visited.add(k);
+        layer.cells[k] = selectedTile.id;
+        stack.push([c+1,r],[c-1,r],[c,r+1],[c,r-1]);
+    }
+    redraw(); pushHistory(); markUnsaved(); updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LAYERS
+// ═══════════════════════════════════════════════════════════
+function addLayer(name, push = true) {
+    layers.push({ name: name || 'Layer ' + (layers.length+1), visible: true, locked: false, cells: {} });
+    activeLayer = layers.length - 1;
+    renderLayersList();
+    if (push) { pushHistory(); markUnsaved(); }
+}
+
+function deleteActiveLayer() {
+    if (layers.length <= 1) { showToast('Kamida 1 layer kerak', 'error'); return; }
+    layers.splice(activeLayer, 1);
+    activeLayer = Math.min(activeLayer, layers.length-1);
+    renderLayersList(); redraw(); pushHistory(); markUnsaved();
+}
+
+function renderLayersList() {
+    const list = document.getElementById('layersList');
+    const LAYER_COLORS = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444'];
+    list.innerHTML = [...layers].reverse().map((l, ri) => {
+        const i = layers.length - 1 - ri;
+        return `
+        <div class="layer-item ${i===activeLayer?'active':''}" onclick="setActiveLayer(${i})">
+            <div class="layer-color" style="background:${LAYER_COLORS[i%LAYER_COLORS.length]}"></div>
+            <span class="layer-name" style="${l.locked?'text-decoration:line-through;opacity:0.5;':''}">${l.name}</span>
+            <button class="layer-vis" onclick="event.stopPropagation();toggleLayerVis(${i})" title="${l.visible?'Yashirish':'Ko\'rsatish'}">${l.visible?'👁':'🙈'}</button>
+            <button class="layer-vis" onclick="event.stopPropagation();toggleLayerLock(${i})" title="${l.locked?'Qulfdan chiqarish':'Qulflash'}">${l.locked?'🔒':'🔓'}</button>
+        </div>`;
+    }).join('');
+}
+
+function setActiveLayer(i) { activeLayer = i; renderLayersList(); }
+function toggleLayerVis(i) { layers[i].visible = !layers[i].visible; redraw(); renderLayersList(); }
+function toggleLayerLock(i) { layers[i].locked = !layers[i].locked; renderLayersList(); }
+
+// ═══════════════════════════════════════════════════════════
+//  TOOLS
+// ═══════════════════════════════════════════════════════════
+const TOOL_CURSORS = { draw:'crosshair', erase:'cell', fill:'cell', select:'default', rect:'crosshair', ellipse:'crosshair', line:'crosshair', spawn:'crosshair', enemy:'crosshair', item:'crosshair', trigger:'crosshair' };
+function setTool(t) {
+    tool = t;
+    document.querySelectorAll('.wb-tool').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('tool-' + t);
+    if (btn) btn.classList.add('active');
+    canvas.style.cursor = TOOL_CURSORS[t] || 'crosshair';
+    // Auto-select matching tile
+    const entityMap = { spawn:'spawn', enemy:'enemy', item:'crystal', trigger:'torch' };
+    if (entityMap[t]) selectTile(entityMap[t]);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ZOOM & VIEW
+// ═══════════════════════════════════════════════════════════
+function setZoom(z) {
+    zoom = Math.max(0.1, Math.min(8, z));
+    canvas.style.transform = `scale(${zoom})`; canvas.style.transformOrigin = 'top left';
+    document.getElementById('zoomLabel').textContent = Math.round(zoom*100) + '%';
+}
+function zoomIn() { setZoom(zoom*1.25); }
+function zoomOut() { setZoom(zoom/1.25); }
+function resetView() { setZoom(1); }
+function fitCanvas() {
+    const scroll = document.getElementById('canvasScroll');
+    const sx = (scroll.clientWidth - 40) / canvas.width;
+    const sy = (scroll.clientHeight - 40) / canvas.height;
+    setZoom(Math.min(sx, sy, 2));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RESIZE MAP
+// ═══════════════════════════════════════════════════════════
+function resizeMap() {
+    cols = parseInt(document.getElementById('mapW').value) || 40;
+    rows = parseInt(document.getElementById('mapH').value) || 25;
+    resizeCanvas(); redraw(); markUnsaved();
+}
+function changeGridSize(sz) { gridSize = sz; resizeCanvas(); redraw(); }
+
+// ═══════════════════════════════════════════════════════════
+//  HISTORY
+// ═══════════════════════════════════════════════════════════
+function pushHistory() {
+    historyArr = historyArr.slice(0, histIdx+1);
+    historyArr.push({ layers: JSON.parse(JSON.stringify(layers)), cols, rows });
+    if (historyArr.length > MAX_HIST) historyArr.shift();
+    histIdx = historyArr.length - 1;
+}
+function undo() { if (histIdx <= 0) return; histIdx--; restoreHistory(); }
+function redo() { if (histIdx >= historyArr.length-1) return; histIdx++; restoreHistory(); }
+function restoreHistory() {
+    const snap = historyArr[histIdx];
+    layers = JSON.parse(JSON.stringify(snap.layers));
+    cols = snap.cols; rows = snap.rows;
+    document.getElementById('mapW').value = cols;
+    document.getElementById('mapH').value = rows;
+    resizeCanvas(); redraw(); renderLayersList(); updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MINIMAP
+// ═══════════════════════════════════════════════════════════
+function updateMinimap() {
+    const mm = document.getElementById('minimapCanvas');
+    if (!mm) return;
+    const mc = mm.getContext('2d');
+    const tw = mm.width / cols, th = mm.height / rows;
+    mc.fillStyle = document.getElementById('mapBg').value;
+    mc.fillRect(0, 0, mm.width, mm.height);
+    layers.forEach(layer => {
+        if (!layer.visible) return;
+        Object.entries(layer.cells || {}).forEach(([key, tileId]) => {
+            const [c, r] = key.split(',').map(Number);
+            const tile = ALL_TILES.find(t => t.id === tileId);
+            if (!tile) return;
+            mc.fillStyle = tile.color;
+            mc.fillRect(c*tw, r*th, Math.max(tw,1), Math.max(th,1));
+        });
+    });
+    // Viewport indicator
+    mc.strokeStyle = '#f59e0b'; mc.lineWidth = 1;
+    mc.strokeRect(0, 0, mm.width, mm.height);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════════
+function updateStats() {
+    let total = 0;
+    layers.forEach(l => total += Object.keys(l.cells||{}).length);
+    document.getElementById('mapStats').innerHTML = `
+        Kataklar: <b>${cols} × ${rows}</b><br>
+        Jami tile: <b>${total}</b><br>
+        Layerlar: <b>${layers.length}</b><br>
+        Xarita turi: <b>{{ map.get_map_type_display }}</b>
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CLEAR
+// ═══════════════════════════════════════════════════════════
+function clearMap() {
+    if (!confirm('Barcha layerlarni tozalashni tasdiqlaysizmi?')) return;
+    layers.forEach(l => l.cells = {});
+    redraw(); pushHistory(); markUnsaved(); updateStats();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════════════════════
+function exportJSON() {
+    const data = { cols, rows, gridSize, layers: layers.map(l => ({name:l.name,cells:l.cells})) };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = '{{ map.title|escapejs }}.json'; a.click();
+    showToast('📄 JSON eksport qilindi', 'success');
+}
+
+function exportPNG() {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = '{{ map.title|escapejs }}.png'; a.click();
+    showToast('🖼️ PNG eksport qilindi', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SAVE
+// ═══════════════════════════════════════════════════════════
+async function saveMap() {
+    const payload = {
+        title: document.getElementById('mapTitle').value,
+        data: { cols, rows, gridSize, layers }
+    };
+    try {
+        const res = await fetch(`/studio/world-builder/save/${PROJECT_ID}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { markSaved(); showToast('💾 Saqlandi', 'success'); }
+    } catch(e) { showToast('Saqlashda xato', 'error'); }
+}
+
+function markUnsaved() { unsaved=true; document.getElementById('saveDot').classList.add('unsaved'); document.getElementById('saveLabel').textContent='Saqlanmagan'; }
+function markSaved()   { unsaved=false; document.getElementById('saveDot').classList.remove('unsaved'); document.getElementById('saveLabel').textContent='Saqlangan'; }
+
+// ═══════════════════════════════════════════════════════════
+//  RIGHT TAB SWITCH
+// ═══════════════════════════════════════════════════════════
+function switchRightTab(t) {
+    ['layers','props','minimap'].forEach(p => {
+        document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = p===t?'':'none';
+        document.getElementById('rt' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p===t);
+    });
+    if (t === 'minimap') updateMinimap();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveMap(); }
+    if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+    if (e.ctrlKey && (e.key === 'y' || e.key === 'Z')) { e.preventDefault(); redo(); }
+    const map2 = { b:'draw', e:'erase', g:'fill', v:'select', r:'rect', c:'ellipse', l:'line' };
+    if (map2[e.key]) setTool(map2[e.key]);
+    if (e.key === '+' && e.ctrlKey) { e.preventDefault(); zoomIn(); }
+    if (e.key === '-' && e.ctrlKey) { e.preventDefault(); setZoom(zoom/1.25); }
+});
+
+// Auto-save every 40s
+setInterval(() => { if (unsaved) saveMap(); }, 40000);
+
+// Init
+window.addEventListener('resize', () => { fitCanvas(); });
+init();
+</script>
+{% endblock %}

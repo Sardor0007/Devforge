@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Bildirishnomalar{% endblock %}
+
+{% block extra_css %}
+<style>
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+}
+.notif-item:hover {
+    background: rgba(59,130,246,.04);
+}
+.notif-item.unread {
+    background: rgba(59,130,246,.06);
+    border-left: 3px solid var(--accent);
+}
+.notif-item.unread:hover {
+    background: rgba(59,130,246,.1);
+}
+.notif-icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+}
+.notif-dot {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+}
+.notif-title {
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--text);
+    margin-bottom: .2rem;
+}
+.notif-msg {
+    font-size: .8rem;
+    color: var(--text2);
+    line-height: 1.5;
+}
+.notif-time {
+    font-size: .72rem;
+    color: var(--text3);
+    margin-top: .3rem;
+}
+.filter-tabs {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.filter-tab {
+    padding: .35rem .9rem;
+    border-radius: 99px;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    transition: .15s;
+}
+.filter-tab:hover { border-color: var(--accent); color: var(--accent); }
+.filter-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+.badge-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--red);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 800;
+    padding: 0 4px;
+    margin-left: .3rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:2rem 2rem 3rem; max-width:860px;">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:1rem;">
+            <div>
+                <h1 class="page-title">
+                    🔔 Bildirishnomalar
+                    {% if unread_count > 0 %}
+                    <span class="badge-count">{{ unread_count }}</span>
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle">Barcha faoliyat va yangiliklar</p>
+            </div>
+            <div class="flex gap-1">
+                {% if unread_count > 0 %}
+                <form method="post" action="{% url 'notification_mark_all' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary btn-sm">
+                        ✓ Hammasini o'qilgan deb belgilash
+                    </button>
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'notification_delete_read' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-sm"
+                            onclick="return confirm('O\'qilgan bildirishnomalar o\'chirilsinmi?')">
+                        🗑 O'qilganlarni tozalash
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-tabs">
+        <a href="{% url 'notification_list' %}"
+           class="filter-tab {% if not filter_type %}active{% endif %}">
+            Hammasi
+        </a>
+        <a href="?type=unread"
+           class="filter-tab {% if filter_type == 'unread' %}active{% endif %}">
+            O'qilmagan
+            {% if unread_count > 0 %}<span style="margin-left:.3rem;background:var(--red);color:#fff;border-radius:99px;padding:1px 6px;font-size:.65rem;">{{ unread_count }}</span>{% endif %}
+        </a>
+        <a href="?type=project_apply"
+           class="filter-tab {% if filter_type == 'project_apply' %}active{% endif %}">📨 Arizalar</a>
+        <a href="?type=project_approved"
+           class="filter-tab {% if filter_type == 'project_approved' %}active{% endif %}">✅ Loyiha</a>
+        <a href="?type=task_assigned"
+           class="filter-tab {% if filter_type == 'task_assigned' %}active{% endif %}">📋 Vazifalar</a>
+        <a href="?type=order_placed"
+           class="filter-tab {% if filter_type == 'order_placed' %}active{% endif %}">🛒 Buyurtmalar</a>
+        <a href="?type=asset_liked"
+           class="filter-tab {% if filter_type == 'asset_liked' %}active{% endif %}">❤️ Aktivlar</a>
+        <a href="?type=review_received"
+           class="filter-tab {% if filter_type == 'review_received' %}active{% endif %}">⭐ Sharhlar</a>
+    </div>
+
+    <!-- NOTIFICATIONS LIST -->
+    <div class="card" style="overflow:hidden;">
+        {% for notif in notifications %}
+        <div class="notif-item {% if not notif.is_read %}unread{% endif %}">
+            {% if not notif.is_read %}
+            <div class="notif-dot"></div>
+            {% endif %}
+
+            <!-- ICON -->
+            <div class="notif-icon"
+                 style="{% if not notif.is_read %}background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3);{% endif %}">
+                {{ notif.icon }}
+            </div>
+
+            <!-- CONTENT -->
+            <div style="flex:1;min-width:0;">
+                <div class="notif-title">{{ notif.title }}</div>
+                {% if notif.message %}
+                <div class="notif-msg">{{ notif.message }}</div>
+                {% endif %}
+                <div class="flex items-center gap-2" style="margin-top:.3rem;">
+                    <div class="notif-time">🕐 {{ notif.created_at|timesince }} avval</div>
+                    {% if notif.sender %}
+                    <div class="text-xs text-muted">
+                        · <a href="{% url 'profile' username=notif.sender.username %}"
+                             style="color:var(--accent);text-decoration:none;">
+                            {{ notif.sender.username }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex items-center gap-1" style="flex-shrink:0;">
+                {% if notif.link %}
+                <a href="{% url 'notification_read' pk=notif.pk %}"
+                   class="btn btn-ghost btn-sm">Ko'rish →</a>
+                {% elif not notif.is_read %}
+                <form method="post" action="{% url 'notification_read' pk=notif.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-sm">O'qildi</button>
+                </form>
+                {% endif %}
+                <form method="post" action="{% url 'notification_delete' pk=notif.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ghost btn-sm"
+                            style="color:var(--text3);" title="O'chirish">✕</button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div style="text-align:center;padding:4rem 2rem;color:var(--text2);">
+            <div style="font-size:3rem;margin-bottom:1rem;">
+                {% if filter_type %}🔍{% else %}🔔{% endif %}
+            </div>
+            <p style="font-size:1rem;font-weight:600;margin-bottom:.5rem;">
+                {% if filter_type == 'unread' %}
+                    Barcha bildirishnomalar o'qilgan ✓
+                {% elif filter_type %}
+                    Bu toifada bildirishnoma yo'q
+                {% else %}
+                    Hali bildirishnomalar yo'q
+                {% endif %}
+            </p>
+            <p style="font-size:.875rem;">Loyihalarga qo'shiling, aktivlar yoqtiring va xizmatlar buyurtma qiling!</p>
+            <a href="{% url 'project_list' %}" class="btn btn-primary" style="margin-top:1.25rem;">
+                Loyihalarni ko'rish →
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

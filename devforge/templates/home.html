@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}DevForge — Build the Future of Gaming{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        padding: 8rem 0 6rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border);
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent);
+        margin-bottom: 2rem;
+    }
+
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: clamp(3rem, 10vw, 5.5rem);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -2px;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(to bottom, #fff 40%, rgba(255,255,255,0.6) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        max-width: 650px;
+        margin: 0 auto 3rem;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .section-label {
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .section-title {
+        font-family: var(--font-display);
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 3rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 4rem;
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(0, 245, 255, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        color: var(--accent);
+    }
+
+    .item-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .thumb {
+        aspect-ratio: 16/10;
+        background: #1e293b;
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .thumb img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .card:hover .thumb img {
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+        .hero { padding: 4rem 0 3rem; }
+        .hero-actions { flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero animate-fade">
+    <div class="hero-badge">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent);"></span>
+        Professional Game Dev Ecosystem
+    </div>
+    <h1 class="hero-title">Forge Your<br>Masterpiece.</h1>
+    <p class="hero-sub">
+        The all-in-one platform for game developers to collaborate, 
+        trade assets, and master the craft.
+    </p>
+    <div class="hero-actions">
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started for Free</a>
+        <a href="{% url 'project_list' %}" class="btn btn-secondary btn-lg">Explore Projects</a>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display: flex; justify-content: center; gap: 4rem; margin-top: 5rem; border-top: 1px solid var(--border); padding-top: 3rem;">
+        <div>
+            <div style="font-size: 2rem; font-weight: 800; font-family: var(--font-display);">{{ stats.users|default:"2.4k" }}+</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Creators</div>
+        </div>
+        <div>
+            <div style="font-size: 2rem; font-weight: 800; font-family: var(--font-display);">{{ stats.projects|default:"150" }}+</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Projects</div>
+        </div>
+        <div>
+            <div style="font-size: 2rem; font-weight: 800; font-family: var(--font-display);">{{ stats.assets|default:"800" }}+</div>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">3D Assets</div>
+        </div>
+    </div>
+</section>
+
+<section style="margin-top: 6rem;">
+    <span class="section-label">Core Capabilities</span>
+    <h2 class="section-title">Built for the Modern Studio</h2>
+    
+    <div class="features-grid">
+        <div class="card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <h3 style="margin-bottom: 0.75rem; font-family: var(--font-display);">Studio Dashboard</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Manage your projects, assets, and team with a high-performance management interface.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            </div>
+            <h3 style="margin-bottom: 0.75rem; font-family: var(--font-display);">Asset Marketplace</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">The premier destination for GLB, GLTF, and high-fidelity 3D assets for game engines.</p>
+        </div>
+        <div class="card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <h3 style="margin-bottom: 0.75rem; font-family: var(--font-display);">Global Collaboration</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Find collaborators across every discipline: code, art, sound, and level design.</p>
+        </div>
+    </div>
+</section>
+
+{% if latest_projects %}
+<section style="margin-top: 8rem;">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <span class="section-label">Showcase</span>
+            <h2 class="section-title" style="margin-bottom: 0;">Featured Projects</h2>
+        </div>
+        <a href="{% url 'project_list' %}" class="btn btn-secondary">View All</a>
+    </div>
+    
+    <div class="item-grid">
+        {% for project in latest_projects %}
+        <div class="card">
+            <div class="thumb">
+                {% if project.thumbnail %}
+                    <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}">
+                {% else %}
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">🎮</div>
+                {% endif %}
+            </div>
+            <div class="badge badge-accent mb-4">{{ project.get_genre_display }}</div>
+            <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display);">{{ project.title }}</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.5rem;">
+                {{ project.description|truncatechars:100 }}
+            </p>
+            <div class="flex items-center justify-between">
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">@{{ project.creator.username }}</span>
+                <a href="{% url 'project_detail' pk=project.pk %}" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

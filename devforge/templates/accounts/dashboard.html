@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}Dashboard — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Profile header */
+.profile-header { display:flex; align-items:flex-start; gap:1.5rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-bottom:2rem; flex-wrap:wrap; }
+.profile-avatar { width:80px; height:80px; border-radius:16px; background:var(--accent-gradient); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:800; color:#000; overflow:hidden; flex-shrink:0; }
+.profile-avatar img { width:100%; height:100%; object-fit:cover; }
+.profile-name { font-family:var(--font-display); font-size:1.75rem; font-weight:800; }
+.profile-bio { color:var(--text-secondary); font-size:.9rem; margin-top:.3rem; }
+/* Stat widgets */
+.stat-label  { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.25rem; }
+.stat-number { font-size:1.5rem; font-weight:800; font-family:var(--font-mono); }
+/* Project mini cards */
+.project-card { overflow:hidden; padding:0; }
+.project-card-thumb { height:120px; background:var(--surface2); display:flex; align-items:center; justify-content:center; font-size:2.5rem; overflow:hidden; }
+.project-card-thumb img { width:100%; height:100%; object-fit:cover; }
+.project-card-body { padding:.85rem 1rem; }
+.project-card-title { font-weight:700; font-size:.9rem; color:var(--text-primary); text-decoration:none; display:block; }
+.project-card-title:hover { color:var(--accent); }
+/* Kanban title reuse */
+.kanban-card-title { font-size:.9rem; font-weight:700; margin-bottom:.25rem; }
+/* Misc */
+.mb-3 { margin-bottom:.75rem; }
+.hidden-mobile { }
+.font-mono { font-family:var(--font-mono); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 2rem;">
+    <!-- Welcome Section -->
+    <div class="profile-header mb-3">
+        <div class="profile-avatar">
+            {% if user.avatar %}<img src="{{ user.avatar.url }}" alt="">{% else %}{{ user.username|first|upper }}{% endif %}
+        </div>
+        <div style="flex: 1;">
+            <div class="flex items-center gap-2">
+                <h1 class="profile-name">Salom, {{ user.username }}!</h1>
+                <span class="badge badge-purple">{{ user.get_role_display }}</span>
+            </div>
+            <p class="profile-bio">Sizning bugungi rejangiz: {{ recommended_jobs.count }} ta yangi ish imkoniyati va {{ recent_projects.count }} ta faol loyiha.</p>
+            
+            <!-- XP Progress Bar -->
+            <div style="max-width: 400px; margin-top: 1rem;">
+                <div class="flex justify-between text-xs mb-1">
+                    <span style="color: var(--accent);">LEVEL {{ user.level }}</span>
+                    <span style="color: var(--text3);">{{ user.xp }} XP / {{ user.level|add:1|multiply:150 }} XP</span>
+                </div>
+                <div style="height: 6px; background: var(--surface2); width: 100%; position: relative; overflow: hidden;">
+                    <div style="height: 100%; width: {{ user_stats.progress }}%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 1s cubic-bezier(0.19, 1, 0.22, 1);"></div>
+                </div>
+            </div>
+        </div>
+        <div class="hidden-mobile" style="text-align: right;">
+            <a href="{% url 'profile_edit' %}" class="btn btn-secondary btn-sm">Profilni Tahrirlash</a>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="grid-sidebar">
+        <!-- Main Content -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <!-- Recommended for You -->
+            <section>
+                <div class="flex items-center justify-between mb-2">
+                    <h2 style="font-size: 1.2rem; font-family: var(--font-mono); color: var(--accent);">Siz uchun tavsiyalar</h2>
+                    <a href="{% url 'job_list' %}" class="text-xs" style="color: var(--text3); text-decoration: none;">Barchasini ko'rish →</a>
+                </div>
+                <div class="grid-2">
+                    {% for job in recommended_jobs %}
+                    <div class="card job-card">
+                        <div class="card-body">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="badge badge-blue">{{ job.get_category_display }}</span>
+                                <span style="color: var(--green); font-weight: 700; font-family: var(--font-mono);">${{ job.budget }}</span>
+                            </div>
+                            <a href="{% url 'job_detail' job.id %}" style="text-decoration: none;"><h3 class="kanban-card-title">{{ job.title }}</h3></a>
+                            <p class="text-xs text-muted" style="margin: 0.5rem 0;">{{ job.description|truncatewords:20 }}</p>
+                            <div class="flex gap-1">
+                                {% for tag in job.tags.all|slice:":3" %}
+                                <span class="badge badge-gray text-xs">{{ tag.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="card" style="grid-column: span 2; text-align: center; padding: 2rem;">
+                        <p class="text-muted">Hozircha tavsiyalar yo'q. Profilingizni to'ldiring.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- Active Projects -->
+            <section>
+                <div class="flex items-center justify-between mb-2">
+                    <h2 style="font-size: 1.2rem; font-family: var(--font-mono); color: var(--accent2);">Faol Loyihalar</h2>
+                    <a href="{% url 'project_list' %}" class="text-xs" style="color: var(--text3); text-decoration: none;">Barchasini ko'rish →</a>
+                </div>
+                <div class="grid-3">
+                    {% for project in recent_projects %}
+                    <div class="card project-card">
+                        <div class="project-card-thumb">
+                            {% if project.thumbnail %}<img src="{{ project.thumbnail.url }}" alt="">{% else %}🎮{% endif %}
+                        </div>
+                        <div class="project-card-body">
+                            <a href="{% url 'project_detail' project.id %}" class="project-card-title">{{ project.title }}</a>
+                            <div class="flex justify-between items-center mt-1">
+                                <span class="text-xs text-muted">{{ project.members.count }} a'zo</span>
+                                <span class="badge badge-orange text-xs">{{ project.get_status_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <a href="{% url 'project_create' %}" class="card flex items-center justify-center" style="border: 2px dashed var(--border); border-left: none; text-decoration: none; min-height: 200px;">
+                        <div style="text-align: center; color: var(--text3);">
+                            <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">+</span>
+                            <span class="text-xs font-mono">YANGI LOYIHA</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Stats Card -->
+            <div class="card" style="border-left: 3px solid var(--green);">
+                <div class="card-header">📊 STATISTIKA</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="stat-label">Balans</div>
+                        <div class="stat-number" style="color: var(--green);">${{ user.balance }}</div>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <div class="stat-label">Loyihalar</div>
+                            <div class="stat-number" style="font-size: 1.2rem;">{{ user_stats.projects }}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Aktivlar</div>
+                            <div class="stat-number" style="font-size: 1.2rem;">{{ user_stats.assets }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Onboarding Checklist -->
+            <div class="card" id="onboardingChecklist">
+                <div class="card-header">🚀 BOSHLASH UCHUN</div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="checklist-item {% if user.avatar %}done{% endif %}">
+                        <span class="check"></span> Profil rasmi yuklash (+50 XP)
+                    </div>
+                    <div class="checklist-item {% if user.skills.exists %}done{% endif %}">
+                        <span class="check"></span> Ko'nikmalarni qo'shish (+30 XP)
+                    </div>
+                    <div class="checklist-item {% if user.project_count > 0 %}done{% endif %}">
+                        <span class="check"></span> Birinchi loyihani yaratish (+100 XP)
+                    </div>
+                    <div class="checklist-item" style="opacity: 0.5;">
+                        <span class="check"></span> Portfolioga ish qo'shish (+50 XP)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotion Card -->
+            <div class="card" style="background: linear-gradient(135deg, #2b1055, #000); border-color: var(--accent2);">
+                <div class="card-body" style="text-align: center; padding: 1.5rem;">
+                    <h3 style="color: var(--text); font-size: 1rem; margin-bottom: 0.5rem;">GOLD'ga O'ting!</h3>
+                    <p class="text-xs text-muted mb-2">3D Studio va AI funksiyalardan cheksiz foydalaning.</p>
+                    <a href="{% url 'subscription_plans' %}" class="btn btn-primary btn-sm w-full">UPGRADE</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .checklist-item {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text);
+    }
+    .checklist-item .check {
+        width: 18px; height: 18px; border: 2px solid var(--border);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem;
+        border-radius: 4px;
+    }
+    .checklist-item.done { color: var(--text-muted); }
+    .checklist-item.done .check { border-color: var(--green); background: var(--green); }
+    .checklist-item.done .check::after { content: '✓'; color: #fff; }
+    
+    .job-card:hover { border-color: var(--accent); }
+    
+    /* Tour Theme */
+    .cyber-tour {
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: var(--radius-lg) !important;
+        color: var(--text) !important;
+        box-shadow: var(--shadow) !important;
+    }
+    .shepherd-header { background: var(--surface2) !important; border-bottom: 1px solid var(--border); }
+    .shepherd-button { 
+        background: var(--accent) !important; 
+        color: #0d1117 !important; 
+        border-radius: var(--radius) !important; 
+        font-weight: 600 !important;
+    }
+</style>
+
+<!-- Shepherd.js Feature Tour -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/css/shepherd.css"/>
+<script src="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Faqat birinchi marta kirganda ko'rsatish
+        if (!localStorage.getItem('dashboard_tour_completed')) {
+            const tour = new Shepherd.Tour({
+                useModalOverlay: true,
+                defaultStepOptions: {
+                    cancelIcon: { enabled: true },
+                    classes: 'cyber-tour',
+                    scrollTo: { behavior: 'smooth', block: 'center' }
+                }
+            });
+
+            tour.addStep({
+                title: 'Xush kelibsiz!',
+                text: 'Bu sizning shaxsiy boshqaruv panelingiz. Bu yerda barcha muhim ma\'lumotlarni ko\'rishingiz mumkin.',
+                attachTo: { element: '.profile-header', on: 'bottom' },
+                buttons: [{ text: 'Keyingisi', action: tour.next }]
+            });
+
+            tour.addStep({
+                title: 'Tavsiyalar',
+                text: 'Sizning ko\'nikmalaringizga mos keladigan ishlar va aktivlar shu yerda ko\'rinadi.',
+                attachTo: { element: '.grid-2', on: 'top' },
+                buttons: [{ text: 'Keyingisi', action: tour.next }]
+            });
+
+            tour.addStep({
+                title: 'Vazifalar',
+                text: 'XP yig\'ish va yangi darajalarga chiqish uchun ushbu vazifalarni bajaring.',
+                attachTo: { element: '#onboardingChecklist', on: 'left' },
+                buttons: [{ text: 'Tugatish', action: () => {
+                    localStorage.setItem('dashboard_tour_completed', 'true');
+                    tour.complete();
+                }}]
+            });
+
+            tour.start();
+        }
+    });
+</script>
+{% endblock %}

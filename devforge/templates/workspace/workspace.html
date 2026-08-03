@@ -1,0 +1,1825 @@
+{% extends "base.html" %}
+{% block title %}Workspace — {{ project.title }}{% endblock %}
+
+{% block extra_css %}
+<!-- CodeMirror IDE Engine & Themes -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/selection/active-line.min.js"></script>
+
+<style>
+/* CodeMirror IDE Overrides */
+.CodeMirror {
+  flex: 1;
+  height: 100% !important;
+  font-family: 'Space Mono', 'Fira Code', 'Consolas', monospace !important;
+  font-size: 0.84rem !important;
+  line-height: 1.65 !important;
+  background: #0d1117 !important;
+}
+.CodeMirror-gutters {
+  background: #0d1117 !important;
+  border-right: 1px solid #1e2d45 !important;
+}
+.CodeMirror-linenumber {
+  color: #3d4855 !important;
+  padding: 0 8px 0 5px !important;
+}
+.CodeMirror-activeline-background {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+.cm-s-dracula.CodeMirror {
+  background: #0d1117 !important;
+}
+.cm-s-dracula .CodeMirror-gutters {
+  background: #0d1117 !important;
+}
+.presence-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.72rem; font-weight: 700; color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 2px 8px; border-radius: 12px; margin-left: 8px;
+}
+
+body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--bg); }
+.nav-wrapper { flex-shrink: 0; max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+.navbar { border-radius: 0 !important; border-left: none !important; border-right: none !important; border-top: none !important; margin: 0 !important; width: 100% !important; }
+.footer { display: none !important; }
+main.container { flex: 1; min-height: 0; max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; display: flex; flex-direction: column; overflow: hidden; }
+.ws-root { display: grid; grid-template-columns: 260px 4px 1fr 4px 280px; height: 100% !important; overflow: hidden; }
+.ws-col-resizer { width: 4px; background: var(--border); cursor: col-resize; transition: background 0.15s; z-index: 10; flex-shrink: 0; }
+.ws-col-resizer:hover { background: var(--accent); }
+
+@media (max-width: 1024px) {
+    .ws-root { grid-template-columns: 220px 4px 1fr 4px 240px; }
+}
+
+@media (max-width: 768px) {
+    .ws-root { display: block; position: relative; }
+    .ws-sidebar, .ws-right { 
+        position: absolute; top: 0; bottom: 0; width: 85%; z-index: 1000;
+        transition: transform 0.3s ease;
+    }
+    .ws-sidebar { left: 0; transform: translateX(-100%); }
+    .ws-right { right: 0; transform: translateX(100%); }
+    .ws-sidebar.mobile-open, .ws-right.mobile-open { transform: translateX(0); }
+    .ws-main { height: 100%; width: 100%; }
+}
+
+/* ── LEFT SIDEBAR ── */
+.ws-sidebar { background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.ws-sidebar-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+.ws-stab { flex:1; padding:.45rem; text-align:center; font-size:.72rem; font-weight:700; color:var(--text2); cursor:pointer; transition:.12s; border-bottom:2px solid transparent; }
+.ws-stab:hover { color:var(--text); }
+.ws-stab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.ws-stab-content { display:none; flex:1; flex-direction:column; overflow:hidden; }
+.ws-stab-content.active { display:flex; }
+
+/* File Tree */
+.tree-toolbar { display:flex; align-items:center; gap:.3rem; padding:.5rem .65rem; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--surface2); }
+.tree-btn { background:none; border:1px solid var(--border); color:var(--text2); padding:.25rem .5rem; border-radius:5px; cursor:pointer; font-size:.7rem; transition:.12s; white-space:nowrap; }
+.tree-btn:hover { border-color:var(--accent); color:var(--accent); }
+.file-tree { flex:1; overflow-y:auto; padding:.35rem 0; }
+.tree-item { display:flex; align-items:center; gap:.4rem; padding:.32rem .5rem .32rem 0; cursor:pointer; font-size:.8rem; color:var(--text2); border-radius:5px; margin:0 .3rem; transition:.1s; position:relative; user-select:none; }
+.tree-item:hover { background:var(--surface2); color:var(--text); }
+.tree-item.active { background:rgba(59,130,246,.15); color:var(--accent); }
+.tree-item .ti-icon { font-size:.85rem; flex-shrink:0; }
+.tree-item .ti-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tree-item .ti-menu { opacity:0; font-size:.7rem; padding:.1rem .3rem; border-radius:3px; }
+.tree-item:hover .ti-menu { opacity:1; }
+.tree-folder-arrow { font-size:.65rem; width:12px; text-align:center; flex-shrink:0; transition:transform .15s; }
+.tree-folder-arrow.open { transform:rotate(90deg); }
+.tree-children { display:none; }
+.tree-children.open { display:block; }
+
+/* Context menu */
+.ctx-menu { position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:.35rem; z-index:9999; min-width:150px; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+.ctx-item { padding:.4rem .75rem; font-size:.8rem; color:var(--text2); cursor:pointer; border-radius:5px; transition:.1s; }
+.ctx-item:hover { background:var(--surface2); color:var(--text); }
+.ctx-item.danger { color:var(--red); }
+.ctx-item.danger:hover { background:rgba(239,68,68,.1); }
+
+/* GitHub panel */
+.gh-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.gh-toolbar { padding:.5rem .65rem; border-bottom:1px solid var(--border); flex-shrink:0; }
+.gh-repo-list { flex:1; overflow-y:auto; }
+.gh-repo-item { padding:.55rem .75rem; border-bottom:1px solid rgba(255,255,255,.04); cursor:pointer; transition:.12s; }
+.gh-repo-item:hover { background:var(--surface2); }
+.gh-file-item { display:flex; align-items:center; gap:.4rem; padding:.35rem .65rem; cursor:pointer; font-size:.8rem; color:var(--text2); transition:.1s; }
+.gh-file-item:hover { background:var(--surface2); color:var(--text); }
+.gh-file-item input[type=checkbox] { flex-shrink:0; }
+.gh-breadcrumb { display:flex; align-items:center; gap:.25rem; padding:.35rem .65rem; font-size:.75rem; color:var(--text2); border-bottom:1px solid var(--border); flex-wrap:wrap; flex-shrink:0; }
+.gh-breadcrumb span { cursor:pointer; color:var(--accent); }
+.gh-breadcrumb span:hover { text-decoration:underline; }
+
+/* ── MAIN EDITOR ── */
+.ws-main { display:flex; flex-direction:column; background:#0d1117; overflow:hidden; min-width:0; }
+.editor-tabs { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border-bottom:1px solid var(--border); overflow:hidden; flex-shrink:0; }
+.tabs-list { display:flex; align-items:center; overflow-x:auto; flex:1; scrollbar-width:none; }
+.tabs-list::-webkit-scrollbar { display:none; }
+.editor-tab { display:flex; align-items:center; gap:.4rem; padding:.5rem .85rem; font-size:.78rem; font-weight:500; color:var(--text2); cursor:pointer; white-space:nowrap; border-right:1px solid var(--border); border-bottom:2px solid transparent; transition:.12s; flex-shrink:0; }
+.editor-tab:hover { background:var(--surface2); color:var(--text); }
+.editor-tab.active { color:var(--text); border-bottom-color:var(--accent); background:#0d1117; }
+.close-tab { opacity:0; font-size:.68rem; padding:0 2px; border-radius:3px; }
+.editor-tab:hover .close-tab { opacity:1; }
+.ws-center { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+.editor-section { flex:1; display:flex; overflow:hidden; min-height:0; }
+.line-numbers { background:#0d1117; color:#3d4855; font-family:'Space Mono',monospace; font-size:.82rem; line-height:1.7; padding:1rem .5rem 1rem 1rem; text-align:right; user-select:none; min-width:44px; overflow:hidden; border-right:1px solid #1e2d45; white-space:pre; }
+.code-editor { flex:1; background:#0d1117; color:#e2e8f0; border:none; outline:none; resize:none; font-family:'Space Mono',monospace; font-size:.82rem; line-height:1.7; padding:1rem; white-space:pre; overflow-wrap:normal; overflow-x:auto; tab-size:4; }
+.ws-resizer { height:5px; background:var(--border); cursor:row-resize; flex-shrink:0; transition:background .15s; }
+.ws-resizer:hover { background:var(--accent); }
+
+/* Terminal */
+.terminal-section { background:#0a0d14; border-top:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; height:240px; min-height:38px; }
+.terminal-header { display:flex; align-items:center; justify-content:space-between; padding:.4rem .85rem; background:#111827; border-bottom:1px solid var(--border); flex-shrink:0; }
+.terminal-title { font-size:.75rem; font-weight:700; color:var(--text2); display:flex; align-items:center; gap:.5rem; }
+.terminal-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.terminal-body { flex:1; overflow-y:auto; overflow-x:auto; padding:.6rem .85rem; font-family:'Space Mono',monospace; font-size:.8rem; line-height:1.6; }
+.terminal-body::-webkit-scrollbar { width:5px; }
+.terminal-body::-webkit-scrollbar-thumb { background:#2d3748; border-radius:3px; }
+.t-line { margin-bottom:.1rem; word-break:break-all; }
+.t-prompt-line { display:flex; gap:.4rem; }
+.t-prompt { color:#10b981; white-space:nowrap; user-select:none; }
+.t-cmd { color:#e2e8f0; }
+.t-out { color:#94a3b8; white-space:pre-wrap; }
+.t-err { color:#f87171; white-space:pre-wrap; }
+.t-sys { color:#6366f1; }
+.terminal-input-row { display:flex; align-items:center; gap:.4rem; padding:.4rem .85rem; border-top:1px solid #1e2d45; flex-shrink:0; background:#0a0d14; }
+.t-input-prompt { color:#10b981; font-family:'Space Mono',monospace; font-size:.8rem; white-space:nowrap; user-select:none; }
+.t-input { flex:1; background:none; border:none; outline:none; color:#e2e8f0; font-family:'Space Mono',monospace; font-size:.8rem; caret-color:#10b981; }
+
+/* Right sidebar */
+.ws-right { background:var(--surface); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; min-height: 0; }
+.ws-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+.ws-tab { flex:1; padding:.5rem; text-align:center; font-size:.72rem; font-weight:700; color:var(--text2); cursor:pointer; transition:.12s; border-bottom:2px solid transparent; }
+.ws-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.ws-tab-content { display:none; flex:1; flex-direction:column; overflow:hidden; min-height: 0; }
+.ws-tab-content.active { display:flex; }
+.chat-body { flex:1; overflow-y:auto; padding:.75rem; display:flex; flex-direction:column; gap:.4rem; min-height: 0; }
+.chat-msg.mine { align-self:flex-end; max-width:90%; }
+.chat-msg.theirs { align-self:flex-start; max-width:90%; }
+.chat-bubble { padding:.45rem .75rem; border-radius:12px; font-size:.8rem; line-height:1.5; display:inline-block; max-width:100%; }
+.chat-msg.mine .chat-bubble { background:var(--accent); color:#fff; border-bottom-right-radius:3px; }
+.chat-msg.theirs .chat-bubble { background:var(--surface2); border:1px solid var(--border); border-bottom-left-radius:3px; }
+.chat-meta { font-size:.65rem; color:var(--text3); padding:0 .3rem; margin-top:.1rem; }
+.chat-footer { padding:.65rem; border-top:1px solid var(--border); display:flex; gap:.5rem; flex-shrink:0; }
+.chat-input { flex:1; background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:.45rem .7rem; font-size:.82rem; outline:none; resize:none; font-family:inherit; transition:.15s; max-height:80px; }
+.chat-input:focus { border-color:var(--accent); }
+
+#editorRunBtn { transition: all 0.2s ease-in-out !important; }
+#editorRunBtn:hover {
+    background: #34d399 !important;
+    color: #0b0e14 !important;
+    transform: scale(1.03);
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.5) !important;
+}
+#editorRunBtn:active {
+    transform: scale(0.98);
+}
+
+/* Upload drop zone */
+.drop-zone { border:2px dashed var(--border); border-radius:10px; padding:1.5rem; text-align:center; color:var(--text3); font-size:.8rem; cursor:pointer; transition:.2s; margin:.5rem .65rem; }
+.drop-zone:hover, .drop-zone.drag-over { border-color:var(--accent); color:var(--accent); background:rgba(59,130,246,.05); }
+
+.statusbar { background:var(--accent); color:#fff; padding:.2rem .85rem; font-size:.68rem; display:flex; gap:1.5rem; flex-shrink:0; }
+.save-indicator { font-size:.72rem; padding:0 .75rem; display:flex; align-items:center; }
+.save-indicator.saved { color:#bbf7d0; }
+.save-indicator.saving { color:#fde68a; }
+
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.mobile-only { display: none; }
+@media (max-width: 768px) {
+    .mobile-only { display: inline-flex; }
+}
+@keyframes pulse {
+    0% { opacity: 0.7; transform: scale(0.98); }
+    50% { opacity: 1; transform: scale(1.02); }
+    100% { opacity: 0.7; transform: scale(0.98); }
+}
+.call-modal { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000;    display:none; flex-direction:column; }
+.call-header { padding:1rem; display:flex; justify-content:space-between; align-items:center; background:#111; border-bottom:1px solid #333; }
+.call-body { flex:1; }
+
+/* Custom Scrollbar for Chat & Terminal */
+.chat-body::-webkit-scrollbar, .terminal-body::-webkit-scrollbar { width: 6px; }
+.chat-body::-webkit-scrollbar-track, .terminal-body::-webkit-scrollbar-track { background: transparent; }
+.chat-body::-webkit-scrollbar-thumb, .terminal-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+.chat-body::-webkit-scrollbar-thumb:hover, .terminal-body::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="ws-root" id="wsRoot">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div class="ws-sidebar">
+    <div class="ws-sidebar-tabs">
+      <div class="ws-stab active" onclick="switchSTab('files',this)">📁 Fayllar</div>
+      <div class="ws-stab" onclick="switchSTab('github',this)">🐙 GitHub</div>
+      <div class="ws-stab" onclick="switchSTab('packages',this)">📦 Kutubxonalar</div>
+    </div>
+
+    <!-- FILES TAB -->
+    <div class="ws-stab-content active" id="stab-files">
+      <div class="tree-toolbar">
+        <span style="font-size:.75rem;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ project.title|truncatechars:16 }}</span>
+        <button class="tree-btn" onclick="newFilePrompt()" title="Yangi fayl">📄</button>
+        <button class="tree-btn" onclick="newFolderPrompt()" title="Yangi papka">📁</button>
+        <button class="tree-btn" onclick="document.getElementById('localUploadInput').click()" title="Fayl yuklash">⬆</button>
+        <button class="tree-btn" onclick="document.getElementById('folderUploadInput').click()" title="Papka yuklash">📂</button>
+      </div>
+
+      <!-- Hidden file inputs -->
+      <input type="file" id="localUploadInput" multiple style="display:none" onchange="uploadLocalFiles(this.files,'/')">
+      <input type="file" id="folderUploadInput" webkitdirectory multiple style="display:none" onchange="uploadFolderFiles(this.files)">
+
+      <!-- Drop zone -->
+      <div class="drop-zone" id="dropZone"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleDrop(event)"
+        onclick="document.getElementById('localUploadInput').click()">
+        📂 Fayl yoki papkani bu yerga tashlang
+      </div>
+
+      <div class="file-tree" id="fileTree"></div>
+    </div>
+
+    <!-- GITHUB TAB -->
+    <div class="ws-stab-content" id="stab-github">
+      <div class="gh-panel">
+        <div class="gh-toolbar">
+          <button onclick="loadGithubRepos()" class="btn btn-ghost btn-sm w-full" style="justify-content:center;font-size:.78rem;" id="ghLoadBtn">
+            🐙 Repolarni yuklash
+          </button>
+        </div>
+        <div id="ghBreadcrumb" class="gh-breadcrumb" style="display:none;"></div>
+        <div class="gh-repo-list" id="ghContent">
+          <div style="padding:1.5rem;text-align:center;color:var(--text3);font-size:.8rem;">
+            GitHub akkountingizni ulang<br>yoki repolarni yuklang
+          </div>
+        </div>
+        <div id="ghImportBar" style="display:none;padding:.5rem .65rem;border-top:1px solid var(--border);flex-shrink:0;">
+          <div style="display:flex;gap:.4rem;align-items:center;">
+            <span id="ghSelectedCount" style="font-size:.75rem;color:var(--text2);flex:1;">0 ta tanlandi</span>
+            <button onclick="importSelected()" class="btn btn-primary btn-sm" style="font-size:.75rem;">⬇ Import</button>
+            <button onclick="clearGhSelection()" class="btn btn-ghost btn-sm" style="font-size:.75rem;">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PACKAGES TAB -->
+    <div class="ws-stab-content" id="stab-packages">
+      <div style="padding:1rem;">
+        <div style="font-size:.85rem;font-weight:700;margin-bottom:.5rem;color:var(--text);display:flex;align-items:center;gap:.5rem;">
+          <span>📦 Paket Menejeri</span>
+        </div>
+        <p style="font-size:.7rem;color:var(--text3);margin-bottom:1rem;line-height:1.4;">Project uchun kerakli kutubxonalarni (pip) o'rnating.</p>
+        
+        <div style="display:flex;gap:.4rem;margin-bottom:.75rem;">
+          <input type="text" id="pkgInput" class="chat-input" style="flex:1;font-size:.75rem;padding:.4rem;" placeholder="Masalan: requests">
+          <button onclick="installPackage()" class="btn btn-primary btn-sm" id="pkgBtn" style="font-size:.7rem;">O'rnatish</button>
+        </div>
+        
+        <div id="pkgStatus" style="font-size:.7rem;padding:.5rem;border-radius:5px;display:none;background:var(--surface2);color:var(--text2);white-space:pre-wrap;"></div>
+        
+        <div style="margin-top:1.5rem;">
+          <h4 style="font-size:.75rem;font-weight:700;color:var(--text2);margin-bottom:.5rem;">O'rnatilgan paketlar:</h4>
+          <div id="pkgList" style="font-size:.7rem;color:var(--text3);">
+             Garchi paketlar o'rnatilgan bo'lsa-da, ularni `packages` papkasida ko'rishingiz mumkin.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEFT COLUMN RESIZER -->
+  <div class="ws-col-resizer" id="wsColResizerLeft"></div>
+
+  <!-- ── MAIN: EDITOR + TERMINAL ── -->
+  <div class="ws-main">
+    <div class="editor-tabs">
+      <div class="tabs-list" id="editorTabs">
+        <div style="padding:.5rem .75rem;font-size:.78rem;color:var(--text3);flex-shrink:0;">Fayl tanlang →</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; padding-right:.85rem; flex-shrink:0;">
+        <div id="collab-presence" style="display:flex;align-items:center;gap:4px;"></div>
+        <div class="save-indicator" id="saveIndicator"></div>
+        <button onclick="runCurrentFile()" id="editorRunBtn" style="background:#10b981; color:#0b0e14; border:none; border-radius:6px; padding:.3rem .75rem; font-size:.75rem; cursor:pointer; font-weight:800; display:flex; align-items:center; gap:5px; transition:all 0.2s ease; box-shadow: 0 0 10px rgba(16,185,129,0.2); display:none;">
+          <span style="font-size:0.8rem;">▶</span> Ishga tushirish
+        </button>
+      </div>
+    </div>
+
+    <div class="ws-center">
+      <div class="editor-section" id="editorSection">
+        <!-- CodeMirror mounts here -->
+        <div id="cmWrapper" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;position:relative;">
+          <div id="cmPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#3d4855;font-size:.85rem;pointer-events:none;z-index:1;">// Fayl tanlang yoki yangi fayl yarating...</div>
+        </div>
+        <!-- 3D VIEWER CONTAINER -->
+        <div id="threeContainer" style="display:none; flex:1; background:#0a0d14; position:relative;">
+          <div id="threeLoading" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); z-index:10; color:white; font-size:0.8rem;">
+            <div class="spinner" style="margin-right:10px;"></div> 3D Model yuklanmoqda...
+          </div>
+          <canvas id="threeCanvas" style="width:100%; height:100%; display:block;"></canvas>
+          <div style="position:absolute; bottom:10px; right:10px; display:flex; gap:5px; z-index:11;">
+            <button class="btn btn-ghost btn-sm" onclick="reset3DCamera()" style="background:rgba(255,255,255,0.1); font-size:0.65rem;">Reset Camera</button>
+            <button class="btn btn-ghost btn-sm" onclick="toggle3DWireframe()" style="background:rgba(255,255,255,0.1); font-size:0.65rem;">Wireframe</button>
+          </div>
+        </div>
+      </div>
+      <div class="ws-resizer" id="wsResizer"></div>
+      <div class="terminal-section" id="terminalSection">
+        <div class="terminal-header">
+          <div class="terminal-title">
+            <div class="terminal-dot" style="background:#ef4444;"></div>
+            <div class="terminal-dot" style="background:#f59e0b;"></div>
+            <div class="terminal-dot" style="background:#10b981;"></div>
+            <span style="margin-left:.35rem;font-weight:700;">Output</span>
+          </div>
+          <div style="display:flex;gap:.35rem;">
+            <button onclick="toggleSidebar('left')" class="btn btn-ghost btn-sm mobile-only" title="Files">📁</button>
+            <button onclick="toggleSidebar('right')" class="btn btn-ghost btn-sm mobile-only" title="Chat">💬</button>
+            <button onclick="clearTerminal()" class="btn btn-ghost btn-sm" style="font-size:.68rem;padding:.2rem .45rem;" title="Tozalash">🗑 Tozalash</button>
+            <button onclick="toggleTerminal()" class="btn btn-ghost btn-sm" id="termToggleBtn" style="font-size:.68rem;padding:.2rem .45rem;">⬇</button>
+          </div>
+        </div>
+        <div class="terminal-body" id="terminalBody">
+          <div class="t-line"><span class="t-sys">DevForge Output Panel ⚡ — Kod bajarilish natijalari bu yerda ko'rsatiladi</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <span id="sbLang">📄 Fayl tanlanmagan</span>
+      <span id="sbPos">Qator 1, Ustun 1</span>
+      <span id="sbLines"></span>
+      <button onclick="aiExplainCode()" id="aiExplainBtn" style="margin-left:auto;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;border-radius:5px;padding:.1rem .55rem;font-size:.65rem;cursor:pointer;font-weight:600;margin-right:.5rem;">🤖 Tushuntir</button>
+      <button onclick="aiDebugCode()" id="aiDebugBtn" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;border-radius:5px;padding:.1rem .55rem;font-size:.65rem;cursor:pointer;font-weight:600;">🐞 Debug</button>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN RESIZER -->
+  <div class="ws-col-resizer" id="wsColResizerRight"></div>
+
+  <!-- ── RIGHT SIDEBAR ── -->
+  <div class="ws-right">
+    <div class="ws-tabs">
+      <div class="ws-tab active" onclick="switchWsTab('chat',this)">💬 Chat</div>
+      <div class="ws-tab" onclick="switchWsTab('info',this)">📋 Ma'lumot</div>
+      <div class="ws-tab" onclick="startVideoCall()" style="color:var(--accent);"><span style="animation: pulse 2s infinite;">📞 Call</span></div>
+    </div>
+    <div class="ws-tab-content active" id="tab-chat">
+      <div class="chat-body" id="chatBody">
+        {% for msg in chat_messages %}
+        <div class="chat-msg {% if msg.sender == request.user %}mine{% else %}theirs{% endif %}" data-id="{{ msg.pk }}">
+          {% if msg.sender != request.user %}<div style="font-size:.68rem;color:var(--text3);padding:0 .3rem;margin-bottom:.1rem;">{{ msg.sender.username }}</div>{% endif %}
+          <div class="chat-bubble">{{ msg.content }}</div>
+          <div class="chat-meta" {% if msg.sender == request.user %}style="text-align:right;"{% endif %}>{{ msg.created_at|date:"H:i" }}</div>
+        </div>
+        {% empty %}
+        <div style="text-align:center;color:var(--text3);padding:2rem;font-size:.8rem;">Suhbat boshlang! 💬</div>
+        {% endfor %}
+      </div>
+      <div class="chat-footer">
+        <textarea id="chatInput" class="chat-input" placeholder="Xabar..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+        <button onclick="sendChat()" class="btn btn-primary btn-sm" style="border-radius:8px;padding:.4rem .65rem;align-self:flex-end;">↑</button>
+      </div>
+    </div>
+    <div class="ws-tab-content" id="tab-info">
+      <div style="padding:1rem;overflow-y:auto;flex:1;">
+        <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:.5rem;">🚀 Loyiha</div>
+        <div style="font-weight:800;margin-bottom:.3rem;">{{ project.title }}</div>
+        <div style="font-size:.8rem;color:var(--text2);margin-bottom:.75rem;line-height:1.6;">{{ project.description|truncatechars:100 }}</div>
+        <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.75rem;">
+          <span class="badge badge-blue">{{ project.get_genre_display }}</span>
+          <span class="badge badge-green">{{ project.get_status_display }}</span>
+        </div>
+        <a href="{% url 'project_detail' pk=project.pk %}" class="btn btn-ghost btn-sm w-full" style="justify-content:center;margin-bottom:1rem;">Loyihaga →</a>
+        <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:.5rem;">⌨️ Qisqa yo'llar</div>
+        <div style="font-size:.73rem;line-height:2.1;color:var(--text2);">
+          <div><kbd style="background:var(--surface2);padding:1px 5px;border-radius:3px;">Ctrl+S</kbd> Saqlash</div>
+          <div><kbd style="background:var(--surface2);padding:1px 5px;border-radius:3px;">Tab</kbd> 4 bo'shliq</div>
+          <div><kbd style="background:var(--surface2);padding:1px 5px;border-radius:3px;">↑↓</kbd> Terminal tarix</div>
+          <div><kbd style="background:var(--surface2);padding:1px 5px;border-radius:3px;">Ctrl+L</kbd> Tozalash</div>
+          <div><kbd style="background:var(--surface2);padding:1px 5px;border-radius:3px;">F2</kbd> Fayl rename</div>
+        </div>
+        <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin:1rem 0 .5rem;">👥 A'zolar</div>
+        <div style="font-size:.78rem;color:var(--accent);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--green);"></div>
+          {{ project.creator.username }} <span style="color:var(--text3);">(ega)</span>
+        </div>
+        {% for m in members %}
+        <div style="font-size:.78rem;color:var(--text2);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem;">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--green);"></div>
+          {{ m.user.username }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- VIDEO CALL MODAL -->
+  <div id="callModal" class="call-modal">
+    <div class="call-header">
+      <div style="font-weight:800;color:#fff;display:flex;align-items:center;gap:.5rem;">
+        <span style="color:var(--green)">●</span> Real-time Video Call — {{ project.title }}
+      </div>
+      <button onclick="endVideoCall()" class="btn btn-ghost btn-sm" style="color:#ff4d4d;font-size:1.2rem;">✕</button>
+    </div>
+    <div id="jitsiContainer" class="call-body"></div>
+  </div>
+
+  <!-- AI EXPLAIN MODAL -->
+<div id="aiExplainModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;width:100%;max-width:580px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h3 style="font-weight:800;">🤖 Kod Tushuntirish</h3>
+      <button onclick="document.getElementById('aiExplainModal').style.display='none'" style="background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="aiExplainContent" style="color:var(--text2);font-size:.875rem;line-height:1.75;white-space:pre-wrap;"></div>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div id="ctxMenu" class="ctx-menu" style="display:none;">
+  <div class="ctx-item" onclick="ctxRename()">✏️ Qayta nomlash</div>
+  <div class="ctx-item" onclick="ctxNewFile()">📄 Yangi fayl</div>
+  <div class="ctx-item" onclick="ctxNewFolder()">📁 Yangi papka</div>
+  <div class="ctx-item danger" onclick="ctxDelete()">🗑 O'chirish</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const WORKSPACE_PK = {{ workspace.pk }};
+const CHAT_ROOM_PK = {{ chat_room.pk }};
+const CURRENT_USER = "{{ request.user.username }}";
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let openTabs   = [], activeTab = null, fileCache = {}, saveTimer = null;
+let treeData   = [];   // all files from server
+let expandedFolders = new Set();
+let termHistory = [], termHistIdx = -1, termMinimized = false;
+let chatLastId = 0;
+let ctxTarget  = null;   // current context menu target item
+let ghState    = { repo: '', branch: 'main', path: '', selected: new Set() };
+let isTermSession = false;
+let termSessionTimer = null;
+
+// ── CODEMIRROR + REALTIME ─────────────────────────────────────────────────────
+let cmEditor = null;             // CodeMirror instance
+let cmSyncTimer = null;          // debounce for broadcasting doc_change
+let remoteUsers = {};            // { username: { color, fileId } }
+const USER_COLORS = ['#38bdf8','#a78bfa','#f472b6','#fb923c','#34d399','#facc15','#f87171','#60a5fa'];
+let myColor = USER_COLORS[Math.floor(Math.random() * USER_COLORS.length)];
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Init CodeMirror IDE
+    const wrapper = document.getElementById('cmWrapper');
+    cmEditor = CodeMirror(wrapper, {
+        value: '',
+        theme: 'dracula',
+        lineNumbers: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        styleActiveLine: true,
+        indentUnit: 4,
+        tabSize: 4,
+        indentWithTabs: false,
+        lineWrapping: false,
+        extraKeys: {
+            'Tab': (cm) => cm.execCommand('insertSoftTab'),
+            'Ctrl-S': () => { if (activeTab) saveFile(activeTab); }
+        }
+    });
+    // Sync fileCache on every change
+    cmEditor.on('change', (cm, changeObj) => {
+        if (window._cmRemoteUpdate) return; // Avoid echo loops for remote doc_change
+        if (!activeTab) return;
+        const tab = openTabs.find(t => t.pk === activeTab);
+        if (tab) tab.dirty = true;
+        fileCache[activeTab] = cm.getValue();
+        updateCursorPos();
+        renderTabs();
+        clearTimeout(saveTimer);
+        setSaveStatus('saving');
+        saveTimer = setTimeout(() => saveFile(activeTab), 2000);
+        // Broadcast doc_change to other collaborators
+        clearTimeout(cmSyncTimer);
+        cmSyncTimer = setTimeout(() => broadcastDocChange(activeTab, cm.getValue()), 300);
+    });
+    // Broadcast cursor position changes
+    cmEditor.on('cursorActivity', () => {
+        if (!activeTab) return;
+        const cursor = cmEditor.getCursor();
+        broadcastCursorPos(activeTab, { line: cursor.line, ch: cursor.ch });
+    });
+    // Hide placeholder when CodeMirror is focused
+    cmEditor.on('focus', () => {
+        const ph = document.getElementById('cmPlaceholder');
+        if (ph) ph.style.display = 'none';
+    });
+
+    loadFileTree();
+    scrollChat();
+    setupResizer();
+    setupColumnResizers();
+    connectWorkspaceSocket();
+    // Polling as fallback for file_change only (not doc content)
+    setInterval(pollEditorUpdates, 8000);
+
+    // Close context menu on click outside
+    document.addEventListener('click', () => {
+        document.getElementById('ctxMenu').style.display = 'none';
+        ctxTarget = null;
+    });
+
+    // Last chat id
+    const all = document.querySelectorAll('#chatBody [data-id]');
+    if (all.length) chatLastId = parseInt(all[all.length-1].dataset.id) || 0;
+});
+
+// ── RESPONSIVE TOGGLES ────────────────────────────────────────────────────────
+function toggleSidebar(side) {
+    if (side === 'left') {
+        const sb = document.querySelector('.ws-sidebar');
+        sb.classList.toggle('mobile-open');
+        document.querySelector('.ws-right').classList.remove('mobile-open');
+    } else {
+        const rb = document.querySelector('.ws-right');
+        rb.classList.toggle('mobile-open');
+        document.querySelector('.ws-sidebar').classList.remove('mobile-open');
+    }
+}
+
+// ── FILE TREE ─────────────────────────────────────────────────────────────────
+function loadFileTree() {
+    fetch(`/workspace/tree/${WORKSPACE_PK}/`)
+        .then(r => r.json())
+        .then(d => {
+            treeData = d.files || [];
+            renderFileTree();
+        }).catch(() => {});
+}
+
+function renderFileTree(filterPath) {
+    const container = document.getElementById('fileTree');
+    container.innerHTML = '';
+    renderTreeLevel(container, '/', 0);
+}
+
+function renderTreeLevel(container, parentPath, depth) {
+    const items = treeData.filter(f => f.path === parentPath);
+    const folders = items.filter(f => f.is_folder);
+    const files   = items.filter(f => !f.is_folder);
+
+    [...folders, ...files].forEach(item => {
+        const div = document.createElement('div');
+        div.style.paddingLeft = (depth * 14 + 6) + 'px';
+        div.className = `tree-item ${activeTab === item.id ? 'active' : ''}`;
+        div.dataset.id      = item.id;
+        div.dataset.name    = item.name;
+        div.dataset.path    = item.path;
+        div.dataset.folder  = item.is_folder ? '1' : '0';
+        div.dataset.lang    = item.language || '';
+
+        const icon = getFileIcon(item.name, item.is_folder);
+        const arrow = item.is_folder
+            ? `<span class="tree-folder-arrow ${expandedFolders.has(item.id) ? 'open' : ''}" id="arr-${item.id}">▶</span>`
+            : '<span style="width:12px;display:inline-block;"></span>';
+
+        div.innerHTML = `
+            ${arrow}
+            <span class="ti-icon">${icon}</span>
+            <span class="ti-name">${esc(item.name)}</span>
+            <button class="ti-menu tree-btn" style="margin-left:auto;border:none;background:none;font-size:.75rem;" onclick="showCtxMenu(event,${item.id})">⋯</button>`;
+
+        if (item.is_folder) {
+            div.onclick = (e) => {
+                if (e.target.classList.contains('ti-menu') || e.target.closest('.ti-menu')) return;
+                toggleFolder(item.id, item.name, item.path);
+            };
+        } else {
+            div.onclick = (e) => {
+                if (e.target.classList.contains('ti-menu') || e.target.closest('.ti-menu')) return;
+                openTab(item.id, item.name, item.language);
+            };
+        }
+
+        div.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            showCtxMenu(e, item.id);
+        });
+
+        container.appendChild(div);
+
+        // Agar papka ochiq bo'lsa — ichini ham chiqar
+        if (item.is_folder && expandedFolders.has(item.id)) {
+            const childPath = item.path === '/' ? `/${item.name}` : `${item.path}/${item.name}`;
+            renderTreeLevel(container, childPath, depth + 1);
+        }
+    });
+}
+
+function toggleFolder(id, name, path) {
+    const childPath = path === '/' ? `/${name}` : `${path}/${name}`;
+    if (expandedFolders.has(id)) {
+        expandedFolders.delete(id);
+    } else {
+        expandedFolders.add(id);
+    }
+    renderFileTree();
+}
+
+function getFileIcon(name, isFolder) {
+    if (isFolder) return '📁';
+    const ext = name.split('.').pop().toLowerCase();
+    const map = {
+        py:'🐍', js:'📜', ts:'📜', html:'🌐', css:'🎨',
+        json:'📋', md:'📝', txt:'📄', glsl:'✨', cs:'💻',
+        cpp:'⚙️', c:'⚙️', h:'⚙️', sh:'💲', yaml:'⚙️',
+        yml:'⚙️', png:'🖼️', jpg:'🖼️', jpeg:'🖼️', gif:'🖼️',
+        svg:'🎨', mp3:'🎵', wav:'🎵', ogg:'🎵', fbx:'📦',
+        glb:'📦', gltf:'📦', blend:'🟠',
+    };
+    return map[ext] || '📄';
+}
+
+// ── CONTEXT MENU ──────────────────────────────────────────────────────────────
+function showCtxMenu(e, itemId) {
+    e.preventDefault();
+    e.stopPropagation();
+    ctxTarget = treeData.find(f => f.id === itemId);
+    if (!ctxTarget) return;
+    const menu = document.getElementById('ctxMenu');
+    menu.style.display = 'block';
+    menu.style.left    = Math.min(e.clientX, window.innerWidth - 160) + 'px';
+    menu.style.top     = Math.min(e.clientY, window.innerHeight - 160) + 'px';
+}
+
+function ctxRename() {
+    if (!ctxTarget) return;
+    const newName = prompt('Yangi nom:', ctxTarget.name);
+    if (!newName || newName === ctxTarget.name) return;
+    fetch(`/workspace/file/${ctxTarget.id}/rename/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({name: newName})
+    }).then(r => r.json()).then(() => {
+        // Tabda ham yangilash
+        const tab = openTabs.find(t => t.pk === ctxTarget.id);
+        if (tab) { tab.name = newName; renderTabs(); }
+        loadFileTree();
+    });
+}
+
+function ctxDelete() {
+    if (!ctxTarget) return;
+    const msg = ctxTarget.is_folder
+        ? `"${ctxTarget.name}" papkasi va barcha mazmuni o'chirilsinmi?`
+        : `"${ctxTarget.name}" o'chirilsinmi?`;
+    if (!confirm(msg)) return;
+    fetch(`/workspace/file/${ctxTarget.id}/delete/`, {
+        method:'POST',
+        headers:{'X-CSRFToken':getCookie('csrftoken')}
+    }).then(() => {
+        // Tabdan ham olib tashlash
+        openTabs = openTabs.filter(t => t.pk !== ctxTarget.id);
+        if (activeTab === ctxTarget.id) {
+            activeTab = openTabs.length ? openTabs[openTabs.length-1].pk : null;
+            if (activeTab) activateTab(activeTab);
+            else if (cmEditor) { cmEditor.setValue(''); const ph = document.getElementById('cmPlaceholder'); if (ph) ph.style.display='flex'; }
+        }
+        renderTabs();
+        loadFileTree();
+    });
+}
+
+function ctxNewFile() {
+    if (!ctxTarget) return;
+    const path = ctxTarget.is_folder
+        ? (ctxTarget.path === '/' ? `/${ctxTarget.name}` : `${ctxTarget.path}/${ctxTarget.name}`)
+        : ctxTarget.path;
+    newFilePrompt(path);
+}
+
+function ctxNewFolder() {
+    if (!ctxTarget) return;
+    const path = ctxTarget.is_folder
+        ? (ctxTarget.path === '/' ? `/${ctxTarget.name}` : `${ctxTarget.path}/${ctxTarget.name}`)
+        : ctxTarget.path;
+    newFolderPrompt(path);
+}
+
+// ── NEW FILE / FOLDER ─────────────────────────────────────────────────────────
+function newFilePrompt(path) {
+    path = path || '/';
+    const name = prompt('Fayl nomi (masalan: main.py):');
+    if (!name) return;
+    const ext  = name.split('.').pop().toLowerCase();
+    const lang = {py:'python',js:'javascript',ts:'javascript',html:'html',css:'css',json:'json',md:'markdown',cs:'csharp',cpp:'cpp',c:'c',sh:'bash',glsl:'glsl'}[ext] || 'text';
+    fetch(`/workspace/file/create/${WORKSPACE_PK}/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({name, path, language: lang})
+    }).then(r=>r.json()).then(d => {
+        fileCache[d.id] = '';
+        loadFileTree();
+        setTimeout(() => openTab(d.id, name, lang), 400);
+    });
+}
+
+function newFolderPrompt(path) {
+    path = path || '/';
+    const name = prompt('Papka nomi:');
+    if (!name) return;
+    fetch(`/workspace/folder/create/${WORKSPACE_PK}/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({name, path})
+    }).then(r=>r.json()).then(d => {
+        expandedFolders.add(d.id);
+        loadFileTree();
+    });
+}
+
+// ── LOCAL FILE UPLOAD ─────────────────────────────────────────────────────────
+function uploadLocalFiles(files, targetPath) {
+    if (!files.length) return;
+    const fd = new FormData();
+    Array.from(files).forEach((f, i) => {
+        fd.append(`file_${i}`, f);
+        fd.append(`path_file_${i}`, targetPath || '/');
+    });
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    showUploadProgress('Yuklanmoqda...');
+    fetch(`/workspace/upload/${WORKSPACE_PK}/`, {method:'POST', body: fd})
+        .then(r=>r.json())
+        .then(d => {
+            hideUploadProgress();
+            if (d.errors?.length) alert('Xatolar:\n' + d.errors.join('\n'));
+            loadFileTree();
+            if (d.uploaded.length) {
+                const msg = `${d.uploaded.length} ta fayl yuklandi`;
+                appendT('sys', '📂 ' + msg);
+            }
+        }).catch(() => hideUploadProgress());
+}
+
+function uploadFolderFiles(files) {
+    if (!files.length) return;
+    const fd = new FormData();
+    Array.from(files).forEach((f, i) => {
+        fd.append(`file_${i}`, f);
+        // webkitRelativePath: "foldername/subdir/file.py"
+        const relPath = f.webkitRelativePath || f.name;
+        const parts   = relPath.split('/');
+        parts.pop(); // filename ni olib tashlash
+        const dir = parts.length ? '/' + parts.join('/') : '/';
+        fd.append(`path_file_${i}`, dir);
+    });
+    fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+    showUploadProgress(`${files.length} ta fayl yuklanmoqda...`);
+    fetch(`/workspace/upload/${WORKSPACE_PK}/`, {method:'POST', body: fd})
+        .then(r=>r.json())
+        .then(d => {
+            hideUploadProgress();
+            if (d.errors?.length) alert('Xatolar:\n' + d.errors.join('\n'));
+            loadFileTree();
+            appendT('sys', `📂 Papka yuklandi: ${d.uploaded.length} ta fayl`);
+        }).catch(() => hideUploadProgress());
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length) uploadLocalFiles(files, '/');
+}
+
+function showUploadProgress(msg) {
+    document.getElementById('dropZone').innerHTML = `<div class="spinner"></div> ${msg}`;
+}
+function hideUploadProgress() {
+    document.getElementById('dropZone').innerHTML = '📂 Fayl yoki papkani bu yerga tashlang';
+    setTimeout(loadFileTree, 300);
+}
+
+// ── GITHUB PANEL ──────────────────────────────────────────────────────────────
+function loadGithubRepos() {
+    const btn = document.getElementById('ghLoadBtn');
+    btn.innerHTML = '<span class="spinner"></span> Yuklanmoqda...';
+    btn.disabled = true;
+    fetch('/workspace/github/repos/')
+        .then(r => r.json())
+        .then(d => {
+            btn.innerHTML = '🔄 Qayta yuklash';
+            btn.disabled = false;
+            if (d.error) {
+                document.getElementById('ghContent').innerHTML = `
+                    <div style="padding:1rem;text-align:center;color:var(--text2);font-size:.8rem;">
+                        <p style="margin-bottom:.75rem;">${esc(d.error)}</p>
+                        ${d.connect_url ? `<a href="${d.connect_url}" class="btn btn-primary btn-sm">GitHub ni ulash</a>` : ''}
+                    </div>`;
+                return;
+            }
+            renderGhRepos(d.repos);
+        }).catch(e => {
+            btn.innerHTML = '🐙 Repolarni yuklash';
+            btn.disabled = false;
+        });
+}
+
+function renderGhRepos(repos) {
+    ghState.repo = ''; ghState.path = '';
+    document.getElementById('ghBreadcrumb').style.display = 'none';
+    const container = document.getElementById('ghContent');
+    if (!repos.length) {
+        container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text3);font-size:.8rem;">Repo topilmadi</div>';
+        return;
+    }
+    container.innerHTML = repos.map(r => `
+        <div class="gh-repo-item" onclick="openGhRepo('${esc(r.full_name)}','${r.default_branch}')">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.2rem;">
+                <span style="font-size:.85rem;">${r.private ? '🔒' : '📦'}</span>
+                <span style="font-weight:700;font-size:.83rem;color:var(--text);">${esc(r.name)}</span>
+                ${r.language ? `<span class="badge badge-gray" style="font-size:.62rem;margin-left:auto;">${esc(r.language)}</span>` : ''}
+            </div>
+            ${r.description ? `<div style="font-size:.72rem;color:var(--text3);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${esc(r.description)}</div>` : ''}
+            <div style="font-size:.68rem;color:var(--text3);margin-top:.2rem;">📅 ${r.updated_at}</div>
+        </div>`).join('');
+}
+
+function openGhRepo(fullName, branch) {
+    ghState.repo   = fullName;
+    ghState.branch = branch;
+    ghState.path   = '';
+    loadGhTree();
+}
+
+function loadGhTree(path) {
+    path = path !== undefined ? path : ghState.path;
+    ghState.path = path;
+    const container = document.getElementById('ghContent');
+    container.innerHTML = '<div style="padding:1.5rem;text-align:center;"><span class="spinner"></span></div>';
+    updateGhBreadcrumb();
+
+    fetch(`/workspace/github/tree/?repo=${encodeURIComponent(ghState.repo)}&branch=${ghState.branch}&path=${encodeURIComponent(path)}`)
+        .then(r => r.json())
+        .then(d => {
+            if (d.error) {
+                container.innerHTML = `<div style="padding:1rem;color:var(--red);font-size:.8rem;">${esc(d.error)}</div>`;
+                return;
+            }
+            renderGhTree(d.files);
+        });
+}
+
+function renderGhTree(files) {
+    const container = document.getElementById('ghContent');
+    if (!files.length) {
+        container.innerHTML = '<div style="padding:1rem;text-align:center;color:var(--text3);font-size:.8rem;">Papka bo\'sh</div>';
+        return;
+    }
+    container.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.4rem .65rem;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--text2);">
+            <span>Hammani tanlash:</span>
+            <label style="cursor:pointer;"><input type="checkbox" onchange="selectAllGh(this.checked)"> barchasi</label>
+        </div>` +
+        files.map(f => `
+        <div class="gh-file-item" data-gh-path="${esc(f.path)}" data-gh-type="${f.type}" data-gh-sha="${f.sha}" data-gh-name="${esc(f.name)}">
+            <input type="checkbox" onclick="event.stopPropagation();toggleGhSelect('${esc(f.path)}','${f.type}','${f.sha}','${esc(f.name)}',this)" class="gh-check">
+            <span>${f.type === 'dir' ? '📁' : getFileIcon(f.name, false)}</span>
+            <span style="flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:.8rem;" 
+                onclick="${f.type === 'dir' ? `loadGhTree('${esc(f.path)}')` : `toggleGhSelect('${esc(f.path)}','${f.type}','${f.sha}','${esc(f.name)}',null)`}">
+                ${esc(f.name)}
+            </span>
+            ${f.type === 'file' && f.size ? `<span style="font-size:.65rem;color:var(--text3);">${formatSize(f.size)}</span>` : ''}
+        </div>`).join('');
+}
+
+function updateGhBreadcrumb() {
+    const bc = document.getElementById('ghBreadcrumb');
+    bc.style.display = 'flex';
+    const repoName = ghState.repo.split('/')[1] || ghState.repo;
+    let html = `<span onclick="openGhRepo('${ghState.repo}','${ghState.branch}')" style="cursor:pointer;">🏠 ${esc(repoName)}</span>`;
+    if (ghState.path) {
+        const parts = ghState.path.split('/');
+        let built = '';
+        parts.forEach((p, i) => {
+            built += (built ? '/' : '') + p;
+            const snap = built;
+            html += ` / <span onclick="loadGhTree('${snap}')">${esc(p)}</span>`;
+        });
+    }
+    bc.innerHTML = html;
+}
+
+function toggleGhSelect(path, type, sha, name, checkbox) {
+    const key = path;
+    if (ghState.selected.has(key)) {
+        ghState.selected.delete(key);
+        if (checkbox) checkbox.checked = false;
+    } else {
+        ghState.selected.add(JSON.stringify({path, type, sha, name}));
+        if (checkbox) checkbox.checked = true;
+    }
+    updateGhImportBar();
+}
+
+function selectAllGh(checked) {
+    document.querySelectorAll('.gh-check').forEach(cb => {
+        cb.checked = checked;
+        const item = cb.closest('.gh-file-item');
+        if (item) {
+            const path = item.dataset.ghPath;
+            const type = item.dataset.ghType;
+            const sha  = item.dataset.ghSha;
+            const name = item.dataset.ghName;
+            if (checked) ghState.selected.add(JSON.stringify({path, type, sha, name}));
+            else ghState.selected.delete(JSON.stringify({path, type, sha, name}));
+        }
+    });
+    updateGhImportBar();
+}
+
+function updateGhImportBar() {
+    const bar   = document.getElementById('ghImportBar');
+    const count = document.getElementById('ghSelectedCount');
+    bar.style.display   = ghState.selected.size > 0 ? 'block' : 'none';
+    count.textContent   = `${ghState.selected.size} ta tanlandi`;
+}
+
+function clearGhSelection() {
+    ghState.selected.clear();
+    document.querySelectorAll('.gh-check').forEach(cb => cb.checked = false);
+    updateGhImportBar();
+}
+
+function importSelected() {
+    if (!ghState.selected.size) return;
+    const items = Array.from(ghState.selected).map(s => JSON.parse(s));
+    const btn   = event.target;
+    btn.disabled = true; btn.textContent = '⏳...';
+
+    fetch(`/workspace/github/import/${WORKSPACE_PK}/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({
+            repo:        ghState.repo,
+            branch:      ghState.branch,
+            items:       items,
+            target_path: '/',
+        })
+    }).then(r=>r.json()).then(d => {
+        btn.disabled = false; btn.textContent = '⬇ Import';
+        clearGhSelection();
+        loadFileTree();
+        appendT('sys', `🐙 GitHub import: ${d.count} ta fayl qo'shildi`);
+        if (d.errors?.length) appendT('err', 'Xatolar: ' + d.errors.join(', '));
+        switchSTab('files', document.querySelector('.ws-stab'));
+    }).catch(() => { btn.disabled = false; btn.textContent = '⬇ Import'; });
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + 'KB';
+    return (bytes/1024/1024).toFixed(1) + 'MB';
+}
+
+// ── EDITOR ────────────────────────────────────────────────────────────────────
+function openTab(pk, name, lang) {
+    if (openTabs.find(t => t.pk === pk)) { activateTab(pk); return; }
+    fetch(`/workspace/file/${pk}/load/`)
+        .then(r => r.json())
+        .then(d => {
+            fileCache[pk] = d.content;
+            openTabs.push({
+                pk, 
+                name: d.name, 
+                lang: d.language, 
+                dirty: false,
+                lastSyncAt: d.updated_at
+            });
+            renderTabs(); activateTab(pk);
+        });
+}
+
+function activateTab(pk) {
+    activeTab = pk;
+    const tab = openTabs.find(t => t.pk === pk);
+    if (!tab) return;
+
+    const ext = tab.name.split('.').pop().toLowerCase();
+    const is3D = ['glb', 'gltf', 'obj', 'fbx', 'stl'].includes(ext);
+    const runnable = ['py', 'js', 'ts', 'java', 'c', 'cpp', 'cs', 'go', 'php', 'rb', 'sh', 'bash', 'bat', 'cmd'].includes(ext);
+
+    const runBtn = document.getElementById('editorRunBtn');
+    if (runBtn) {
+        if (runnable) {
+            runBtn.style.display = 'flex';
+            runBtn.style.background = '#10b981';
+            runBtn.style.color = '#0b0e14';
+            runBtn.style.opacity = '1';
+            runBtn.style.cursor = 'pointer';
+            runBtn.style.pointerEvents = 'auto';
+            runBtn.title = "Faylni ishga tushirish";
+        } else {
+            runBtn.style.display = 'flex';
+            runBtn.style.background = '#374151';
+            runBtn.style.color = '#9ca3af';
+            runBtn.style.opacity = '0.5';
+            runBtn.style.cursor = 'not-allowed';
+            runBtn.style.pointerEvents = 'none';
+            runBtn.title = "Ushbu fayl turini ishga tushirib bo'lmaydi";
+        }
+    }
+
+    const cmWrapper = document.getElementById('cmWrapper');
+    const threeCont = document.getElementById('threeContainer');
+
+    if (is3D) {
+        if (cmWrapper) cmWrapper.style.display = 'none';
+        if (threeCont) { threeCont.style.display = 'flex'; init3DPreview(pk, tab.name); }
+    } else {
+        if (cmWrapper) cmWrapper.style.display = 'flex';
+        if (threeCont) threeCont.style.display = 'none';
+        // Load content into CodeMirror
+        if (cmEditor) {
+            const content = fileCache[pk] || '';
+            const lang = langMode(tab.lang || tab.name.split('.').pop());
+            cmEditor.setOption('mode', lang);
+            cmEditor.setValue(content);
+            cmEditor.clearHistory();
+            cmEditor.refresh();
+            // Show placeholder if empty
+            const ph = document.getElementById('cmPlaceholder');
+            if (ph) ph.style.display = content ? 'none' : 'flex';
+        }
+    }
+
+    updateStatusBar(tab);
+    renderTabs();
+    // File tree active state
+    document.querySelectorAll('.tree-item').forEach(el =>
+        el.classList.toggle('active', parseInt(el.dataset.id) === pk));
+}
+
+function langMode(ext) {
+    const map = {
+        py:'python', js:'javascript', ts:'javascript',
+        html:'htmlmixed', css:'css', json:'javascript',
+        md:'markdown', cs:'text/x-csharp', cpp:'text/x-c++src',
+        c:'text/x-csrc', java:'text/x-java', sh:'shell',
+        xml:'xml', yaml:'yaml', rs:'rust'
+    };
+    return map[ext] || 'null';
+}
+
+function renderTabs() {
+    const bar  = document.getElementById('editorTabs');
+    bar.innerHTML = '';
+    if (!openTabs.length) {
+        bar.innerHTML = '<div style="padding:.5rem .75rem;font-size:.78rem;color:var(--text3);">Fayl tanlang →</div>';
+        const runBtn = document.getElementById('editorRunBtn');
+        if (runBtn) runBtn.style.display = 'none';
+    } else {
+        openTabs.forEach(tab => {
+            const el = document.createElement('div');
+            el.className = `editor-tab ${tab.pk === activeTab ? 'active' : ''}`;
+            el.innerHTML = `<span>${getFileIcon(tab.name,false)}</span><span>${esc(tab.name)}${tab.dirty?' ●':''}</span><span class="close-tab" onclick="closeTab(event,${tab.pk})">✕</span>`;
+            el.addEventListener('click', () => activateTab(tab.pk));
+            bar.appendChild(el);
+        });
+    }
+}
+
+function closeTab(e, pk) {
+    e.stopPropagation();
+    openTabs = openTabs.filter(t => t.pk !== pk);
+    if (activeTab === pk) {
+        activeTab = openTabs.length ? openTabs[openTabs.length-1].pk : null;
+        if (activeTab) activateTab(activeTab);
+        else if (cmEditor) { cmEditor.setValue(''); const ph = document.getElementById('cmPlaceholder'); if (ph) ph.style.display='flex'; }
+    }
+    renderTabs();
+}
+
+// onEditorInput is now handled by cmEditor.on('change') above
+function onEditorInput() {}
+
+function saveFile(pk) {
+    if (!pk) return Promise.resolve();
+    return fetch(`/workspace/file/${pk}/save/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body: JSON.stringify({content: fileCache[pk] || ''})
+    }).then(r=>r.json()).then(d => {
+        const tab = openTabs.find(t => t.pk === pk);
+        if (tab) {
+            tab.dirty = false;
+            tab.lastSyncAt = d.updated_at;
+        }
+        renderTabs(); setSaveStatus('saved');
+    });
+}
+
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (activeTab) saveFile(activeTab); return; }
+    if (e.key === 'F2' && activeTab) { const tab = openTabs.find(t=>t.pk===activeTab); if(tab) { ctxTarget=treeData.find(f=>f.id===activeTab); ctxRename(); } return; }
+
+    // Direct terminal typing: if activeElement is not a form input/textarea
+    const active = document.activeElement;
+    if (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA' && active.tagName !== 'SELECT' && !active.isContentEditable) {
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        
+        // Single character, backspace, delete, space or terminal shortcuts
+        if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete') {
+            if (termMinimized) {
+                toggleTerminal();
+            }
+            const termInput = document.getElementById('termInput');
+            termInput.focus();
+        }
+    }
+});
+
+function setSaveStatus(s) {
+    const el = document.getElementById('saveIndicator');
+    el.className = 'save-indicator ' + s;
+    el.textContent = s === 'saving' ? '⏳' : s === 'saved' ? '✓ Saqlandi' : '';
+    if (s === 'saved') setTimeout(() => el.textContent = '', 2000);
+}
+
+function handleEditorKey(e) {/* handled by CodeMirror extraKeys */}
+
+function updateLineNumbers() {/* handled by CodeMirror */}
+function syncScroll() {/* handled by CodeMirror */}
+function updateCursorPos() {
+    if (!cmEditor) return;
+    const cur = cmEditor.getCursor();
+    const el = document.getElementById('sbPos');
+    if (el) el.textContent = `Qator ${cur.line+1}, Ustun ${cur.ch+1}`;
+}
+function updateStatusBar(tab) {
+    const icons = {python:'🐍',javascript:'📜',html:'🌐',css:'🎨',json:'📋',markdown:'📝',csharp:'💻',cpp:'⚙️'};
+    document.getElementById('sbLang').textContent = icons[tab.lang] || '📄';
+}
+
+// ── REAL-TIME SYNC (Fallback polling — WebSocket is primary) ────────────────
+function pollEditorUpdates() {
+    if (!activeTab) return;
+    const tab = openTabs.find(t => t.pk === activeTab);
+    if (!tab || tab.dirty || saveTimer) return;
+    // Only poll if WebSocket is down
+    if (workspaceSocket && workspaceSocket.readyState === WebSocket.OPEN) return;
+
+    fetch(`/workspace/file/${activeTab}/load/`)
+        .then(r => r.json())
+        .then(d => {
+            if (d.updated_at > tab.lastSyncAt && !tab.dirty && !saveTimer && cmEditor) {
+                tab.lastSyncAt = d.updated_at;
+                fileCache[activeTab] = d.content;
+                const cursor = cmEditor.getCursor();
+                cmEditor.setValue(d.content);
+                cmEditor.setCursor(cursor);
+                console.log(`Fayl "${tab.name}" boshqa foydalanuvchi tomonidan yangilandi (fallback).`);
+            }
+        }).catch(() => {});
+}
+
+// ── OUTPUT PANEL ──────────────────────────────────────────────────────────────
+function runCommand(cmd, filename, fileContent, language) {
+    appendT('prompt', '▶ ' + cmd);
+    const loadEl = appendT('sys', '⏳ Kod bajarilmoqda...', true);
+
+    // 90 soniyalik frontend timeout (backend max 60s)
+    const controller = new AbortController();
+    const runTimer = setTimeout(() => controller.abort(), 90000);
+
+    fetch(`/workspace/terminal/${WORKSPACE_PK}/run/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ cmd, filename, file_content: fileContent, language }),
+        signal: controller.signal
+    })
+    .then(r => r.json())
+    .then(d => {
+        clearTimeout(runTimer);
+        if (loadEl) loadEl.remove();
+        if (d.output && d.output.trim()) {
+            appendT(d.error ? 'err' : 'out', d.output);
+        } else {
+            appendT('sys', '✓ Bajarildi (natija bo\'sh)');
+        }
+    })
+    .catch(err => {
+        clearTimeout(runTimer);
+        if (loadEl) loadEl.remove();
+        if (err.name === 'AbortError') {
+            appendT('err', '⏳ Vaqt tugadi (90s). Kod juda uzoq bajarildi yoki server javob bermadi.');
+        } else {
+            appendT('err', 'Server bilan ulanishda xatolik yuz berdi.');
+        }
+    });
+}
+
+
+function appendT(type, text, returnEl) {
+    const body = document.getElementById('terminalBody');
+    if (!body) return;
+    const line = document.createElement('div');
+    line.className = 't-line';
+    if (type === 'prompt') line.innerHTML = `<span class="t-sys">${esc(text)}</span>`;
+    else if (type === 'out') line.innerHTML = `<span class="t-out">${esc(text)}</span>`;
+    else if (type === 'err') line.innerHTML = `<span class="t-err">${esc(text)}</span>`;
+    else line.innerHTML = `<span class="t-sys">${esc(text)}</span>`;
+    
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+    return returnEl ? line : undefined;
+}
+
+function clearTerminal() {
+    const body = document.getElementById('terminalBody');
+    if (body) {
+        body.innerHTML = '<div class="t-line"><span class="t-sys">DevForge Output Panel ⚡ — Kod bajarilish natijalari bu yerda ko\'rsatiladi</span></div>';
+    }
+}
+
+function toggleTerminal() {
+    const sec = document.getElementById('terminalSection');
+    const btn = document.getElementById('termToggleBtn');
+    termMinimized = !termMinimized;
+    if (termMinimized) {
+        sec.style.height = '38px';
+        sec.querySelector('.terminal-body').style.display = 'none';
+        btn.textContent = '⬆';
+    } else {
+        sec.style.height = '240px';
+        sec.querySelector('.terminal-body').style.display = '';
+        btn.textContent = '⬇';
+    }
+}
+
+// ── RESIZER ───────────────────────────────────────────────────────────────────
+function setupResizer() {
+    const r=document.getElementById('wsResizer'), t=document.getElementById('terminalSection');
+    let startY,startH;
+    r.addEventListener('mousedown',e=>{startY=e.clientY;startH=t.offsetHeight;const m=e2=>{const h=Math.max(120,Math.min(window.innerHeight*.6,startH+(startY-e2.clientY)));t.style.height=h+'px';};document.addEventListener('mousemove',m);document.addEventListener('mouseup',()=>document.removeEventListener('mousemove',m),{once:true});e.preventDefault();});
+}
+
+function setupColumnResizers() {
+    const root = document.getElementById('wsRoot');
+    const leftResizer = document.getElementById('wsColResizerLeft');
+    const rightResizer = document.getElementById('wsColResizerRight');
+    if (!root || !leftResizer || !rightResizer) return;
+    
+    let leftWidth = 260;
+    let rightWidth = 280;
+    
+    leftResizer.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = leftWidth;
+        
+        const onMouseMove = ev => {
+            const deltaX = ev.clientX - startX;
+            leftWidth = Math.max(180, Math.min(450, startWidth + deltaX));
+            root.style.gridTemplateColumns = `${leftWidth}px 4px 1fr 4px ${rightWidth}px`;
+        };
+        
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+    
+    rightResizer.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = rightWidth;
+        
+        const onMouseMove = ev => {
+            const deltaX = startX - ev.clientX;
+            rightWidth = Math.max(200, Math.min(450, startWidth + deltaX));
+            root.style.gridTemplateColumns = `${leftWidth}px 4px 1fr 4px ${rightWidth}px`;
+        };
+        
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+}
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+function sendChat() {
+    const inp=document.getElementById('chatInput'); const content=inp.value.trim(); if(!content) return;
+    const fd=new FormData(); fd.append('content',content); fd.append('csrfmiddlewaretoken',getCookie('csrftoken'));
+    fetch(`/workspace/chat/${CHAT_ROOM_PK}/send/`,{
+        method:'POST',
+        body:fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(r=> r.ok ? r.json() : Promise.reject())
+        .then(msg=>{
+            appendChat({...msg,is_mine:true});
+            chatLastId = Math.max(chatLastId, msg.id);
+            inp.value=''; inp.style.height='auto';
+        }).catch(()=>{});
+}
+function pollChat() {
+    fetch(`/workspace/chat/${CHAT_ROOM_PK}/messages/?last_id=${chatLastId}`)
+        .then(r=> r.ok ? r.json() : Promise.reject())
+        .then(d=>{
+            d.messages.forEach(msg=>{
+                if(msg.sender!==CURRENT_USER){
+                    appendChat({...msg,is_mine:false});
+                }
+                chatLastId = Math.max(chatLastId, msg.id);
+            });
+        }).catch(()=>{});
+}
+function appendChat(msg) {
+    const body=document.getElementById('chatBody');
+    const ph=body.querySelector('div[style*="text-align:center"]'); if(ph) ph.remove();
+    const wrap=document.createElement('div'); wrap.className=`chat-msg ${msg.is_mine?'mine':'theirs'}`; wrap.dataset.id=msg.id;
+    wrap.innerHTML=`${!msg.is_mine?`<div style="font-size:.68rem;color:var(--text3);padding:0 .3rem;margin-bottom:.1rem;">${esc(msg.sender)}</div>`:''}<div class="chat-bubble">${esc(msg.content)}</div><div class="chat-meta" ${msg.is_mine?'style="text-align:right;"':''}>${msg.time}</div>`;
+    body.appendChild(wrap); scrollChat();
+}
+function scrollChat() { 
+    const b=document.getElementById('chatBody'); 
+    b.scrollTo({ top: b.scrollHeight, behavior: 'smooth' }); 
+}
+
+// ── AI EXPLAIN ────────────────────────────────────────────────────────────────
+function aiExplainCode() {
+    if (!activeTab) { alert('Avval fayl tanlang'); return; }
+    const code = fileCache[activeTab] || '';
+    const tab  = openTabs.find(t => t.pk === activeTab);
+    if (!code.trim()) { alert('Fayl bo\'sh'); return; }
+    const btn = document.getElementById('aiExplainBtn');
+    btn.textContent='⏳'; btn.disabled=true;
+    fetch('/ai/explain-code/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({code,lang:tab?.lang||'python'})})
+        .then(r=>r.json()).then(d=>{
+            btn.textContent='🤖 Tushuntir'; btn.disabled=false;
+            document.getElementById('aiExplainContent').textContent = d.explanation||d.error||'Javob olinmadi';
+            document.getElementById('aiExplainModal').style.display='flex';
+        }).catch(()=>{btn.textContent='🤖 Tushuntir';btn.disabled=false;});
+}
+
+function aiDebugCode() {
+    if (!activeTab) { alert('Avval fayl tanlang'); return; }
+    const code = fileCache[activeTab] || '';
+    const tab  = openTabs.find(t => t.pk === activeTab);
+    
+    const lastErr = Array.from(document.querySelectorAll('.t-err')).pop()?.textContent || '';
+
+    const btn = document.getElementById('aiDebugBtn');
+    btn.textContent='⏳'; btn.disabled=true;
+    
+    fetch('/ai/debug-code/', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+        body:JSON.stringify({
+            code,
+            lang: tab?.lang || 'python',
+            error: lastErr
+        })
+    }).then(r=>r.json()).then(d=>{
+        btn.textContent='🐞 Debug'; btn.disabled=false;
+        
+        if (d.fixed_code && d.fixed_code !== code) {
+            if (confirm("AI xatoni tuzatdi. Kodni yangilashni xohlaysizmi?\n\nIzoh: " + d.explanation)) {
+                fileCache[activeTab] = d.fixed_code;
+                if (cmEditor) cmEditor.setValue(d.fixed_code);
+                // Trigger save
+                clearTimeout(saveTimer);
+                setSaveStatus('saving');
+                saveTimer = setTimeout(() => saveFile(activeTab), 1500);
+            }
+        } else {
+            document.getElementById('aiExplainContent').textContent = (d.explanation || d.error || 'Xato topilmadi');
+            document.getElementById('aiExplainModal').style.display='flex';
+        }
+    }).catch(()=>{btn.textContent='🐞 Debug';btn.disabled=false;});
+}
+
+// ── RUN CODE ──────────────────────────────────────────────────────────────────
+async function runCurrentFile() {
+    if (!activeTab) { alert('Avval fayl tanlang'); return; }
+    const tab = openTabs.find(t => t.pk === activeTab);
+    const code = fileCache[activeTab] || '';
+    if (!code.trim() && !tab.name.endsWith('.sh') && !tab.name.endsWith('.bat')) { alert('Fayl bo\'sh'); return; }
+    
+    // Faylni saqlash va kutish (majburiy)
+    await saveFile(activeTab);
+    
+    const fileInfo = treeData.find(f => f.id === tab.pk);
+    const name = fileInfo ? (fileInfo.path.replace(/^\//,'') + (fileInfo.path==='/'?'':'/') + fileInfo.name) : tab.name;
+    const base = name.substring(0, name.lastIndexOf('.')) || name;
+    const ext  = tab.name.split('.').pop().toLowerCase();
+    
+    let cmd = '';
+    
+    switch (ext) {
+        case 'py':   cmd = `python "${name}"`; break;
+        case 'js':   cmd = `node "${name}"`; break;
+        case 'ts':   cmd = `tsc "${name}" --outFile "${base}.js" && node "${base}.js"`; break;
+        case 'java': cmd = `javac "${name}" && java "${base.replace(/\//g, '.')}"`; break;
+        case 'c':    cmd = `gcc "${name}" -o "${base}.exe" && "${base}.exe"`; break;
+        case 'cpp':  cmd = `g++ "${name}" -o "${base}.exe" && "${base}.exe"`; break;
+        case 'cs':   cmd = `csc "${name}" && "${base}.exe"`; break;
+        case 'go':   cmd = `go run "${name}"`; break;
+        case 'php':  cmd = `php "${name}"`; break;
+        case 'rb':   cmd = `ruby "${name}"`; break;
+        case 'sh':
+        case 'bash': cmd = `bash "${name}"`; break;
+        case 'bat':
+        case 'cmd':  cmd = `"${name}"`; break;
+        case 'html': alert('HTML fayllarni terminalda ishga tushirib bo\'lmaydi. Uni brauzerda ko\'ring.'); return;
+        default:     alert('Ushbu format uchun ishga tushirish buyrug\'i mavjud emas'); return;
+    }
+    
+    if (cmd) {
+        if (termMinimized) toggleTerminal();
+        runCommand(cmd, tab.name, code, tab.lang || ext);
+    }
+}
+function switchSTab(name, el) {
+    document.querySelectorAll('.ws-sidebar .ws-stab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.ws-sidebar .ws-stab-content').forEach(t=>t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById('stab-'+name)?.classList.add('active');
+}
+function switchWsTab(name, el) {
+    if (name === 'call') return; // Call is different
+    document.querySelectorAll('.ws-right .ws-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.ws-right .ws-tab-content').forEach(t=>t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    const tabEl = document.getElementById('tab-'+name);
+    if (tabEl) tabEl.classList.add('active');
+    if(name==='chat') setTimeout(scrollChat,50);
+}
+
+// ── PACKAGE MANAGER ──────────────────────────────────────────────────────────
+function installPackage() {
+    const pkg = document.getElementById('pkgInput').value.trim();
+    if (!pkg) return;
+    const btn = document.getElementById('pkgBtn');
+    const status = document.getElementById('pkgStatus');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+    status.style.display = 'block';
+    status.textContent = `⏳ ${pkg} o'rnatilmoqda...`;
+    status.style.color = 'var(--text2)';
+
+    fetch(`/workspace/package-install/${WORKSPACE_PK}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ package: pkg })
+    }).then(r => r.json()).then(d => {
+        btn.disabled = false;
+        btn.textContent = "O'rnatish";
+        status.textContent = d.output || d.error;
+        status.style.color = d.success ? 'var(--green)' : 'var(--red)';
+        if (d.success) {
+            document.getElementById('pkgInput').value = '';
+            loadFileTree(); // Refresh to show 'packages' folder
+        }
+    }).catch(e => {
+        btn.disabled = false;
+        btn.textContent = "O'rnatish";
+        status.textContent = "Xatolik yuz berdi.";
+        status.style.color = 'var(--red)';
+    });
+}
+
+// ── VIDEO CALL (JITSI) ────────────────────────────────────────────────────────
+let jitsiApi = null;
+function startVideoCall() {
+    const modal = document.getElementById('callModal');
+    modal.style.display = 'flex';
+    
+    // Create a unique room name for this project
+    const roomName = `DevForge_Room_${WORKSPACE_PK}_${CHAT_ROOM_PK}`;
+    const domain = "meet.jit.si";
+    const options = {
+        roomName: roomName,
+        width: '100%',
+        height: '100%',
+        parentNode: document.getElementById('jitsiContainer'),
+        userInfo: { displayName: CURRENT_USER },
+        configOverwrite: { prejoinPageEnabled: false },
+        interfaceConfigOverwrite: {
+            TOOLBAR_BUTTONS: [
+                'microphone', 'camera', 'closedcaptions', 'desktop', 'embedmeeting', 'fullscreen',
+                'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
+                'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
+                'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
+                'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
+                'security'
+            ],
+        }
+    };
+    
+    // Load Jitsi script if not loaded
+    if (!window.JitsiMeetExternalAPI) {
+        const script = document.createElement('script');
+        script.src = `https://${domain}/external_api.js`;
+        script.onload = () => { jitsiApi = new JitsiMeetExternalAPI(domain, options); };
+        document.head.appendChild(script);
+    } else {
+        if (jitsiApi) jitsiApi.dispose();
+        jitsiApi = new JitsiMeetExternalAPI(domain, options);
+    }
+}
+
+function endVideoCall() {
+    if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+    document.getElementById('callModal').style.display = 'none';
+    document.getElementById('jitsiContainer').innerHTML = '';
+}
+
+// ── 3D PREVIEW LOGIC ──────────────────────────────────────────────────────────
+let scene, camera, renderer, controls, currentModel;
+function init3DPreview(pk, filename) {
+    const container = document.getElementById('threeContainer');
+    const canvas = document.getElementById('threeCanvas');
+    const loading = document.getElementById('threeLoading');
+    loading.style.display = 'flex';
+
+    if (!scene) {
+        // First time initialization
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0d14);
+        
+        camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(5, 5, 5);
+
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 10, 10);
+        scene.add(directionalLight);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        function animate() {
+            if (activeTab === pk) {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            const tc = document.getElementById('threeContainer');
+            if (tc && tc.style.display !== 'none') {
+                camera.aspect = tc.clientWidth / tc.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(tc.clientWidth, tc.clientHeight);
+            }
+        });
+    }
+
+    // Clear previous model
+    if (currentModel) scene.remove(currentModel);
+
+    const ext = filename.split('.').pop().toLowerCase();
+    const url = `/workspace/file/${pk}/raw/`; // Need to ensure this endpoint exists or use download URL
+
+    let loader;
+    if (ext === 'glb' || ext === 'gltf') loader = new THREE.GLTFLoader();
+    else if (ext === 'obj') loader = new THREE.OBJLoader();
+    else if (ext === 'fbx') loader = new THREE.FBXLoader();
+    else if (ext === 'stl') loader = new THREE.STLLoader();
+
+    if (loader) {
+        loader.load(url, (result) => {
+            currentModel = result.scene || result;
+            scene.add(currentModel);
+            
+            // Center model
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            currentModel.position.sub(center);
+            
+            const maxDim = Math.max(size.x, size.y, size.z);
+            camera.position.set(maxDim * 1.5, maxDim * 1.5, maxDim * 1.5);
+            controls.target.set(0,0,0);
+            
+            loading.style.display = 'none';
+        }, (xhr) => {
+            // progress
+        }, (err) => {
+            console.error("3D Load Error:", err);
+            loading.innerHTML = `<span style="color:var(--red)">Xatolik: 3D modelni yuklab bo'lmadi</span>`;
+        });
+    }
+}
+
+function reset3DCamera() { if(controls) controls.reset(); }
+function toggle3DWireframe() {
+    if (!currentModel) return;
+    currentModel.traverse(child => {
+        if (child.isMesh) child.material.wireframe = !child.material.wireframe;
+    });
+}
+
+// ── WORKSPACE WEBSOCKET COLLABORATION (Real-Time) ─────────────────────────────
+let workspaceSocket = null;
+
+function connectWorkspaceSocket() {
+    const ws_scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    workspaceSocket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/workspace/${WORKSPACE_PK}/`);
+
+    workspaceSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === 'chat_message') {
+            if (data.sender !== CURRENT_USER) {
+                appendChat({ id: data.id, sender: data.sender, content: data.content, time: data.time, is_mine: false });
+                chatLastId = Math.max(chatLastId, data.id);
+            }
+
+        } else if (data.type === 'typing') {
+            let indicator = document.getElementById('wsTypingIndicator');
+            if (data.is_typing) {
+                if (!indicator) {
+                    indicator = document.createElement('div');
+                    indicator.id = 'wsTypingIndicator';
+                    indicator.style.cssText = 'font-size:.72rem;color:var(--accent);padding:0.2rem 0.5rem;font-style:italic;';
+                    indicator.textContent = `${data.username} yozmoqda...`;
+                    document.getElementById('chatBody').appendChild(indicator);
+                    scrollChat();
+                }
+            } else { if (indicator) indicator.remove(); }
+
+        } else if (data.type === 'file_change') {
+            loadFileTree();
+            appendT('sys', `⚡ ${data.sender} fayl o'zgartirdi: ${data.action} → ${data.name}`);
+
+        } else if (data.type === 'doc_change') {
+            // === REAL-TIME CODE EDIT SYNC ===
+            const fileId = data.file_id;
+            // Always update the cache
+            fileCache[fileId] = data.content;
+            // If this file is currently open in the editor, sync CodeMirror
+            if (activeTab === fileId && cmEditor) {
+                const cursor = cmEditor.getCursor();
+                const scrollInfo = cmEditor.getScrollInfo();
+                window._cmRemoteUpdate = true;
+                cmEditor.setValue(data.content);
+                window._cmRemoteUpdate = false;
+                cmEditor.setCursor(cursor);
+                cmEditor.scrollTo(scrollInfo.left, scrollInfo.top);
+            }
+            appendT('sys', `✏️ ${data.sender} kodni tahrirladi`);
+
+        } else if (data.type === 'cursor_position') {
+            // Show remote cursor badge
+            if (!remoteUsers[data.sender]) {
+                const colorIdx = Object.keys(remoteUsers).length % USER_COLORS.length;
+                remoteUsers[data.sender] = { color: data.color || USER_COLORS[colorIdx] };
+            }
+            updatePresenceBadges();
+
+        } else if (data.type === 'user_presence') {
+            if (data.action === 'join') {
+                if (!remoteUsers[data.username]) {
+                    const colorIdx = Object.keys(remoteUsers).length % USER_COLORS.length;
+                    remoteUsers[data.username] = { color: USER_COLORS[colorIdx] };
+                }
+                appendT('sys', `👋 ${data.username} workspace'ga qo'shildi`);
+            } else if (data.action === 'leave') {
+                delete remoteUsers[data.username];
+                appendT('sys', `👋 ${data.username} workspace'dan chiqdi`);
+            }
+            updatePresenceBadges();
+        }
+    };
+
+    workspaceSocket.onclose = function() {
+        console.warn('WS closed. Reconnecting in 5s...');
+        updatePresenceBadges(true);
+        setTimeout(connectWorkspaceSocket, 5000);
+    };
+    workspaceSocket.onerror = function() {
+        console.warn('WS error.');
+    };
+}
+
+// Broadcast real-time document content to all collaborators
+function broadcastDocChange(fileId, content) {
+    if (!workspaceSocket || workspaceSocket.readyState !== WebSocket.OPEN) return;
+    workspaceSocket.send(JSON.stringify({
+        type: 'doc_change',
+        file_id: fileId,
+        content: content
+    }));
+}
+
+// Broadcast cursor position
+function broadcastCursorPos(fileId, cursor) {
+    if (!workspaceSocket || workspaceSocket.readyState !== WebSocket.OPEN) return;
+    workspaceSocket.send(JSON.stringify({
+        type: 'cursor_position',
+        file_id: fileId,
+        cursor: cursor,
+        color: myColor
+    }));
+}
+
+// Update the presence badge row in editor toolbar
+function updatePresenceBadges(offline) {
+    const container = document.getElementById('collab-presence');
+    if (!container) return;
+    container.innerHTML = '';
+    if (offline) {
+        container.innerHTML = '<span class="presence-badge" style="border-color:rgba(239,68,68,0.3);color:#f87171;">● Offline</span>';
+        return;
+    }
+    Object.entries(remoteUsers).forEach(([username, info]) => {
+        const badge = document.createElement('span');
+        badge.className = 'presence-badge';
+        badge.style.color = info.color;
+        badge.style.borderColor = info.color + '44';
+        badge.style.background = info.color + '18';
+        badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:${info.color};display:inline-block;"></span> ${esc(username)}`;
+        badge.title = `${username} — hozir onlayn`;
+        container.appendChild(badge);
+    });
+}
+
+// Attach typing status listener
+document.addEventListener('DOMContentLoaded', () => {
+    const chatInputEl = document.getElementById('chatInput');
+    let wsTypingTimeout;
+    if (chatInputEl) {
+        chatInputEl.addEventListener('input', () => {
+            if (workspaceSocket && workspaceSocket.readyState === WebSocket.OPEN) {
+                clearTimeout(wsTypingTimeout);
+                workspaceSocket.send(JSON.stringify({
+                    'type': 'typing',
+                    'is_typing': true
+                }));
+                
+                wsTypingTimeout = setTimeout(() => {
+                    workspaceSocket.send(JSON.stringify({
+                        'type': 'typing',
+                        'is_typing': false
+                    }));
+                }, 2000);
+            }
+        });
+    }
+});
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+<!-- Scripts for 3D -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/FBXLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/STLLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.0/lib/browser.min.js"></script> <!-- Required for FBX -->
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Avtorizatsiya Xatosi — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-error-wrap {
+  min-height: calc(100vh - 220px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 3rem 1rem;
+}
+.auth-error-card {
+  width: 100%; max-width: 440px;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+  text-align: center;
+}
+.error-icon { font-size: 3rem; margin-bottom: 1rem; }
+.error-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; color: #f87171; margin-bottom: .5rem; }
+.error-desc { font-size: .88rem; color: var(--text-secondary); line-height: 1.55; margin-bottom: 1.75rem; }
+.btn-back {
+  display: inline-block; padding: .75rem 1.5rem;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 12px; color: var(--text-primary); text-decoration: none;
+  font-weight: 600; font-size: .9rem; transition: background .2s;
+}
+.btn-back:hover { background: rgba(255,255,255,.15); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-error-wrap">
+  <div class="auth-error-card">
+    <div class="error-icon">⚠️</div>
+    <h1 class="error-title">Avtorizatsiya Xatosi</h1>
+    <p class="error-desc">
+      Uchinchi tomon akkaunti (Google/GitHub) orqali kirishda xatolik yuz berdi yoki jarayon bekor qilindi.
+    </p>
+    <a href="{% url 'login' %}" class="btn-back">← Kirish Sahifasiga Qaytish</a>
+  </div>
+</div>
+{% endblock %}

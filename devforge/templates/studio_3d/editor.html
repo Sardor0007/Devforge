@@ -1,0 +1,820 @@
+{% extends 'base.html' %}
+{% block title %}{{ scene.title }} — 3D Studio{% endblock %}
+
+{% block extra_css %}
+<style>
+body { overflow:hidden; }
+main.container { max-width:100%!important; padding:0!important; margin:0!important; }
+
+/* Shell */
+.s3d-shell {
+    display:grid;
+    grid-template-columns: 52px 240px 1fr 280px;
+    height:100vh; background:#08090d; font-family:var(--font-mono);
+}
+
+/* Top Toolbar */
+.s3d-topbar {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    height:44px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:.4rem; padding:0 .75rem;
+}
+.s3d-brand { font-family:var(--font-display); font-weight:800; font-size:.9rem;
+    background:linear-gradient(135deg,#8b5cf6,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-right:.5rem; }
+.tb-btn { display:inline-flex; align-items:center; gap:4px; padding:.28rem .6rem; border-radius:5px; font-size:.75rem;
+    background:transparent; border:none; color:var(--text-secondary); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.tb-btn:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
+.tb-btn.active { background:rgba(139,92,246,.15); color:#a78bfa; }
+.tb-btn.primary { background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; font-weight:700; border:none; }
+.tb-sep { width:1px; height:22px; background:rgba(255,255,255,.08); margin:0 .35rem; }
+.save-dot { width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block; }
+.save-dot.unsaved { background:#f59e0b; animation:blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* Left toolbar icons */
+.s3d-tools {
+    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; align-items:center; padding:.5rem 0; gap:2px;
+    margin-top:44px; overflow-y:auto;
+}
+.s3d-tool { width:44px; height:38px; display:flex; align-items:center; justify-content:center;
+    border-radius:7px; cursor:pointer; font-size:.9rem; transition:all .15s;
+    background:none; border:none; color:var(--text-muted); }
+.s3d-tool:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
+.s3d-tool.active { background:rgba(139,92,246,.2); color:#a78bfa; box-shadow:0 0 0 1px rgba(139,92,246,.4); }
+.s3d-tool-sep { width:28px; height:1px; background:rgba(255,255,255,.06); margin:3px 0; }
+
+/* Left Scene Tree */
+.s3d-outliner {
+    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+}
+.outliner-header { padding:.5rem .75rem; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between; }
+.outliner-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; }
+.outliner-body { flex:1; overflow-y:auto; }
+.outliner-body::-webkit-scrollbar { width:4px; }
+.outliner-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+.scene-item { display:flex; align-items:center; gap:5px; padding:.35rem .75rem; cursor:pointer; transition:all .1s; border-bottom:1px solid rgba(255,255,255,.02); }
+.scene-item:hover { background:rgba(255,255,255,.04); }
+.scene-item.selected { background:rgba(139,92,246,.1); }
+.scene-item-icon { font-size:.85rem; flex-shrink:0; }
+.scene-item-name { flex:1; font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.scene-item-vis { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.7rem; }
+
+/* Center Viewport */
+.s3d-viewport {
+    margin-top:44px; position:relative; overflow:hidden; background:#050608;
+}
+#threeCanvas { display:block; width:100%; height:100%; }
+.viewport-overlay { position:absolute; inset:0; pointer-events:none; }
+.viewport-info { position:absolute; bottom:8px; left:8px; font-size:.62rem; color:rgba(255,255,255,.25); font-family:var(--font-mono); }
+.viewport-gizmo { position:absolute; top:8px; right:8px; width:64px; height:64px; }
+.camera-btns { position:absolute; top:8px; left:8px; display:flex; flex-direction:column; gap:3px; }
+.cam-btn { background:rgba(10,11,16,.8); border:1px solid rgba(255,255,255,.1); border-radius:4px; color:var(--text-muted);
+    padding:3px 6px; font-size:.62rem; cursor:pointer; transition:all .1s; }
+.cam-btn:hover { color:#a78bfa; border-color:#8b5cf6; }
+
+/* Right Properties */
+.s3d-props {
+    background:#0a0b10; border-left:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+}
+.props-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.06); }
+.pt { flex:1; padding:.4rem; text-align:center; font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+    color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.pt.active { color:#a78bfa; border-bottom-color:#8b5cf6; background:rgba(139,92,246,.05); }
+.props-body { flex:1; overflow-y:auto; padding:.75rem; }
+.props-body::-webkit-scrollbar { width:4px; }
+.props-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+.p-sec { margin-bottom:1.25rem; }
+.p-sec-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:.5rem; }
+.p-row { display:flex; align-items:center; gap:5px; margin-bottom:5px; }
+.p-label { font-size:.68rem; color:var(--text-muted); min-width:65px; flex-shrink:0; }
+.p-input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
+    padding:2px 5px; color:var(--text-primary); font-size:.72rem; outline:none; font-family:var(--font-mono); }
+.p-input:focus { border-color:#8b5cf6; }
+.p-range { flex:1; accent-color:#8b5cf6; cursor:pointer; }
+.p-val { font-size:.66rem; color:#a78bfa; min-width:30px; text-align:right; }
+.p-color { width:28px; height:20px; border:1px solid rgba(255,255,255,.1); border-radius:3px; cursor:pointer; padding:0; }
+.p-select { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
+    padding:2px 5px; color:var(--text-primary); font-size:.72rem; outline:none; }
+.p-select option { background:#0d1117; }
+.p-xyz { display:flex; gap:3px; flex:1; }
+.p-xyz input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:3px;
+    padding:2px 4px; color:var(--text-primary); font-size:.68rem; outline:none; text-align:center; font-family:var(--font-mono); }
+.p-xyz input:focus { border-color:#8b5cf6; }
+.xyz-label { font-size:.55rem; display:block; text-align:center; margin-top:1px; color:var(--text-muted); }
+
+/* Add object buttons */
+.add-obj-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.add-obj-btn { padding:.5rem .25rem; border-radius:6px; border:1px solid rgba(255,255,255,.06);
+    background:rgba(255,255,255,.03); cursor:pointer; text-align:center; transition:all .15s; }
+.add-obj-btn:hover { background:rgba(139,92,246,.1); border-color:rgba(139,92,246,.3); }
+.add-obj-btn-icon { font-size:1.1rem; display:block; margin-bottom:2px; }
+.add-obj-btn-label { font-size:.6rem; color:var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Load Three.js CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Top Toolbar -->
+<div class="s3d-topbar">
+    <a href="{% url 'studio_3d:dashboard' %}" class="tb-btn">◀</a>
+    <span class="s3d-brand">🎲</span>
+    <input type="text" id="sceneTitle" value="{{ scene.title }}"
+        style="background:none;border:none;color:var(--text-primary);font-size:.85rem;font-weight:600;outline:none;width:160px;"
+        onchange="markUnsaved()">
+    <div class="tb-sep"></div>
+    <!-- Transform modes -->
+    <button class="tb-btn active" id="mode-translate" onclick="setTransformMode('translate')" title="Move (G)">✥ Move</button>
+    <button class="tb-btn" id="mode-rotate" onclick="setTransformMode('rotate')" title="Rotate (R)">↻ Rotate</button>
+    <button class="tb-btn" id="mode-scale" onclick="setTransformMode('scale')" title="Scale (S)">⤡ Scale</button>
+    <div class="tb-sep"></div>
+    <!-- View modes -->
+    <button class="tb-btn" onclick="setViewMode('solid')">⬛ Solid</button>
+    <button class="tb-btn" onclick="setViewMode('wireframe')">🔲 Wire</button>
+    <button class="tb-btn" onclick="setViewMode('rendered')">✨ Render</button>
+    <div class="tb-sep"></div>
+    <!-- Camera -->
+    <button class="tb-btn" onclick="setCamera('perspective')">📷 Persp</button>
+    <button class="tb-btn" onclick="setCamera('orthographic')">📐 Ortho</button>
+    <div class="tb-sep"></div>
+    <!-- Actions -->
+    <button class="tb-btn" onclick="focusSelected()" title="F">🎯 Focus</button>
+    <button class="tb-btn" onclick="duplicateSelected()" title="Ctrl+D">⧉ Dupe</button>
+    <button class="tb-btn" onclick="deleteSelected()" style="color:#fca5a5;" title="Del">🗑 Delete</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="exportGLTF()">⬇ GLTF</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:.68rem;color:var(--text-muted);"><span class="save-dot" id="saveDot"></span><span id="saveLabel">Saqlangan</span></span>
+        <button class="tb-btn primary" onclick="saveScene()">💾 Save</button>
+    </div>
+</div>
+
+<div class="s3d-shell">
+    <!-- ── TOOL ICONS ── -->
+    <div class="s3d-tools">
+        <button class="s3d-tool active" id="tool-select3d" onclick="set3dTool('select')" title="Select (Q)">⊹</button>
+        <button class="s3d-tool" id="tool-move" onclick="set3dTool('move')" title="Move (G)">✥</button>
+        <button class="s3d-tool" id="tool-rotate" onclick="set3dTool('rotate')" title="Rotate (R)">↻</button>
+        <button class="s3d-tool" id="tool-scale" onclick="set3dTool('scale')" title="Scale (S)">⤡</button>
+        <div class="s3d-tool-sep"></div>
+        <button class="s3d-tool" onclick="addMesh('box')" title="Box">⬜</button>
+        <button class="s3d-tool" onclick="addMesh('sphere')" title="Sphere">⬤</button>
+        <button class="s3d-tool" onclick="addMesh('cylinder')" title="Cylinder">🔵</button>
+        <button class="s3d-tool" onclick="addMesh('plane')" title="Plane">▬</button>
+        <div class="s3d-tool-sep"></div>
+        <button class="s3d-tool" onclick="addLight('point')" title="Point Light">💡</button>
+        <button class="s3d-tool" onclick="addLight('directional')" title="Sun">☀️</button>
+        <button class="s3d-tool" onclick="addLight('spot')" title="Spot">🔦</button>
+        <div class="s3d-tool-sep"></div>
+        <button class="s3d-tool" onclick="addCamera()" title="Camera">📷</button>
+    </div>
+
+    <!-- ── OUTLINER ── -->
+    <div class="s3d-outliner">
+        <div class="outliner-header">
+            <span class="outliner-title">📋 Scene Objects</span>
+            <button onclick="addMesh('box')" style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);border-radius:4px;color:#a78bfa;cursor:pointer;font-size:.7rem;padding:2px 6px;">+ Add</button>
+        </div>
+        <div class="outliner-body" id="outlinerBody">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+
+    <!-- ── VIEWPORT ── -->
+    <div class="s3d-viewport">
+        <canvas id="threeCanvas"></canvas>
+        <div class="viewport-overlay">
+            <div class="camera-btns">
+                <button class="cam-btn" onclick="setCameraView('top')">Top</button>
+                <button class="cam-btn" onclick="setCameraView('front')">Front</button>
+                <button class="cam-btn" onclick="setCameraView('right')">Right</button>
+                <button class="cam-btn" onclick="setCameraView('persp')">Persp</button>
+            </div>
+            <div class="viewport-info" id="viewportInfo">Objects: 0 | Tris: 0 | FPS: 0</div>
+        </div>
+    </div>
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="s3d-props">
+        <div class="props-tabs">
+            <div class="pt active" id="ptObject" onclick="switchPropTab('object')">Object</div>
+            <div class="pt" id="ptMaterial" onclick="switchPropTab('material')">Material</div>
+            <div class="pt" id="ptLight" onclick="switchPropTab('light')">Light</div>
+            <div class="pt" id="ptScene" onclick="switchPropTab('scene')">World</div>
+        </div>
+
+        <!-- Object tab -->
+        <div class="props-body" id="panelObject">
+            <div class="p-sec">
+                <div class="p-sec-title">📐 Transform</div>
+                <div class="p-row">
+                    <span class="p-label">Location</span>
+                    <div class="p-xyz">
+                        <div><input type="number" class="p-xyz" id="posX" step="0.1" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#ef4444">X</span></div>
+                        <div><input type="number" class="p-xyz" id="posY" step="0.1" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#10b981">Y</span></div>
+                        <div><input type="number" class="p-xyz" id="posZ" step="0.1" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#3b82f6">Z</span></div>
+                    </div>
+                </div>
+                <div class="p-row">
+                    <span class="p-label">Rotation</span>
+                    <div class="p-xyz">
+                        <div><input type="number" class="p-xyz" id="rotX" step="5" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#ef4444">X°</span></div>
+                        <div><input type="number" class="p-xyz" id="rotY" step="5" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#10b981">Y°</span></div>
+                        <div><input type="number" class="p-xyz" id="rotZ" step="5" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#3b82f6">Z°</span></div>
+                    </div>
+                </div>
+                <div class="p-row">
+                    <span class="p-label">Scale</span>
+                    <div class="p-xyz">
+                        <div><input type="number" class="p-xyz" id="scaX" step="0.1" value="1" min="0.01" onchange="applyTransform()"><span class="xyz-label" style="color:#ef4444">X</span></div>
+                        <div><input type="number" class="p-xyz" id="scaY" step="0.1" value="1" min="0.01" onchange="applyTransform()"><span class="xyz-label" style="color:#10b981">Y</span></div>
+                        <div><input type="number" class="p-xyz" id="scaZ" step="0.1" value="1" min="0.01" onchange="applyTransform()"><span class="xyz-label" style="color:#3b82f6">Z</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-sec">
+                <div class="p-sec-title">➕ Add Object</div>
+                <div class="add-obj-grid">
+                    <div class="add-obj-btn" onclick="addMesh('box')"><span class="add-obj-btn-icon">⬜</span><span class="add-obj-btn-label">Box</span></div>
+                    <div class="add-obj-btn" onclick="addMesh('sphere')"><span class="add-obj-btn-icon">⬤</span><span class="add-obj-btn-label">Sphere</span></div>
+                    <div class="add-obj-btn" onclick="addMesh('cylinder')"><span class="add-obj-btn-icon">🔵</span><span class="add-obj-btn-label">Cylinder</span></div>
+                    <div class="add-obj-btn" onclick="addMesh('cone')"><span class="add-obj-btn-icon">🔺</span><span class="add-obj-btn-label">Cone</span></div>
+                    <div class="add-obj-btn" onclick="addMesh('torus')"><span class="add-obj-btn-icon">🍩</span><span class="add-obj-btn-label">Torus</span></div>
+                    <div class="add-obj-btn" onclick="addMesh('plane')"><span class="add-obj-btn-icon">▬</span><span class="add-obj-btn-label">Plane</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material tab -->
+        <div class="props-body" id="panelMaterial" style="display:none;">
+            <div class="p-sec">
+                <div class="p-sec-title">🎨 Material</div>
+                <div class="p-row"><span class="p-label">Type</span>
+                    <select class="p-select" id="matType" onchange="applyMaterial()">
+                        <option value="standard">Standard (PBR)</option>
+                        <option value="phong">Phong</option>
+                        <option value="lambert">Lambert</option>
+                        <option value="basic">Basic</option>
+                        <option value="wireframe">Wireframe</option>
+                        <option value="toon">Toon (Cel)</option>
+                    </select>
+                </div>
+                <div class="p-row"><span class="p-label">Color</span><input type="color" class="p-color" id="matColor" value="#8b5cf6" onchange="applyMaterial()"></div>
+                <div class="p-row"><span class="p-label">Emissive</span><input type="color" class="p-color" id="matEmissive" value="#000000" onchange="applyMaterial()"></div>
+                <div class="p-row"><span class="p-label">Metalness</span><input type="range" class="p-range" id="matMetal" min="0" max="1" step="0.01" value="0" oninput="applyMaterial();document.getElementById('matMetalVal').textContent=Math.round(this.value*100)+'%'"><span class="p-val" id="matMetalVal">0%</span></div>
+                <div class="p-row"><span class="p-label">Roughness</span><input type="range" class="p-range" id="matRough" min="0" max="1" step="0.01" value="0.5" oninput="applyMaterial();document.getElementById('matRoughVal').textContent=Math.round(this.value*100)+'%'"><span class="p-val" id="matRoughVal">50%</span></div>
+                <div class="p-row"><span class="p-label">Opacity</span><input type="range" class="p-range" id="matOpacity" min="0" max="1" step="0.01" value="1" oninput="applyMaterial();document.getElementById('matOpacityVal').textContent=Math.round(this.value*100)+'%'"><span class="p-val" id="matOpacityVal">100%</span></div>
+            </div>
+        </div>
+
+        <!-- Light tab -->
+        <div class="props-body" id="panelLight" style="display:none;">
+            <div class="p-sec">
+                <div class="p-sec-title">💡 Active Light</div>
+                <div id="lightProps" style="font-size:.75rem;color:var(--text-muted);">Yorug'lik tanlang</div>
+            </div>
+            <div class="p-sec">
+                <div class="p-sec-title">🌍 Scene Lighting</div>
+                <div class="p-row"><span class="p-label">Ambient</span><input type="color" class="p-color" id="ambientColor" value="#111827" onchange="updateAmbient()"></div>
+                <div class="p-row"><span class="p-label">Intensity</span><input type="range" class="p-range" id="ambientInt" min="0" max="3" step="0.05" value="0.4" oninput="updateAmbient()"><span class="p-val" id="ambientIntVal">0.4</span></div>
+                <div class="p-row"><span class="p-label">+ Lights</span>
+                    <button onclick="addLight('point')" style="flex:1;padding:.25rem;border-radius:4px;font-size:.68rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-muted);cursor:pointer;">💡 Point</button>
+                    <button onclick="addLight('directional')" style="flex:1;padding:.25rem;border-radius:4px;font-size:.68rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-muted);cursor:pointer;">☀️ Sun</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- World tab -->
+        <div class="props-body" id="panelScene" style="display:none;">
+            <div class="p-sec">
+                <div class="p-sec-title">🌌 Background</div>
+                <div class="p-row"><span class="p-label">Color</span><input type="color" class="p-color" id="bgColor" value="#0d0d1a" onchange="updateBackground()"></div>
+                <div class="p-row"><span class="p-label">Fog</span><input type="checkbox" id="fogEnabled" onchange="updateFog()" style="accent-color:#8b5cf6;cursor:pointer;"></div>
+                <div class="p-row"><span class="p-label">Fog Color</span><input type="color" class="p-color" id="fogColor" value="#0d0d1a" onchange="updateFog()"></div>
+                <div class="p-row"><span class="p-label">Fog Near</span><input type="range" class="p-range" id="fogNear" min="1" max="100" value="10" oninput="updateFog()"><span class="p-val" id="fogNearVal">10</span></div>
+                <div class="p-row"><span class="p-label">Fog Far</span><input type="range" class="p-range" id="fogFar" min="10" max="1000" value="200" oninput="updateFog()"><span class="p-val" id="fogFarVal">200</span></div>
+            </div>
+            <div class="p-sec">
+                <div class="p-sec-title">🎬 Render</div>
+                <div class="p-row"><span class="p-label">Shadows</span><input type="checkbox" id="shadowsOn" checked onchange="toggleShadows()" style="accent-color:#8b5cf6;cursor:pointer;"></div>
+                <div class="p-row"><span class="p-label">Tone Map</span>
+                    <select class="p-select" id="toneMap" onchange="updateToneMap()">
+                        <option value="0">Linear</option>
+                        <option value="1" selected>Reinhard</option>
+                        <option value="3">ACES</option>
+                    </select>
+                </div>
+                <div class="p-row"><span class="p-label">Exposure</span><input type="range" class="p-range" id="exposure" min="0.1" max="3" step="0.1" value="1" oninput="updateToneMap()"><span class="p-val" id="exposureVal">1</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ═══════════════════════════════════════════════════════════
+//  THREE.JS SETUP
+// ═══════════════════════════════════════════════════════════
+const PROJECT_ID = {{ scene.pk }};
+let unsaved = false;
+let sceneObjects = [];
+let selectedObj = null;
+let transformMode = 'translate';
+let viewMode = 'solid';
+let frameCount = 0, lastFPSTime = performance.now();
+
+// Renderer
+const canvas = document.getElementById('threeCanvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 1;
+
+// Scene
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d0d1a);
+
+// Camera
+let camera = new THREE.PerspectiveCamera(60, 1, 0.01, 10000);
+camera.position.set(5, 5, 5); camera.lookAt(0, 0, 0);
+
+// Orbit Controls (manual)
+let orbiting = false, orbitStart = {x:0,y:0}, orbitState = {theta:Math.PI/4, phi:Math.PI/4, radius:10, target: new THREE.Vector3()};
+let panning = false, panStart = {x:0,y:0};
+
+// Lights
+const ambientLight = new THREE.AmbientLight(0x111827, 0.4);
+scene.add(ambientLight);
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+sunLight.position.set(5, 10, 7); sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
+scene.add(sunLight);
+
+// Grid Helper
+const gridHelper = new THREE.GridHelper(20, 20, 0x222244, 0x1a1a33);
+scene.add(gridHelper);
+
+// ═══════════════════════════════════════════════════════════
+//  RAYCASTING (click selection)
+// ═══════════════════════════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const meshes = sceneObjects.filter(o => o.mesh).map(o => o.mesh);
+    const hits = raycaster.intersectObjects(meshes, true);
+    if (hits.length > 0) {
+        const hit = hits[0].object;
+        const obj = sceneObjects.find(o => o.mesh === hit || (o.mesh && o.mesh.children.includes(hit)));
+        if (obj) { selectObject(obj.id); }
+    } else { deselectAll(); }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  ORBIT CONTROLS
+// ═══════════════════════════════════════════════════════════
+canvas.addEventListener('mousedown', e => {
+    if (e.button === 0 && e.altKey) { orbiting = true; orbitStart = {x:e.clientX, y:e.clientY}; e.preventDefault(); }
+    if (e.button === 1 || (e.button === 0 && e.shiftKey)) { panning = true; panStart = {x:e.clientX, y:e.clientY}; e.preventDefault(); }
+});
+document.addEventListener('mousemove', e => {
+    if (orbiting) {
+        const dx = (e.clientX - orbitStart.x) * 0.01;
+        const dy = (e.clientY - orbitStart.y) * 0.01;
+        orbitState.theta -= dx; orbitState.phi = Math.max(0.05, Math.min(Math.PI-0.05, orbitState.phi - dy));
+        orbitStart = {x:e.clientX, y:e.clientY};
+        updateCameraOrbit();
+    }
+    if (panning) {
+        const dx = (e.clientX - panStart.x) * 0.01;
+        const dy = (e.clientY - panStart.y) * 0.01;
+        const right = new THREE.Vector3(); const up = new THREE.Vector3();
+        camera.getWorldDirection(right); right.cross(camera.up).normalize();
+        up.copy(camera.up);
+        orbitState.target.addScaledVector(right, -dx * orbitState.radius * 0.1);
+        orbitState.target.addScaledVector(up, dy * orbitState.radius * 0.1);
+        panStart = {x:e.clientX, y:e.clientY};
+        updateCameraOrbit();
+    }
+});
+document.addEventListener('mouseup', () => { orbiting = false; panning = false; });
+canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    orbitState.radius = Math.max(0.5, orbitState.radius * (e.deltaY > 0 ? 1.1 : 0.9));
+    updateCameraOrbit();
+}, {passive:false});
+
+function updateCameraOrbit() {
+    const {theta, phi, radius, target} = orbitState;
+    camera.position.set(
+        target.x + radius * Math.sin(phi) * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * Math.sin(phi) * Math.cos(theta)
+    );
+    camera.lookAt(target);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  OBJECTS
+// ═══════════════════════════════════════════════════════════
+let objCounter = 0;
+const MESH_GEOMETRIES = {
+    box: () => new THREE.BoxGeometry(1,1,1),
+    sphere: () => new THREE.SphereGeometry(0.5, 32, 32),
+    cylinder: () => new THREE.CylinderGeometry(0.5, 0.5, 1, 32),
+    cone: () => new THREE.ConeGeometry(0.5, 1, 32),
+    torus: () => new THREE.TorusGeometry(0.5, 0.2, 16, 100),
+    plane: () => new THREE.PlaneGeometry(2, 2),
+};
+
+function addMesh(type) {
+    const geom = MESH_GEOMETRIES[type] ? MESH_GEOMETRIES[type]() : new THREE.BoxGeometry();
+    const mat  = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.5, metalness: 0 });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.position.set((Math.random()-0.5)*2, 0.5, (Math.random()-0.5)*2);
+    const id = 'obj_' + (++objCounter);
+    const objData = { id, name: type.charAt(0).toUpperCase()+type.slice(1)+' '+objCounter, type, mesh, visible: true };
+    sceneObjects.push(objData);
+    scene.add(mesh);
+    renderOutliner();
+    selectObject(id);
+    markUnsaved();
+}
+
+function addLight(type) {
+    let light;
+    const id = 'obj_' + (++objCounter);
+    if (type === 'point') {
+        light = new THREE.PointLight(0xffffff, 1, 20);
+        light.position.set(0, 3, 0);
+        light.castShadow = true;
+    } else if (type === 'directional') {
+        light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 10, 5);
+        light.castShadow = true;
+    } else if (type === 'spot') {
+        light = new THREE.SpotLight(0xffffff, 1, 20, Math.PI/6);
+        light.position.set(0, 5, 0);
+        light.castShadow = true;
+    }
+    const helper = type === 'point' ? new THREE.PointLightHelper(light, 0.5) : type === 'directional' ? new THREE.DirectionalLightHelper(light, 1) : new THREE.SpotLightHelper(light);
+    scene.add(light); scene.add(helper);
+    const objData = { id, name: type.charAt(0).toUpperCase()+type.slice(1)+' Light '+objCounter, type:'light_'+type, mesh: helper, light, visible: true };
+    sceneObjects.push(objData);
+    renderOutliner();
+    markUnsaved();
+}
+
+function addCamera() {
+    const camHelper = new THREE.CameraHelper(camera);
+    scene.add(camHelper);
+    showToast('📷 Camera sahna kamerasidan ko\'chiriladi', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SELECTION
+// ═══════════════════════════════════════════════════════════
+function selectObject(id) {
+    // Remove previous selection outline
+    sceneObjects.forEach(o => {
+        if (o.mesh && o.mesh.material) {
+            if (o.mesh.material.emissive) o.mesh.material.emissive.set(0x000000);
+        }
+    });
+    selectedObj = sceneObjects.find(o => o.id === id);
+    if (selectedObj && selectedObj.mesh && selectedObj.mesh.material) {
+        if (selectedObj.mesh.material.emissive) selectedObj.mesh.material.emissive.set(0x221133);
+    }
+    updateTransformPanel();
+    renderOutliner();
+}
+
+function deselectAll() { selectedObj = null; renderOutliner(); }
+
+function updateTransformPanel() {
+    if (!selectedObj || !selectedObj.mesh) return;
+    const m = selectedObj.mesh;
+    document.getElementById('posX').value = m.position.x.toFixed(2);
+    document.getElementById('posY').value = m.position.y.toFixed(2);
+    document.getElementById('posZ').value = m.position.z.toFixed(2);
+    document.getElementById('rotX').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.x));
+    document.getElementById('rotY').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.y));
+    document.getElementById('rotZ').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.z));
+    document.getElementById('scaX').value = m.scale.x.toFixed(2);
+    document.getElementById('scaY').value = m.scale.y.toFixed(2);
+    document.getElementById('scaZ').value = m.scale.z.toFixed(2);
+    if (selectedObj.mesh.material && selectedObj.mesh.material.color) {
+        document.getElementById('matColor').value = '#' + selectedObj.mesh.material.color.getHexString();
+    }
+}
+
+function applyTransform() {
+    if (!selectedObj || !selectedObj.mesh) return;
+    const m = selectedObj.mesh;
+    m.position.set(+document.getElementById('posX').value, +document.getElementById('posY').value, +document.getElementById('posZ').value);
+    m.rotation.set(
+        THREE.MathUtils.degToRad(+document.getElementById('rotX').value),
+        THREE.MathUtils.degToRad(+document.getElementById('rotY').value),
+        THREE.MathUtils.degToRad(+document.getElementById('rotZ').value)
+    );
+    m.scale.set(+document.getElementById('scaX').value, +document.getElementById('scaY').value, +document.getElementById('scaZ').value);
+    markUnsaved();
+}
+
+function applyMaterial() {
+    if (!selectedObj || !selectedObj.mesh || !selectedObj.mesh.material) return;
+    const type = document.getElementById('matType').value;
+    const color = new THREE.Color(document.getElementById('matColor').value);
+    const emissive = new THREE.Color(document.getElementById('matEmissive').value);
+    const metalness = +document.getElementById('matMetal').value;
+    const roughness = +document.getElementById('matRough').value;
+    const opacity = +document.getElementById('matOpacity').value;
+
+    let mat;
+    if (type === 'standard') mat = new THREE.MeshStandardMaterial({color, emissive, metalness, roughness, transparent: opacity < 1, opacity});
+    else if (type === 'phong') mat = new THREE.MeshPhongMaterial({color, emissive, shininess: (1-roughness)*100, transparent: opacity < 1, opacity});
+    else if (type === 'lambert') mat = new THREE.MeshLambertMaterial({color, emissive, transparent: opacity < 1, opacity});
+    else if (type === 'basic') mat = new THREE.MeshBasicMaterial({color, transparent: opacity < 1, opacity});
+    else if (type === 'wireframe') mat = new THREE.MeshBasicMaterial({color, wireframe: true});
+    else if (type === 'toon') mat = new THREE.MeshToonMaterial({color});
+    else mat = new THREE.MeshStandardMaterial({color, metalness, roughness});
+
+    selectedObj.mesh.material = mat;
+    markUnsaved();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  OUTLINER
+// ═══════════════════════════════════════════════════════════
+const TYPE_ICONS = { box:'⬜', sphere:'⬤', cylinder:'🔵', cone:'🔺', torus:'🍩', plane:'▬', light_point:'💡', light_directional:'☀️', light_spot:'🔦' };
+function renderOutliner() {
+    const body = document.getElementById('outlinerBody');
+    body.innerHTML = sceneObjects.length ? sceneObjects.map(o => `
+        <div class="scene-item ${selectedObj && selectedObj.id===o.id?'selected':''}" onclick="selectObject('${o.id}')">
+            <span class="scene-item-icon">${TYPE_ICONS[o.type]||'⬜'}</span>
+            <span class="scene-item-name">${o.name}</span>
+            <button class="scene-item-vis" onclick="event.stopPropagation();toggleObjVis('${o.id}')">${o.visible?'👁':'🙈'}</button>
+        </div>
+    `).join('') : '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.75rem;">Sahna bo\'sh</div>';
+}
+
+function toggleObjVis(id) {
+    const obj = sceneObjects.find(o => o.id===id);
+    if (!obj) return;
+    obj.visible = !obj.visible;
+    if (obj.mesh) obj.mesh.visible = obj.visible;
+    renderOutliner();
+}
+
+function deleteSelected() {
+    if (!selectedObj) return;
+    scene.remove(selectedObj.mesh);
+    if (selectedObj.light) scene.remove(selectedObj.light);
+    sceneObjects = sceneObjects.filter(o => o.id !== selectedObj.id);
+    selectedObj = null;
+    renderOutliner(); markUnsaved();
+}
+
+function duplicateSelected() {
+    if (!selectedObj || !selectedObj.mesh) return;
+    const orig = selectedObj.mesh;
+    const newMesh = orig.clone();
+    newMesh.position.x += 1;
+    scene.add(newMesh);
+    const id = 'obj_' + (++objCounter);
+    const objData = { ...selectedObj, id, name: selectedObj.name + ' Copy', mesh: newMesh };
+    sceneObjects.push(objData);
+    renderOutliner(); selectObject(id); markUnsaved();
+}
+
+function focusSelected() {
+    if (!selectedObj || !selectedObj.mesh) return;
+    orbitState.target.copy(selectedObj.mesh.position);
+    updateCameraOrbit();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  WORLD SETTINGS
+// ═══════════════════════════════════════════════════════════
+function updateBackground() {
+    scene.background = new THREE.Color(document.getElementById('bgColor').value);
+}
+function updateAmbient() {
+    ambientLight.color.set(document.getElementById('ambientColor').value);
+    ambientLight.intensity = +document.getElementById('ambientInt').value;
+    document.getElementById('ambientIntVal').textContent = document.getElementById('ambientInt').value;
+}
+function updateFog() {
+    const on = document.getElementById('fogEnabled').checked;
+    const color = document.getElementById('fogColor').value;
+    const near = +document.getElementById('fogNear').value;
+    const far  = +document.getElementById('fogFar').value;
+    scene.fog = on ? new THREE.Fog(color, near, far) : null;
+    document.getElementById('fogNearVal').textContent = near;
+    document.getElementById('fogFarVal').textContent = far;
+}
+function toggleShadows() { renderer.shadowMap.enabled = document.getElementById('shadowsOn').checked; }
+function updateToneMap() {
+    renderer.toneMapping = +document.getElementById('toneMap').value;
+    renderer.toneMappingExposure = +document.getElementById('exposure').value;
+    document.getElementById('exposureVal').textContent = document.getElementById('exposure').value;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  VIEW MODES & CAMERAS
+// ═══════════════════════════════════════════════════════════
+function setViewMode(mode) {
+    viewMode = mode;
+    sceneObjects.forEach(o => {
+        if (!o.mesh || !o.mesh.material) return;
+        if (mode === 'wireframe') o.mesh.material.wireframe = true;
+        else { o.mesh.material.wireframe = false; }
+    });
+}
+
+function setCamera(type) {
+    if (type === 'orthographic') {
+        const aspect = canvas.clientWidth / canvas.clientHeight;
+        camera = new THREE.OrthographicCamera(-5*aspect, 5*aspect, 5, -5, 0.01, 10000);
+    } else {
+        camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.01, 10000);
+    }
+    updateCameraOrbit();
+}
+
+function setCameraView(view) {
+    const r = orbitState.radius;
+    if (view==='top')   { orbitState.phi = 0.01; orbitState.theta = 0; }
+    if (view==='front') { orbitState.phi = Math.PI/2; orbitState.theta = 0; }
+    if (view==='right') { orbitState.phi = Math.PI/2; orbitState.theta = Math.PI/2; }
+    if (view==='persp') { orbitState.phi = Math.PI/4; orbitState.theta = Math.PI/4; }
+    updateCameraOrbit();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TRANSFORM MODES
+// ═══════════════════════════════════════════════════════════
+function setTransformMode(mode) {
+    transformMode = mode;
+    document.querySelectorAll('[id^="mode-"]').forEach(b => b.classList.remove('active'));
+    document.getElementById('mode-' + mode)?.classList.add('active');
+}
+function set3dTool(t) {
+    document.querySelectorAll('.s3d-tool').forEach(b => b.classList.remove('active'));
+    document.getElementById('tool-' + t + '3d')?.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RESIZE
+// ═══════════════════════════════════════════════════════════
+function resizeRenderer() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w || canvas.height !== h) {
+        renderer.setSize(w, h, false);
+        if (camera.isPerspectiveCamera) camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER LOOP
+// ═══════════════════════════════════════════════════════════
+function animate() {
+    requestAnimationFrame(animate);
+    resizeRenderer();
+    renderer.render(scene, camera);
+    frameCount++;
+    const now = performance.now();
+    if (now - lastFPSTime > 1000) {
+        const fps = Math.round(frameCount * 1000 / (now - lastFPSTime));
+        let tris = 0;
+        sceneObjects.forEach(o => { if (o.mesh && o.mesh.geometry) tris += (o.mesh.geometry.index ? o.mesh.geometry.index.count/3 : 0); });
+        document.getElementById('viewportInfo').textContent = `Objects: ${sceneObjects.length} | FPS: ${fps}`;
+        frameCount = 0; lastFPSTime = now;
+    }
+}
+animate();
+
+// ═══════════════════════════════════════════════════════════
+//  SAVE & EXPORT
+// ═══════════════════════════════════════════════════════════
+async function saveScene() {
+    const payload = {
+        title: document.getElementById('sceneTitle').value,
+        scene_data: {
+            objects: sceneObjects.map(o => ({
+                id: o.id, name: o.name, type: o.type, visible: o.visible,
+                position: o.mesh ? [o.mesh.position.x, o.mesh.position.y, o.mesh.position.z] : [0,0,0],
+                rotation: o.mesh ? [o.mesh.rotation.x, o.mesh.rotation.y, o.mesh.rotation.z] : [0,0,0],
+                scale: o.mesh ? [o.mesh.scale.x, o.mesh.scale.y, o.mesh.scale.z] : [1,1,1],
+                color: (o.mesh && o.mesh.material && o.mesh.material.color) ? '#' + o.mesh.material.color.getHexString() : '#8b5cf6',
+            })),
+            background: document.getElementById('bgColor').value,
+            ambientIntensity: +document.getElementById('ambientInt').value,
+        }
+    };
+    try {
+        const res = await fetch(`/studio/3d-studio/save/${PROJECT_ID}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { markSaved(); showToast('💾 Saqlandi', 'success'); }
+    } catch(e) { showToast('Saqlashda xato', 'error'); }
+}
+
+function exportGLTF() {
+    // Take screenshot and download
+    renderer.render(scene, camera);
+    const url = renderer.domElement.toDataURL('image/png');
+    const a = document.createElement('a'); a.href = url; a.download = '{{ scene.title|escapejs }}_render.png'; a.click();
+    showToast('🖼️ Render rasm eksport qilindi', 'success');
+}
+
+function markUnsaved() { unsaved=true; document.getElementById('saveDot').classList.add('unsaved'); document.getElementById('saveLabel').textContent='Saqlanmagan'; }
+function markSaved()   { unsaved=false; document.getElementById('saveDot').classList.remove('unsaved'); document.getElementById('saveLabel').textContent='Saqlangan'; }
+
+// ═══════════════════════════════════════════════════════════
+//  PROP TAB SWITCH
+// ═══════════════════════════════════════════════════════════
+function switchPropTab(t) {
+    ['object','material','light','scene'].forEach(p => {
+        document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = p===t?'':'none';
+        document.getElementById('pt' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p===t);
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveScene(); }
+    if (e.ctrlKey && e.key === 'd') { e.preventDefault(); duplicateSelected(); }
+    if (e.key === 'Delete' || e.key === 'Backspace') { if (selectedObj) { e.preventDefault(); deleteSelected(); } }
+    if (e.key === 'f' || e.key === 'F') focusSelected();
+    if (e.key === 'g') setTransformMode('translate');
+    if (e.key === 'r') setTransformMode('rotate');
+    if (e.key === 's' && !e.ctrlKey) setTransformMode('scale');
+    if (e.key === 'q') set3dTool('select');
+});
+
+// Auto-save
+setInterval(() => { if (unsaved) saveScene(); }, 45000);
+
+// ═══════════════════════════════════════════════════════════
+//  LOAD SCENE DATA
+// ═══════════════════════════════════════════════════════════
+(function loadSavedScene() {
+    try {
+        const saved = {{ scene.scene_data|default:'{}'|safe }};
+        if (!saved || !saved.objects) return;
+        if (saved.background) scene.background = new THREE.Color(saved.background);
+        saved.objects.forEach(o => {
+            const geomFn = MESH_GEOMETRIES[o.type];
+            if (!geomFn) return;
+            const geom = geomFn();
+            const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(o.color || '#8b5cf6') });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.castShadow = true; mesh.receiveShadow = true;
+            if (o.position) mesh.position.set(...o.position);
+            if (o.rotation) mesh.rotation.set(...o.rotation);
+            if (o.scale) mesh.scale.set(...o.scale);
+            mesh.visible = o.visible !== false;
+            scene.add(mesh);
+            sceneObjects.push({ id: o.id, name: o.name, type: o.type, mesh, visible: mesh.visible });
+        });
+        renderOutliner();
+    } catch(e) {}
+})();
+
+// Add default template objects
+(function addTemplateDefaults() {
+    const template = '{{ scene.template }}';
+    if (sceneObjects.length > 0) return;
+    if (template === 'showcase') {
+        addMesh('sphere'); addMesh('plane');
+    } else if (template === 'space') {
+        scene.background = new THREE.Color(0x000005);
+        for (let i=0;i<30;i++) {
+            const g = new THREE.SphereGeometry(Math.random()*0.05+0.01, 8, 8);
+            const m = new THREE.MeshBasicMaterial({color:0xffffff});
+            const s = new THREE.Mesh(g,m);
+            s.position.set((Math.random()-0.5)*30,(Math.random()-0.5)*20,(Math.random()-0.5)*30);
+            scene.add(s);
+        }
+    }
+})();
+</script>
+{% endblock %}

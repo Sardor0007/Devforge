@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}DevFeed — DevForge Community{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feed-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    /* Post Creation Box */
+    .create-post-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .post-input-wrapper {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: var(--transition);
+    }
+
+    .post-input-wrapper:focus-within {
+        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .post-textarea {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-family: inherit;
+        resize: none;
+        outline: none;
+        font-size: 1rem;
+    }
+
+    /* Post Cards */
+    .post-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        margin-bottom: 1.5rem;
+        transition: var(--transition);
+    }
+
+    .post-card:hover {
+        border-color: var(--border-bright);
+    }
+
+    .post-header {
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .post-body {
+        padding: 0 1.25rem 1.25rem;
+    }
+
+    .post-text {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-primary);
+        white-space: pre-wrap;
+    }
+
+    .post-media {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        margin-top: 1rem;
+        border: 1px solid var(--border);
+        max-height: 480px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #040608;
+    }
+
+    .post-media img, .post-media video {
+        max-width: 100%;
+        max-height: 480px;
+        object-fit: contain;
+        display: block;
+    }
+
+    .post-code-block {
+        background: #0d1117;
+        padding: 1.25rem;
+        border-radius: var(--radius-md);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: #e2e8f0;
+        margin-top: 1rem;
+        position: relative;
+        border: 1px solid #1e2d45;
+    }
+
+    .code-label {
+        position: absolute;
+        top: 0; right: 0;
+        background: rgba(255,255,255,0.05);
+        padding: 4px 12px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-bottom-left-radius: 8px;
+    }
+
+    .post-footer {
+        padding: 0.75rem 1.25rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .action-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .action-link:hover {
+        color: var(--accent);
+    }
+
+    .action-link.active {
+        color: var(--danger);
+    }
+
+    /* Sidebar Content */
+    .sidebar-widget {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+        .feed-layout { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 0 1.5rem 3rem;">
+<div class="feed-layout animate-fade">
+    <main>
+        <!-- Post Creator -->
+        {% if user.is_authenticated %}
+        <div class="create-post-card">
+            <form method="post" action="{% url 'post_create' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="post-input-wrapper">
+                    <textarea name="content" class="post-textarea" rows="2" placeholder="Share a progress update, code snippet, or inspiration..."></textarea>
+                </div>
+                
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-2">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAttachment('snippet')">💻 Code</button>
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAttachment('media')">🖼️ Media</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Forge Post</button>
+                </div>
+
+                <div id="snippet-fields" style="display:none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <select name="code_lang" class="input-field mb-4" style="width: auto;">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="csharp">C# (Unity)</option>
+                        <option value="cpp">C++ (Unreal)</option>
+                    </select>
+                    <textarea name="code" class="input-field" rows="6" style="font-family: var(--font-mono);" placeholder="// Paste code here..."></textarea>
+                </div>
+
+                <div id="media-fields" style="display:none; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <input type="file" name="image" accept="image/*" class="input-field mb-2">
+                    <input type="file" name="video" accept="video/*" class="input-field">
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Feed Tabs -->
+        <div class="flex gap-6 mb-8" style="border-bottom: 1px solid var(--border);">
+            <a href="?tab=following" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'following' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'following' %}var(--accent){% else %}transparent{% endif %};">Following</a>
+            <a href="?tab=trending" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'trending' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'trending' %}var(--accent){% else %}transparent{% endif %};">Trending</a>
+            <a href="?tab=all" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'all' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'all' %}var(--accent){% else %}transparent{% endif %};">All Posts</a>
+        </div>
+
+        <!-- Post List -->
+        {% for post in posts %}
+        <article class="post-card">
+            <div class="post-header">
+                <div class="avatar" style="width: 40px; height: 40px;">
+                    {% if post.author.avatar %}<img src="{{ post.author.avatar.url }}">{% else %}{{ post.author.username|first|upper }}{% endif %}
+                </div>
+                <div>
+                    <div style="font-weight: 700; font-family: var(--font-display);">@{{ post.author.username }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ post.author.get_role_display }} • {{ post.created_at|timesince }} ago</div>
+                </div>
+            </div>
+
+            <div class="post-body">
+                <div class="post-text">{{ post.content }}</div>
+                
+                {% if post.code %}
+                <div class="post-code-block">
+                    <div class="code-label">{{ post.code_lang }}</div>
+                    <pre style="margin:0; white-space:pre-wrap; word-break:break-word;"><code>{{ post.code|escape }}</code></pre>
+                </div>
+                {% endif %}
+
+                {% if post.image %}
+                <div class="post-media">
+                    <img src="{{ post.image.url }}" style="max-width: 100%; max-height: 480px; object-fit: contain; display: block;">
+                </div>
+                {% endif %}
+
+                {% if post.video %}
+                <div class="post-media">
+                    <video src="{{ post.video.url }}" controls style="max-width: 100%; max-height: 480px; object-fit: contain; display: block;"></video>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="post-footer">
+                <button class="action-link btn btn-ghost {% if post.pk in liked_pks %}active{% endif %}" onclick="likePost({{ post.pk }}, this)">
+                    ❤️ <span>{{ post.like_count }}</span>
+                </button>
+                <a href="{% url 'post_detail' pk=post.pk %}" class="action-link btn btn-ghost">
+                    💬 {{ post.comment_count }}
+                </a>
+                <a href="{% url 'integrations:feed_to_editor' post.id %}" class="action-link btn btn-ghost" style="color: var(--accent); font-weight: 700; border: 1px solid rgba(0, 245, 255, 0.2); background: rgba(0, 245, 255, 0.05);">
+                    🛠️ Open in Studio
+                </a>
+                <button class="action-link btn btn-ghost" onclick="navigator.clipboard.writeText(window.location.origin + '{% url 'post_detail' pk=post.pk %}')">
+                    🔗 Share
+                </button>
+            </div>
+        </article>
+        {% empty %}
+        <div class="card" style="text-align: center; padding: 4rem 0;">
+            <p style="color: var(--text-muted);">No posts found in this transmission.</p>
+        </div>
+        {% endfor %}
+
+        {% include '_pagination.html' %}
+    </main>
+
+    <aside>
+        {% if user.is_authenticated %}
+        <div class="sidebar-widget">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="avatar" style="width: 48px; height: 48px;">
+                    {% if user.avatar %}<img src="{{ user.avatar.url }}">{% else %}{{ user.username|first|upper }}{% endif %}
+                </div>
+                <div>
+                    <div style="font-weight: 700; font-family: var(--font-display);">{{ user.username }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ user.get_role_display }}</div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div class="stat-pill" style="padding: 8px;">
+                    <span style="font-weight: 700;">{{ user.followers.count }}</span>
+                    <span style="font-size: 0.65rem;">Followers</span>
+                </div>
+                <div class="stat-pill" style="padding: 8px;">
+                    <span style="font-weight: 700;">{{ user.following.count }}</span>
+                    <span style="font-size: 0.65rem;">Following</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="sidebar-widget">
+            <h4 style="font-family: var(--font-display); margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Suggested Creators</h4>
+            {% for u in suggested %}
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="avatar" style="width: 32px; height: 32px; font-size: 0.7rem;">
+                        {% if u.avatar %}<img src="{{ u.avatar.url }}">{% else %}{{ u.username|first|upper }}{% endif %}
+                    </div>
+                    <a href="{% url 'profile' username=u.username %}" style="font-weight: 600; font-size: 0.85rem;">@{{ u.username }}</a>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="followUser('{{ u.username }}', this)">Follow</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="sidebar-widget">
+            <h4 style="font-family: var(--font-display); margin-bottom: 1rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Trending Tags</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                {% for tag in trending_tags %}
+                <a href="?tag={{ tag }}" class="badge">#{{ tag }}</a>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleAttachment(type) {
+        const snippet = document.getElementById('snippet-fields');
+        const media = document.getElementById('media-fields');
+        if (type === 'snippet') {
+            snippet.style.display = snippet.style.display === 'none' ? 'block' : 'none';
+            media.style.display = 'none';
+        } else {
+            media.style.display = media.style.display === 'none' ? 'block' : 'none';
+            snippet.style.display = 'none';
+        }
+    }
+
+    function likePost(pk, btn) {
+        const fd = new FormData();
+        fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+        fetch(`/feed/post/${pk}/like/`, {method:'POST', body:fd})
+            .then(r => r.json())
+            .then(d => {
+                btn.classList.toggle('active', d.liked);
+                btn.querySelector('span').textContent = d.count;
+            });
+    }
+
+    function followUser(username, btn) {
+        const fd = new FormData();
+        fd.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+        fetch(`/feed/follow/${username}/`, {method:'POST', body:fd})
+            .then(r => r.json())
+            .then(d => {
+                btn.textContent = d.following ? 'Following' : 'Follow';
+                btn.classList.toggle('btn-primary', d.following);
+                btn.classList.toggle('btn-secondary', !d.following);
+            });
+    }
+</script>
+{% endblock %}

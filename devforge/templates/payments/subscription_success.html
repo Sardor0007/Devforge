@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Obuna Faollashtirildi — DevForge{% endblock %}
+{% block content %}
+<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
+  <div style="text-align:center; max-width:480px;">
+    <div style="font-size:5rem; margin-bottom:1.5rem;">🎉</div>
+    <h1 style="font-size:2rem; font-weight:800; margin-bottom:0.75rem;">Obuna Faollashtirildi!</h1>
+    <p style="color:var(--text2); margin-bottom:2rem;">
+      Obunangiz muvaffaqiyatli faollashtirildi. Barcha premium imkoniyatlardan foydalanishingiz mumkin!
+    </p>
+    <a href="{% url 'home' %}" class="btn btn-primary">🏠 Bosh sahifaga qaytish</a>
+  </div>
+</div>
+{% endblock %}

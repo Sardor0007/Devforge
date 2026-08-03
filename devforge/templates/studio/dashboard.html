@@ -1,0 +1,609 @@
+{% extends 'base.html' %}
+
+{% block title %}🧊 3D Studio Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .studio-hero {
+        background: radial-gradient(ellipse at 80% 0%, rgba(0, 245, 255, 0.15) 0%, transparent 55%),
+                    radial-gradient(ellipse at 20% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 55%);
+        padding: 3.5rem 2.5rem 2.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(0, 245, 255, 0.15);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .studio-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(0, 245, 255, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 245, 255, 0.04) 1px, transparent 1px);
+        background-size: 30px 30px;
+        z-index: 0;
+    }
+    
+    .hero-content { position: relative; z-index: 2; max-width: 680px; }
+    
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 245, 255, 0.1);
+        border: 1px solid rgba(0, 245, 255, 0.3);
+        color: #e0faff;
+        padding: 4px 14px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+    }
+    
+    .hero-title {
+        font-family: var(--font-display);
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 0.75rem;
+        background: linear-gradient(135deg, #00f5ff 0%, #8b5cf6 50%, #d946ef 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .hero-sub { font-size: 1.05rem; color: var(--text-secondary); margin-bottom: 1.75rem; line-height: 1.6; }
+    
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+    
+    .hero-stats {
+        display: flex;
+        gap: 2.5rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(0, 245, 255, 0.12);
+    }
+    
+    .hero-stat-val {
+        font-family: var(--font-display);
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+    
+    .hero-stat-val span { color: #00f5ff; }
+    
+    .hero-stat-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Pure CSS 3D wireframe rotating cube */
+    .cube-container {
+        width: 130px;
+        height: 130px;
+        perspective: 500px;
+        position: absolute;
+        right: 8%;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1;
+        display: none;
+    }
+    @media (min-width: 768px) {
+        .cube-container { display: block; }
+    }
+    .cube {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        transform-style: preserve-3d;
+        animation: rotateCube 15s linear infinite;
+    }
+    .face {
+        position: absolute;
+        width: 130px;
+        height: 130px;
+        border: 1px solid rgba(0, 245, 255, 0.35);
+        background: rgba(0, 245, 255, 0.03);
+        box-shadow: 0 0 15px rgba(0, 245, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Crosshair inner decoration for tech feeling */
+    .face::after {
+        content: '';
+        width: 15px;
+        height: 15px;
+        border: 1px solid rgba(139, 92, 246, 0.4);
+        border-radius: 50%;
+    }
+
+    .front  { transform: rotateY(  0deg) translateZ(65px); }
+    .back   { transform: rotateY(180deg) translateZ(65px); }
+    .right  { transform: rotateY( 90deg) translateZ(65px); }
+    .left   { transform: rotateY(-90deg) translateZ(65px); }
+    .top    { transform: rotateX( 90deg) translateZ(65px); }
+    .bottom { transform: rotateX(-90deg) translateZ(65px); }
+
+    @keyframes rotateCube {
+        0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+        100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+    }
+
+    /* ── Controls & Filter Bar ── */
+    .filters-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .section-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
+
+    .search-filter-wrap {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .search-input-container {
+        position: relative;
+    }
+
+    .search-input-container svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .search-input {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        color: var(--text-primary);
+        padding: 0.5rem 1rem 0.5rem 2.2rem;
+        font-size: 0.9rem;
+        outline: none;
+        transition: var(--transition);
+        width: 220px;
+    }
+
+    .search-input:focus {
+        border-color: #00f5ff;
+        box-shadow: 0 0 10px rgba(0, 245, 255, 0.15);
+    }
+
+    /* ── Projects Grid & Cards ── */
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .project-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        transition: all 0.25s ease;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .project-card:hover {
+        border-color: #00f5ff;
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 245, 255, 0.12);
+    }
+    
+    /* 3D Blueprint mockup header */
+    .project-thumb {
+        height: 150px;
+        background: radial-gradient(circle at center, #131924 0%, #090c12 100%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .project-thumb::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: 
+            linear-gradient(rgba(0, 245, 255, 0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 245, 255, 0.02) 1px, transparent 1px);
+        background-size: 15px 15px;
+    }
+
+    /* Perspective Blueprint Grid Drawing */
+    .blueprint-circle {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border: 1px dashed rgba(139, 92, 246, 0.2);
+        border-radius: 50%;
+        animation: spin-slow 20s linear infinite;
+    }
+
+    .blueprint-crosshair {
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        opacity: 0.15;
+    }
+    .blueprint-crosshair::before, .blueprint-crosshair::after {
+        content: '';
+        position: absolute;
+        background: #00f5ff;
+    }
+    .blueprint-crosshair::before { top: 50%; left: 0; right: 0; height: 1px; }
+    .blueprint-crosshair::after { left: 50%; top: 0; bottom: 0; width: 1px; }
+
+    @keyframes spin-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .project-thumb svg.model-icon {
+        opacity: 0.65;
+        width: 48px;
+        height: 48px;
+        color: #00f5ff;
+        filter: drop-shadow(0 0 8px rgba(0, 245, 255, 0.4));
+        transition: transform 0.3s ease;
+    }
+
+    .project-card:hover svg.model-icon {
+        transform: rotateY(180deg) scale(1.1);
+    }
+    
+    .project-info {
+        padding: 1.25rem 1.5rem 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .project-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .project-meta {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 6px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .meta-item span {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .project-desc {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 2.6rem;
+    }
+
+    .project-actions {
+        display: flex;
+        gap: 0.6rem;
+        margin-top: auto;
+    }
+    
+    /* ── Empty State ── */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        border: 1px dashed rgba(0, 245, 255, 0.25);
+        border-radius: var(--radius-lg);
+        background: radial-gradient(circle at center, rgba(0, 245, 255, 0.02) 0%, transparent 70%);
+        margin-top: 1.5rem;
+    }
+
+    .empty-state svg {
+        color: var(--text-muted);
+        margin: 0 auto 1.5rem;
+        opacity: 0.4;
+        animation: floatAnim 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatAnim {
+        from { transform: translateY(0px) rotate(0deg); }
+        to { transform: translateY(-10px) rotate(5deg); }
+    }
+
+    /* ── Modals & Forms ── */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    .modal-card {
+        background: #0d1117;
+        border: 1px solid rgba(0, 245, 255, 0.25);
+        border-radius: var(--radius-lg);
+        padding: 2.25rem;
+        width: 100%;
+        max-width: 440px;
+        transform: scale(0.9) translateY(20px);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 245, 255, 0.1);
+    }
+    
+    .modal-overlay.active .modal-card {
+        transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-title {
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #00f5ff, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .input-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+        font-weight: 700;
+    }
+
+    .input-field {
+        transition: var(--transition);
+        border: 1px solid var(--border);
+    }
+
+    .input-field:focus {
+        border-color: #00f5ff;
+        box-shadow: 0 0 10px rgba(0, 245, 255, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="studio-hero">
+    <div class="cube-container">
+        <div class="cube">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face top"></div>
+            <div class="face bottom"></div>
+        </div>
+    </div>
+    
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span style="display:inline-block; width:6px; height:6px; background:#00f5ff; border-radius:50%; box-shadow:0 0 6px #00f5ff; animation: pulse 1.5s infinite alternate;"></span>
+            Three.js Core Engine
+        </div>
+        <h1 class="hero-title">Forge 3D Studio</h1>
+        <p class="hero-sub">
+            Professional WebGL loyihalash va interaktiv animatsiya tizimi. 
+            Primitiv jismlar, yorug'lik manbalari va murakkab transformatsiyalar bilan to'liq sahnalar yarating.
+        </p>
+        
+        <div class="hero-actions">
+            <button onclick="openModal()" class="btn btn-primary" style="font-size: 1rem; padding: 0.75rem 1.75rem; box-shadow: 0 4px 15px rgba(0, 245, 255, 0.35);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Yangi 3D Loyiha
+            </button>
+        </div>
+
+        <div class="hero-stats">
+            <div>
+                <div class="hero-stat-val">{{ projects.count }}</div>
+                <div class="hero-stat-label">Jami loyihalar</div>
+            </div>
+            <div>
+                <div class="hero-stat-val">
+                    {% if total_objects %}{{ total_objects }}{% else %}0{% endif %}
+                </div>
+                <div class="hero-stat-label">3D Ob'ektlar</div>
+            </div>
+            <div>
+                <div class="hero-stat-val">WebGL<span>2.0</span></div>
+                <div class="hero-stat-label">Render Engine</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="filters-bar">
+    <h2 class="section-title">Mening Loyihalarim</h2>
+    
+    <div class="search-filter-wrap">
+        <div class="search-input-container">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="projectSearch" class="search-input" placeholder="Loyiha qidirish..." onkeyup="filterProjects()">
+        </div>
+    </div>
+</div>
+
+{% if projects %}
+<div class="projects-grid" id="projectsGrid">
+    {% for project in projects %}
+    <div class="project-card" data-title="{{ project.title|lower }}">
+        <div class="project-thumb">
+            <!-- Dynamic tech design lines -->
+            <div class="blueprint-crosshair"></div>
+            <div class="blueprint-circle"></div>
+            
+            <svg class="model-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        </div>
+        <div class="project-info">
+            <h3 class="project-title">{{ project.title }}</h3>
+            
+            <div class="project-meta">
+                <div class="meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    Ob'ektlar: <span>{{ project.scene_objects.count }}</span>
+                </div>
+                <div class="meta-item">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span>{{ project.updated_at|date:"d.m.Y" }}</span>
+                </div>
+            </div>
+            
+            {% if project.description %}
+            <p class="project-desc">{{ project.description }}</p>
+            {% else %}
+            <p class="project-desc" style="font-style: italic;">Hech qanday tavsif berilmagan.</p>
+            {% endif %}
+            
+            <div class="project-actions">
+                <a href="{% url 'studio:editor' project.id %}" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 0.55rem; font-weight: 700;">Tahrirlash</a>
+                <form action="{% url 'studio:delete_project' project.id %}" method="POST" onsubmit="return confirm('Rostdan ham o\'chirmoqchimisiz?');" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.55rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.25); display: flex; align-items: center; justify-content: center;" title="Loyiha o'chirish">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="empty-state" id="emptySearchResults" style="display: none;">
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Qidiruv bo'yicha hech narsa topilmadi</h3>
+    <p style="color: var(--text-secondary);">Boshqa kalit so'zlarni kiritib ko'ring.</p>
+</div>
+{% else %}
+<div class="empty-state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+    <h3 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0.5rem; font-weight: 700;">3D Loyihalar mavjud emas</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 1.75rem; max-width: 380px; margin-left: auto; margin-right: auto;">Sizda hali 3D makon yaratilmagan. Birinchi 3D loyihangizni yarating va WebGL muharririni sinab ko'ring.</p>
+    <button onclick="openModal()" class="btn btn-primary">Yangi yaratish</button>
+</div>
+{% endif %}
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title">Yangi 3D Loyiha</h3>
+            <button onclick="closeModal()" class="btn btn-ghost" style="padding: 0.25rem;" type="button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <form action="{% url 'studio:create_project' %}" method="POST">
+            {% csrf_token %}
+            <div class="input-group">
+                <label class="input-label">Loyiha nomi</label>
+                <input type="text" name="title" class="input-field" required placeholder="Masalan: Qilich 3D Model">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Tavsif (ixtiyoriy)</label>
+                <textarea name="description" class="input-field" rows="3" placeholder="Loyiha haqida batafsilroq..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-weight: 700; padding: 0.75rem; box-shadow: 0 4px 15px rgba(0, 245, 255, 0.25);">Yaratish & Tahrirlash</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal() {
+        document.getElementById('createModal').classList.add('active');
+    }
+    function closeModal() {
+        document.getElementById('createModal').classList.remove('active');
+    }
+    
+    // Close modal on clicking overlay background
+    document.getElementById('createModal').addEventListener('click', function(e) {
+        if(e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Client-side quick filter
+    function filterProjects() {
+        const query = document.getElementById('projectSearch').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('#projectsGrid .project-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const title = card.getAttribute('data-title') || '';
+            if (title.includes(query)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const emptyMsg = document.getElementById('emptySearchResults');
+        const grid = document.getElementById('projectsGrid');
+        if (visibleCount === 0 && cards.length > 0) {
+            emptyMsg.style.display = 'block';
+            grid.style.display = 'none';
+        } else {
+            emptyMsg.style.display = 'none';
+            if (grid) grid.style.display = 'grid';
+        }
+    }
+</script>
+{% endblock %}

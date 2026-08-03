@@ -1,0 +1,22 @@
+{
+  "name": "DevForge",
+  "short_name": "DevForge",
+  "description": "DevForge — Professional Game Dev Ecosystem",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#05070a",
+  "theme_color": "#00f5ff",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

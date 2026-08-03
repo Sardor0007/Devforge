@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block title %}3D Studio — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.s3d-hero {
+    background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(236,72,153,0.08) 100%);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem; margin-bottom: 2.5rem; text-align: center; position: relative; overflow: hidden;
+}
+.s3d-hero::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(139,92,246,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 40%, rgba(236,72,153,0.1) 0%, transparent 60%);
+    pointer-events:none;
+}
+/* Rotating cube */
+.cube-3d { width:64px; height:64px; perspective:200px; margin:0 auto 1rem; }
+.cube-inner { width:40px; height:40px; position:relative; transform-style:preserve-3d;
+    animation:rotateCube 5s linear infinite; margin:12px auto; }
+@keyframes rotateCube { from{transform:rotateX(-30deg) rotateY(0)} to{transform:rotateX(-30deg) rotateY(360deg)} }
+.cube-face { position:absolute; width:40px; height:40px; border:2px solid rgba(139,92,246,.5); display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+.cube-face.front  { transform:translateZ(20px); background:rgba(139,92,246,.15); }
+.cube-face.back   { transform:translateZ(-20px) rotateY(180deg); background:rgba(139,92,246,.1); }
+.cube-face.left   { transform:translateX(-20px) rotateY(-90deg); background:rgba(236,72,153,.1); }
+.cube-face.right  { transform:translateX(20px) rotateY(90deg); background:rgba(236,72,153,.1); }
+.cube-face.top    { transform:translateY(-20px) rotateX(90deg); background:rgba(139,92,246,.08); }
+.cube-face.bottom { transform:translateY(20px) rotateX(-90deg); background:rgba(139,92,246,.08); }
+
+.s3d-hero-title { font-family:var(--font-display); font-size:2.6rem; font-weight:900;
+    background:linear-gradient(135deg,#8b5cf6,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:.4rem; }
+.s3d-hero-sub { color:var(--text-secondary); margin-bottom:1.5rem; }
+
+.s3d-stats { display:flex; gap:1rem; margin-bottom:2.5rem; }
+.s3d-stat { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; text-align:center; }
+.s3d-stat-val { font-family:var(--font-display); font-size:2rem; font-weight:800;
+    background:linear-gradient(135deg,#8b5cf6,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.s3d-stat-lbl { color:var(--text-muted); font-size:.78rem; }
+
+.s3d-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1.5rem; }
+.s3d-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; transition:var(--transition); }
+.s3d-card:hover { transform:translateY(-4px); border-color:#8b5cf6; box-shadow:0 12px 36px rgba(139,92,246,.15); }
+.s3d-card-preview { height:150px; background:#0a0b0f; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.s3d-card-preview canvas { pointer-events:none; }
+.s3d-card-overlay { position:absolute; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:var(--transition); }
+.s3d-card:hover .s3d-card-overlay { opacity:1; }
+.s3d-card-body { padding:1rem; }
+.s3d-card-title { font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:.3rem; }
+.s3d-card-meta { font-size:.72rem; color:var(--text-muted); display:flex; gap:.75rem; flex-wrap:wrap; }
+.s3d-card-actions { display:flex; gap:.5rem; padding:.75rem 1rem; border-top:1px solid var(--border); }
+.s3d-btn { flex:1; padding:.4rem; border-radius:var(--radius-sm); font-size:.78rem; font-weight:500;
+    border:1px solid var(--border); background:var(--surface-hover); color:var(--text-secondary);
+    cursor:pointer; transition:var(--transition); text-decoration:none; text-align:center; display:flex; align-items:center; justify-content:center; gap:3px; }
+.s3d-btn:hover { background:#8b5cf6; color:#fff; border-color:#8b5cf6; }
+.s3d-btn.danger:hover { background:var(--danger); color:#fff; border-color:var(--danger); }
+.s3d-empty { text-align:center; padding:4rem 2rem; border:2px dashed var(--border); border-radius:var(--radius-lg); }
+
+/* Modal */
+.modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+.modal-backdrop.show { display:flex; }
+.modal-box { background:#0d1117; border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; width:100%; max-width:500px; position:relative; }
+.modal-title { font-family:var(--font-display); font-size:1.3rem; font-weight:700; margin-bottom:1.5rem; }
+.form-label { display:block; font-size:.83rem; font-weight:500; margin-bottom:.4rem; color:var(--text-secondary); }
+.form-input { width:100%; padding:.65rem 1rem; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-size:.9rem; outline:none; transition:var(--transition); }
+.form-input:focus { border-color:#8b5cf6; box-shadow:0 0 0 3px rgba(139,92,246,.1); }
+.form-group { margin-bottom:1.25rem; }
+
+/* Template grid */
+.template-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; }
+.tmpl-btn { padding:.75rem .4rem; border:1px solid var(--border); border-radius:var(--radius-sm);
+    background:rgba(255,255,255,.03); cursor:pointer; text-align:center; transition:all .15s; }
+.tmpl-btn:hover, .tmpl-btn.active { border-color:#8b5cf6; background:rgba(139,92,246,.1); }
+.tmpl-icon { font-size:1.5rem; display:block; margin-bottom:3px; }
+.tmpl-label { font-size:.62rem; color:var(--text-muted); }
+.tmpl-btn.active .tmpl-label { color:#a78bfa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="s3d-hero">
+    <div class="cube-3d">
+        <div class="cube-inner">
+            <div class="cube-face front">⬡</div>
+            <div class="cube-face back"></div>
+            <div class="cube-face left"></div>
+            <div class="cube-face right"></div>
+            <div class="cube-face top"></div>
+            <div class="cube-face bottom"></div>
+        </div>
+    </div>
+    <div class="s3d-hero-title">🎲 3D Studio</div>
+    <p class="s3d-hero-sub">Three.js asosida 3D sahnalar — modellar, animatsiya, material, render</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newSceneModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;">🎲 Yangi Sahna</button>
+</div>
+
+{% if scenes %}
+<div class="s3d-stats">
+    <div class="s3d-stat"><div class="s3d-stat-val">{{ scenes.count }}</div><div class="s3d-stat-lbl">Sahnalar</div></div>
+    <div class="s3d-stat"><div class="s3d-stat-val" style="background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">WebGL</div><div class="s3d-stat-lbl">Render Engine</div></div>
+    <div class="s3d-stat"><div class="s3d-stat-val" style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">GLTF</div><div class="s3d-stat-lbl">Export</div></div>
+</div>
+<div style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;">🎲 Mening Sahnalarim</h2>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('newSceneModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;">+ Yangi</button>
+</div>
+<div class="s3d-grid">
+    {% for scene in scenes %}
+    <div class="s3d-card">
+        <div class="s3d-card-preview">
+            <canvas id="prev_{{ scene.id }}" width="260" height="150" data-template="{{ scene.template }}"></canvas>
+            <div class="s3d-card-overlay">
+                <a href="{% url 'studio_3d:editor' scene.id %}" style="background:rgba(139,92,246,.9);color:#fff;padding:.5rem 1.25rem;border-radius:99px;font-weight:700;font-size:.85rem;text-decoration:none;">▶ Tahrirlash</a>
+            </div>
+        </div>
+        <div class="s3d-card-body">
+            <div class="s3d-card-title">{{ scene.title }}</div>
+            <div class="s3d-card-meta">
+                <span style="color:#a78bfa">{{ scene.get_template_display|default:scene.template }}</span>
+                <span>🕐 {{ scene.updated_at|timesince }} avval</span>
+            </div>
+        </div>
+        <div class="s3d-card-actions">
+            <a href="{% url 'studio_3d:editor' scene.id %}" class="s3d-btn">✏️ Edit</a>
+            <a href="{% url 'studio_3d:delete' scene.id %}" class="s3d-btn danger" onclick="return confirm('Sahna o\'chirilsinmi?')">🗑️ Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="s3d-empty">
+    <div style="font-size:4rem;margin-bottom:1rem;">🎲</div>
+    <p style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem;">Hali 3D sahnalar yo'q</p>
+    <p style="color:var(--text-muted);margin-bottom:1.5rem;">Birinchi 3D sahnangi yarating</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newSceneModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;">🎲 Birinchi Sahna</button>
+</div>
+{% endif %}
+
+<!-- New Scene Modal -->
+<div class="modal-backdrop" id="newSceneModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('newSceneModal').classList.remove('show')"
+            style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+        <div class="modal-title">🎲 Yangi 3D Sahna</div>
+        <div class="form-group">
+            <label class="form-label">Sahna nomi</label>
+            <input type="text" id="sceneTitle" class="form-input" placeholder="Misol: Space Station Interior" autofocus>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Shablon tanlang</label>
+            <div class="template-grid">
+                <div class="tmpl-btn active" onclick="setTemplate('empty',this)"><span class="tmpl-icon">⬛</span><span class="tmpl-label">Bo'sh</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('showcase',this)"><span class="tmpl-icon">💎</span><span class="tmpl-label">Showcase</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('terrain',this)"><span class="tmpl-icon">🏔️</span><span class="tmpl-label">Terrain</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('room',this)"><span class="tmpl-icon">🏠</span><span class="tmpl-label">Room</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('space',this)"><span class="tmpl-icon">🌌</span><span class="tmpl-label">Space</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('city',this)"><span class="tmpl-icon">🏙️</span><span class="tmpl-label">City</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('nature',this)"><span class="tmpl-icon">🌿</span><span class="tmpl-label">Nature</span></div>
+                <div class="tmpl-btn" onclick="setTemplate('abstract',this)"><span class="tmpl-icon">🔮</span><span class="tmpl-label">Abstract</span></div>
+            </div>
+            <input type="hidden" id="sceneTemplate" value="empty">
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('newSceneModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary" id="createSceneBtn" onclick="createScene()"
+                style="background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;">🎲 Yaratish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedTemplate = 'empty';
+function setTemplate(t, btn) {
+    selectedTemplate = t;
+    document.getElementById('sceneTemplate').value = t;
+    document.querySelectorAll('.tmpl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+// Render mini 3D previews using WebGL
+document.querySelectorAll('[id^="prev_"]').forEach(canvas => {
+    try {
+        const tmpl = canvas.dataset.template || 'empty';
+        renderMiniPreview(canvas, tmpl);
+    } catch(e) {}
+});
+
+function renderMiniPreview(canvas, template) {
+    const gl = canvas.getContext('webgl');
+    if (!gl) return;
+    const COLORS = {
+        empty:'#1e1b4b', showcase:'#1a0a3b', terrain:'#0a1a0a', room:'#1a1510', space:'#000010', city:'#0a0a1a', nature:'#0a1a05', abstract:'#1a0a1a'
+    };
+    const c = canvas.getContext('2d') || { fillRect:()=>{} };
+    // Fallback canvas2d preview
+    const c2 = document.createElement('canvas');
+    c2.width = 260; c2.height = 150;
+    const ctx2 = c2.getContext('2d');
+    const bgColor = COLORS[template] || '#111';
+    ctx2.fillStyle = bgColor; ctx2.fillRect(0,0,260,150);
+    // Draw simple shape preview
+    ctx2.save(); ctx2.translate(130,75); ctx2.rotate(Date.now()/10000);
+    const shapes = { empty:'', showcase:'💎', terrain:'🏔️', room:'🏠', space:'🌌', city:'🏙️', nature:'🌿', abstract:'🔮' };
+    ctx2.font = '40px serif'; ctx2.textAlign='center'; ctx2.textBaseline='middle';
+    ctx2.globalAlpha = 0.4;
+    ctx2.fillText(shapes[template]||'⬛', 0, 0);
+    ctx2.restore();
+    // Glow
+    ctx2.fillStyle = 'rgba(139,92,246,0.1)'; ctx2.fillRect(0,0,260,150);
+    // Copy to visible canvas
+    const visCtx = canvas.getContext('2d');
+    if (visCtx) visCtx.drawImage(c2, 0, 0);
+}
+
+async function createScene() {
+    const title = document.getElementById('sceneTitle').value.trim() || 'Untitled Scene';
+    const template = document.getElementById('sceneTemplate').value;
+    const btn = document.getElementById('createSceneBtn');
+    btn.disabled = true; btn.textContent = 'Yaratilmoqda...';
+    const form = document.createElement('form');
+    form.method = 'POST'; form.action = '/studio/3d-studio/create/';
+    const csrf = document.createElement('input'); csrf.type='hidden'; csrf.name='csrfmiddlewaretoken'; csrf.value=getCookie('csrftoken');
+    const t = document.createElement('input'); t.type='hidden'; t.name='title'; t.value=title;
+    const tp = document.createElement('input'); tp.type='hidden'; tp.name='template'; tp.value=template;
+    form.appendChild(csrf); form.appendChild(t); form.appendChild(tp);
+    document.body.appendChild(form); form.submit();
+}
+document.getElementById('newSceneModal').addEventListener('click', e => { if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
+document.getElementById('sceneTitle').addEventListener('keydown', e => { if(e.key==='Enter') createScene(); });
+</script>
+{% endblock %}

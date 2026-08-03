@@ -1,0 +1,1325 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.title }} — Audio Lab{% endblock %}
+
+{% block extra_css %}
+<style>
+body { overflow: hidden; }
+main.container { max-width:100%!important; padding:0!important; margin:0!important; }
+
+/* Shell */
+.daw-shell {
+    display: grid;
+    grid-template-rows: 48px 1fr 220px;
+    height: calc(100vh);
+    background: #08090d; font-family: var(--font-mono); color: var(--text-primary);
+    user-select: none;
+}
+
+/* ── Transport Bar ── */
+.daw-transport {
+    background: #0a0b10; border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 0.4rem; padding: 0 0.75rem;
+}
+.tp-brand { font-family: var(--font-display); font-weight: 800; font-size: 0.9rem;
+    background: linear-gradient(135deg,#10b981,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    margin-right: 0.5rem; }
+.tp-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:28px;
+    border-radius:5px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08);
+    color:var(--text-secondary); cursor:pointer; font-size:0.85rem; transition:all 0.15s; }
+.tp-btn:hover { background:rgba(255,255,255,0.12); color:var(--text-primary); }
+.tp-btn.play { background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.3); color:#10b981; }
+.tp-btn.play:hover { background:#10b981; color:#fff; }
+.tp-btn.rec { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:#ef4444; }
+.tp-btn.rec.active { background:#ef4444; color:#fff; animation:recBlink 1s infinite; }
+@keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.tp-sep { width:1px; height:22px; background:rgba(255,255,255,0.07); margin:0 0.25rem; }
+.tp-time { font-family:var(--font-mono); font-size:1.05rem; font-weight:700; color:#10b981;
+    background:#050607; border:1px solid rgba(16,185,129,0.2); border-radius:6px; padding:3px 10px; min-width:90px; text-align:center; }
+.tp-bpm-box { display:flex; align-items:center; gap:5px; background:#050607; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:3px 8px; }
+.tp-bpm-label { font-size:0.6rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; }
+.tp-bpm-val { font-size:0.95rem; font-weight:700; color:#06b6d4; min-width:30px; text-align:center; }
+.tp-bpm-btn { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem; padding:0 2px; }
+.tp-bpm-btn:hover { color:#10b981; }
+.tp-vol-box { display:flex; align-items:center; gap:6px; }
+.tp-vol-label { font-size:0.62rem; color:var(--text-muted); text-transform:uppercase; }
+.tp-save-lbl { font-size:0.68rem; color:var(--text-muted); margin-left:auto; }
+.save-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981; margin-right:4px; }
+.save-dot.unsaved { background:#f59e0b; animation:blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Main Area ── */
+.daw-main {
+    display: grid; grid-template-columns: 220px 1fr 260px; overflow: hidden;
+}
+
+/* Track headers (left) */
+.daw-track-headers {
+    background: #0a0b10; border-right: 1px solid rgba(255,255,255,0.06);
+    overflow-y: auto; overflow-x: hidden;
+}
+.daw-track-headers::-webkit-scrollbar { width:4px; }
+.daw-track-headers::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+/* ruler filler */
+.track-ruler-filler { height: 24px; background: #060708; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+.track-header {
+    height: 72px; display:flex; flex-direction:column; justify-content:center; padding:0 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04); position: relative;
+}
+.th-top { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+.th-color { width:3px; height:40px; border-radius:2px; position:absolute; left:0; top:16px; }
+.th-name { font-size:0.78rem; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:text; }
+.th-controls { display:flex; gap:3px; }
+.th-btn { width:22px; height:22px; border-radius:4px; background:rgba(255,255,255,0.05); border:none; color:var(--text-muted);
+    cursor:pointer; font-size:0.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.th-btn:hover { background:rgba(255,255,255,0.1); }
+.th-btn.muted { background:rgba(239,68,68,0.15); color:#f87171; }
+.th-btn.soloed { background:rgba(234,179,8,0.2); color:#fbbf24; }
+.th-bottom { display:flex; align-items:center; gap:4px; }
+.th-vol { flex:1; accent-color:#10b981; cursor:pointer; height:3px; }
+.th-pan { width:50px; accent-color:#06b6d4; cursor:pointer; height:3px; }
+
+/* + Add track */
+.add-track-btn {
+    width:100%; padding:0.6rem; background:none; border:none; border-top:1px solid rgba(255,255,255,0.04);
+    color:var(--text-muted); cursor:pointer; font-size:0.75rem; display:flex; align-items:center; justify-content:center; gap:4px;
+}
+.add-track-btn:hover { background:rgba(16,185,129,0.05); color:#10b981; }
+
+/* Timeline (center) */
+.daw-timeline-wrap { display:flex; flex-direction:column; overflow:hidden; }
+.timeline-ruler { height:24px; background:#060708; border-bottom:1px solid rgba(255,255,255,0.06);
+    overflow:hidden; position:relative; flex-shrink:0; }
+.timeline-ruler canvas { position:absolute; top:0; left:0; }
+.timeline-tracks { flex:1; overflow:scroll; position:relative; }
+.timeline-tracks::-webkit-scrollbar { width:6px; height:6px; }
+.timeline-tracks::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:3px; }
+.timeline-content { position:relative; min-height:100%; }
+.track-lane { height:72px; border-bottom:1px solid rgba(255,255,255,0.03); position:relative; cursor:pointer; }
+.track-lane:hover { background:rgba(255,255,255,0.01); }
+/* Playhead */
+.playhead { position:absolute; top:0; bottom:0; width:1px; background:#ef4444; pointer-events:none; z-index:10;
+    box-shadow:0 0 4px rgba(239,68,68,0.5); }
+.playhead::before { content:'▼'; position:absolute; top:-2px; left:-5px; color:#ef4444; font-size:10px; }
+/* Clips */
+.clip {
+    position:absolute; top:6px; height:60px; border-radius:4px;
+    cursor:move; overflow:hidden; border:1px solid rgba(255,255,255,0.15);
+    display:flex; flex-direction:column; min-width:40px;
+}
+.clip-label { font-size:0.62rem; font-weight:600; padding:2px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.clip-waveform { flex:1; opacity:0.6; }
+.clip-trim { position:absolute; top:0; width:6px; height:100%; cursor:ew-resize; background:rgba(255,255,255,0.15); }
+.clip-trim.left { left:0; } .clip-trim.right { right:0; }
+
+/* Effects Panel (right) */
+.daw-fx {
+    background: #0a0b10; border-left: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction: column; overflow: hidden;
+}
+.fx-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,0.06); }
+.fx-tab { flex:1; padding:0.45rem 0.5rem; text-align:center; font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;
+    color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; }
+.fx-tab.active { color:#10b981; border-bottom-color:#10b981; background:rgba(16,185,129,0.05); }
+.fx-body { flex:1; overflow-y:auto; padding:0.75rem; }
+.fx-body::-webkit-scrollbar { width:4px; }
+.fx-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+.fx-section { margin-bottom:1.25rem; }
+.fx-section-title { font-size:0.62rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:0.5rem; }
+.fx-knob-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+.fx-lbl { font-size:0.7rem; color:var(--text-muted); min-width:70px; }
+.fx-range { flex:1; accent-color:#10b981; cursor:pointer; }
+.fx-val { font-size:0.68rem; color:#10b981; min-width:30px; text-align:right; font-family:var(--font-mono); }
+/* Spectrum analyser */
+#spectrumCanvas { width:100%; height:80px; border-radius:6px; background:#050607; border:1px solid rgba(255,255,255,0.04); display:block; }
+
+/* ── Beat Sequencer ── */
+.daw-sequencer {
+    background: #08090d; border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; flex-direction:column; overflow:hidden;
+}
+.seq-header { display:flex; align-items:center; gap:0.75rem; padding:0.4rem 0.75rem; border-bottom:1px solid rgba(255,255,255,0.06); }
+.seq-title { font-size:0.75rem; font-weight:700; color:#10b981; }
+.seq-toggle { padding:0.25rem 0.6rem; border-radius:4px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.2); color:#10b981; cursor:pointer; font-size:0.72rem; }
+.seq-toggle.active { background:#10b981; color:#fff; }
+.seq-grid { flex:1; overflow:auto; padding:0.5rem 0.75rem; }
+.seq-row { display:flex; align-items:center; gap:4px; margin-bottom:5px; }
+.seq-row-label { font-size:0.68rem; color:var(--text-muted); width:40px; flex-shrink:0; }
+.seq-vol { width:50px; accent-color:#10b981; }
+.seq-steps { display:flex; gap:3px; }
+.seq-step { width:26px; height:26px; border-radius:4px; border:1px solid rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.03); cursor:pointer; transition:all 0.1s; }
+.seq-step.on { background:rgba(16,185,129,0.7); border-color:#10b981; box-shadow:0 0 6px rgba(16,185,129,0.4); }
+.seq-step.playing { outline:2px solid #06b6d4; }
+.seq-step:hover:not(.on) { background:rgba(255,255,255,0.07); }
+/* Dividers every 4 */
+.seq-step:nth-child(4n+1) { margin-left:6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="daw-shell">
+    <!-- ══ TRANSPORT BAR ══ -->
+    <div class="daw-transport">
+        <a href="{% url 'audio_lab:dashboard' %}" class="tp-btn" title="Dashboard">◀</a>
+        <span class="tp-brand">🎵</span>
+        <input type="text" id="projTitleInput" value="{{ project.title }}" style="background:none;border:none;color:var(--text-primary);font-size:0.85rem;font-weight:600;outline:none;width:140px;" onchange="markUnsaved()">
+        <div class="tp-sep"></div>
+        <!-- Transport -->
+        <button class="tp-btn" onclick="seekStart()" title="To Start">⏮</button>
+        <button class="tp-btn play" id="playBtn" onclick="togglePlay()" title="Space">▶</button>
+        <button class="tp-btn" onclick="stop()" title="Stop">■</button>
+        <button class="tp-btn rec" id="recBtn" onclick="toggleRecord()" title="Record">⏺</button>
+        <button class="tp-btn" id="loopBtn" onclick="toggleLoop()" title="Loop">🔁</button>
+        <div class="tp-sep"></div>
+        <!-- Time display -->
+        <div class="tp-time" id="timeDisplay">0:00.000</div>
+        <div class="tp-sep"></div>
+        <!-- BPM -->
+        <div class="tp-bpm-box">
+            <div>
+                <div class="tp-bpm-label">BPM</div>
+                <div class="tp-bpm-val" id="bpmDisplay">{{ project.bpm }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                <button class="tp-bpm-btn" onclick="changeBPM(1)">▲</button>
+                <button class="tp-bpm-btn" onclick="changeBPM(-1)">▼</button>
+            </div>
+        </div>
+        <div class="tp-sep"></div>
+        <!-- Master volume -->
+        <div class="tp-vol-box">
+            <span class="tp-vol-label">Master</span>
+            <input type="range" id="masterVol" min="0" max="1" step="0.01" value="1" style="width:70px;accent-color:#10b981;" oninput="setMasterVolume(this.value)">
+        </div>
+        <!-- Upload audio -->
+        <button class="tp-btn" onclick="document.getElementById('globalUpload').click()" title="Audio yuklash" style="font-size:0.7rem;width:auto;padding:0 8px;">📁 Import</button>
+        <input type="file" id="globalUpload" accept="audio/*" multiple style="display:none" onchange="handleGlobalUpload(this)">
+        <!-- Save & Export -->
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <span class="save-lbl"><span class="save-dot" id="saveDot"></span><span id="saveLabel">Saqlangan</span></span>
+            <button class="tp-btn play" onclick="saveProject()" style="width:auto;padding:0 10px;font-size:0.72rem;">💾 Save</button>
+            <button class="tp-btn primary" onclick="exportAudio()" style="width:auto;padding:0 12px;font-size:0.72rem;background:#10b981;border-color:#10b981;color:#fff;font-weight:700;">⬇ Export WAV</button>
+        </div>
+    </div>
+
+    <!-- ══ MAIN AREA ══ -->
+    <div class="daw-main">
+        <!-- Track Headers -->
+        <div class="daw-track-headers" id="trackHeaders">
+            <div class="track-ruler-filler"></div>
+            <!-- Dynamically rendered -->
+        </div>
+
+        <!-- Timeline -->
+        <div class="daw-timeline-wrap">
+            <canvas id="rulerCanvas" class="timeline-ruler" height="24"></canvas>
+            <div class="timeline-tracks" id="timelineTracks">
+                <div class="timeline-content" id="timelineContent">
+                    <div class="playhead" id="playhead" style="left:0;"></div>
+                    <!-- Track lanes dynamically rendered -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Effects Panel -->
+        <div class="daw-fx">
+            <div class="fx-tabs">
+                <div class="fx-tab active" id="fxTabMixer" onclick="switchFxTab('mixer')">Mixer</div>
+                <div class="fx-tab" id="fxTabEQ" onclick="switchFxTab('eq')">EQ</div>
+                <div class="fx-tab" id="fxTabFX" onclick="switchFxTab('fx')">FX</div>
+                <div class="fx-tab" id="fxTabAI" onclick="switchFxTab('ai')">AI Tools</div>
+            </div>
+            <div class="fx-body" id="fxBody">
+                <!-- MIXER TAB -->
+                <div id="fxMixer">
+                    <div class="fx-section">
+                        <div class="fx-section-title">🎚 Spectrum</div>
+                        <canvas id="spectrumCanvas"></canvas>
+                    </div>
+                    <div class="fx-section" id="mixerChannels">
+                        <!-- Channels rendered dynamically -->
+                    </div>
+                </div>
+                <!-- EQ TAB -->
+                <div id="fxEQ" style="display:none;">
+                    <div class="fx-section">
+                        <div class="fx-section-title">🎛 Equalizer (7-Band)</div>
+                        <div id="eqBands"></div>
+                    </div>
+                </div>
+                <!-- FX TAB -->
+                <div id="fxFX" style="display:none;">
+                    <div class="fx-section">
+                        <div class="fx-section-title">🌊 Reverb</div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Wet</span><input type="range" class="fx-range" id="reverbWet" min="0" max="1" step="0.01" value="0" oninput="setReverb(this.value)"><span class="fx-val" id="reverbWetVal">0%</span></div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Room Size</span><input type="range" class="fx-range" id="reverbRoom" min="0" max="1" step="0.01" value="0.5" oninput="setReverbRoom(this.value)"><span class="fx-val">—</span></div>
+                    </div>
+                    <div class="fx-section">
+                        <div class="fx-section-title">🗜 Compressor</div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Threshold</span><input type="range" class="fx-range" id="compThresh" min="-60" max="0" value="-24" oninput="updateComp()"><span class="fx-val" id="compThreshVal">-24dB</span></div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Ratio</span><input type="range" class="fx-range" id="compRatio" min="1" max="20" value="4" oninput="updateComp()"><span class="fx-val" id="compRatioVal">4:1</span></div>
+                    </div>
+                    <div class="fx-section">
+                        <div class="fx-section-title">⏱ Delay</div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Time</span><input type="range" class="fx-range" id="delayTime" min="0" max="1" step="0.01" value="0.3" oninput="updateDelay()"><span class="fx-val" id="delayTimeVal">0.3s</span></div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Feedback</span><input type="range" class="fx-range" id="delayFb" min="0" max="0.9" step="0.01" value="0.3" oninput="updateDelay()"><span class="fx-val" id="delayFbVal">0.3</span></div>
+                        <div class="fx-knob-row"><span class="fx-lbl">Wet</span><input type="range" class="fx-range" id="delayWet" min="0" max="1" step="0.01" value="0" oninput="updateDelay()"><span class="fx-val" id="delayWetVal">0%</span></div>
+                    </div>
+                </div>
+                <!-- AI TAB -->
+                <div id="fxAI" style="display:none;">
+                    <div class="fx-section">
+                        <div class="fx-section-title">🪄 AI Audio Tools</div>
+                        <div class="fx-knob-row" style="margin-bottom:12px;">
+                            <span class="fx-lbl" style="width:70px;">Target Track</span>
+                            <select id="aiTrackSelect" style="flex:1;background:#050607;border:1px solid rgba(255,255,255,0.08);color:var(--text-primary);font-size:0.75rem;padding:3px;border-radius:4px;outline:none;"></select>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;">
+                            <button onclick="runAIAudio('noise_reduction')" class="tp-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;justify-content:center;padding:7px;font-weight:600;font-size:0.72rem;cursor:pointer;">🔇 Noise Reduction</button>
+                            <button onclick="runAIAudio('stem_separation')" class="tp-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;justify-content:center;padding:7px;font-weight:600;font-size:0.72rem;cursor:pointer;">🎹 Stem Separation</button>
+                            <button onclick="runAIAudio('whisper_transcription')" class="tp-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;justify-content:center;padding:7px;font-weight:600;font-size:0.72rem;cursor:pointer;">📝 Whisper Transcription</button>
+                            <button onclick="runAIAudio('auto_mastering')" class="tp-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);color:#34d399;justify-content:center;padding:7px;font-weight:600;font-size:0.72rem;cursor:pointer;">⚡ Auto-Mastering</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ BEAT SEQUENCER ══ -->
+    <div class="daw-sequencer">
+        <div class="seq-header">
+            <span class="seq-title">🥁 Beat Sequencer</span>
+            <button class="seq-toggle" id="seqToggle" onclick="toggleSequencer()">OFF</button>
+            <span style="font-size:0.7rem;color:var(--text-muted);">16 steps | syncs to BPM</span>
+            <span style="margin-left:auto;font-size:0.68rem;color:var(--text-muted);">Current: <span id="seqStep" style="color:#10b981;font-weight:700;">—</span></span>
+        </div>
+        <div class="seq-grid" id="seqGrid">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+const PROJECT_ID = {{ project.pk }};
+let projectData  = {{ project_data_json|safe }};
+let bpm          = projectData.bpm || {{ project.bpm }};
+let masterVolume = projectData.masterVolume || 1.0;
+let isPlaying    = false;
+let isRecording  = false;
+let isLooping    = false;
+let currentTime  = 0;  // seconds
+let startWallTime = 0;
+let animFrame    = null;
+let unsaved      = false;
+
+// Audio engine
+let audioCtx = null;
+const trackBuffers   = {};  // trackId -> AudioBuffer
+const trackSources   = {};  // trackId -> AudioBufferSourceNode (current)
+const trackGainNodes = {};  // trackId -> GainNode
+const trackPanNodes  = {};  // trackId -> StereoPannerNode
+
+// Analyser
+let analyserNode = null;
+let masterGain   = null;
+let compressor   = null;
+let reverbNode   = null;
+let reverbGain   = null;
+let delayNode    = null;
+let delayGain    = null;
+
+// Tracks state
+let tracks = projectData.tracks || [
+    {id:'tr1', name:'Track 1', muted:false, solo:false, volume:0.8, pan:0, clips:[]},
+    {id:'tr2', name:'Track 2', muted:false, solo:false, volume:0.8, pan:0, clips:[]},
+    {id:'tr3', name:'Track 3', muted:false, solo:false, volume:0.8, pan:0, clips:[]},
+];
+
+// Beat sequencer
+const DRUMS = ['kick','snare','hihat','tom'];
+const DRUM_NAMES = { kick:'Kick', snare:'Snare', hihat:'Hi-Hat', tom:'Tom' };
+let beatPattern = projectData.beatPattern || {
+    kick:  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+    snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+    hihat: [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+    tom:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+};
+let seqOn        = projectData.sequencerOn || false;
+let seqStep      = 0;
+let seqInterval  = null;
+const drumVolumes = { kick:0.9, snare:0.7, hihat:0.5, tom:0.6 };
+
+// Timeline
+const PPQ       = 100;  // px per quarter note
+const TIMELINE_W = 4000; // px total width
+
+// EQ bands
+const EQ_FREQS  = [60, 150, 400, 1000, 2500, 6000, 15000];
+const eqFilters = [];
+
+// Mic recording
+let mediaRecorder = null;
+let recordedChunks = [];
+
+// ══════════════════════════════════════════════════════════════
+//  AUDIO CONTEXT INIT
+// ══════════════════════════════════════════════════════════════
+function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = masterVolume;
+
+    // Analyser
+    analyserNode = audioCtx.createAnalyser();
+    analyserNode.fftSize = 256;
+
+    // Compressor
+    compressor = audioCtx.createDynamicsCompressor();
+    compressor.threshold.value = -24;
+    compressor.ratio.value = 4;
+
+    // Reverb
+    reverbNode = audioCtx.createConvolver();
+    reverbGain = audioCtx.createGain();
+    reverbGain.gain.value = 0;
+    buildImpulseResponse();
+
+    // Delay
+    delayNode = audioCtx.createDelay(2.0);
+    delayNode.delayTime.value = 0.3;
+    delayGain = audioCtx.createGain();
+    delayGain.gain.value = 0;
+    const delayFeedback = audioCtx.createGain();
+    delayFeedback.gain.value = 0.3;
+    delayNode.connect(delayFeedback); delayFeedback.connect(delayNode);
+    delayNode.connect(delayGain); delayGain.connect(masterGain);
+
+    // EQ chain
+    EQ_FREQS.forEach(freq => {
+        const f = audioCtx.createBiquadFilter();
+        f.type = freq < 200 ? 'lowshelf' : freq > 5000 ? 'highshelf' : 'peaking';
+        f.frequency.value = freq;
+        f.gain.value = 0;
+        eqFilters.push(f);
+    });
+    // Connect EQ chain: masterGain -> eq1 -> eq2 -> ... -> compressor -> analyser -> reverbGain -> destination
+    let prev = masterGain;
+    eqFilters.forEach(f => { prev.connect(f); prev = f; });
+    prev.connect(compressor);
+    compressor.connect(analyserNode);
+    analyserNode.connect(reverbGain);
+    reverbGain.connect(audioCtx.destination);
+    analyserNode.connect(audioCtx.destination);
+
+    // Per-track nodes
+    tracks.forEach(t => {
+        const g = audioCtx.createGain(); g.gain.value = t.volume;
+        const p = audioCtx.createStereoPanner(); p.pan.value = t.pan;
+        g.connect(p); p.connect(masterGain);
+        trackGainNodes[t.id] = g;
+        trackPanNodes[t.id]  = p;
+    });
+
+    startSpectrumDraw();
+}
+
+function buildImpulseResponse() {
+    if (!audioCtx) return;
+    const sr = audioCtx.sampleRate, len = 2 * sr;
+    const buf = audioCtx.createBuffer(2, len, sr);
+    for (let c = 0; c < 2; c++) {
+        const ch = buf.getChannelData(c);
+        for (let i = 0; i < len; i++) ch[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 3);
+    }
+    reverbNode.buffer = buf;
+    reverbNode.connect(reverbGain);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TRANSPORT
+// ══════════════════════════════════════════════════════════════
+function togglePlay() {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (isPlaying) pause(); else play();
+}
+
+function play() {
+    isPlaying = true;
+    document.getElementById('playBtn').textContent = '⏸';
+    document.getElementById('playBtn').style.background = 'rgba(239,68,68,0.15)';
+    startWallTime = audioCtx.currentTime - currentTime;
+
+    // Schedule playback for all tracks with clips
+    tracks.forEach(t => {
+        if (!trackBuffers[t.id]) return;
+        const src = audioCtx.createBufferSource();
+        src.buffer = trackBuffers[t.id];
+        src.connect(trackGainNodes[t.id]);
+        if (isLooping) src.loop = true;
+        src.start(0, Math.min(currentTime, src.buffer.duration));
+        trackSources[t.id] = src;
+    });
+
+    if (seqOn) startSequencer();
+    scheduleLoop();
+}
+
+function pause() {
+    isPlaying = false;
+    document.getElementById('playBtn').textContent = '▶';
+    document.getElementById('playBtn').style.background = 'rgba(16,185,129,0.15)';
+    Object.values(trackSources).forEach(s => { try { s.stop(); } catch(e){} });
+    stopSequencer();
+    if (animFrame) cancelAnimationFrame(animFrame);
+    animFrame = null;
+}
+
+function stop() {
+    pause();
+    currentTime = 0;
+    updateTimeDisplay();
+    movePlayhead(0);
+}
+
+function seekStart() { stop(); }
+
+function toggleLoop() {
+    isLooping = !isLooping;
+    document.getElementById('loopBtn').style.color = isLooping ? '#10b981' : '';
+}
+
+function scheduleLoop() {
+    if (!isPlaying) return;
+    currentTime = audioCtx.currentTime - startWallTime;
+    updateTimeDisplay();
+    movePlayhead(currentTime);
+    animFrame = requestAnimationFrame(scheduleLoop);
+}
+
+function updateTimeDisplay() {
+    const m = Math.floor(currentTime / 60);
+    const s = Math.floor(currentTime % 60);
+    const ms = Math.floor((currentTime % 1) * 1000);
+    document.getElementById('timeDisplay').textContent = `${m}:${String(s).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+}
+
+function movePlayhead(t) {
+    const beatsPerSec = bpm / 60;
+    const x = t * beatsPerSec * PPQ;
+    document.getElementById('playhead').style.left = x + 'px';
+    // Auto-scroll
+    const wrap = document.getElementById('timelineTracks');
+    if (x > wrap.scrollLeft + wrap.clientWidth - 100) wrap.scrollLeft = x - 100;
+}
+
+function changeBPM(delta) {
+    bpm = Math.max(60, Math.min(240, bpm + delta));
+    document.getElementById('bpmDisplay').textContent = bpm;
+    if (seqOn) { stopSequencer(); startSequencer(); }
+    markUnsaved();
+}
+
+function setMasterVolume(v) {
+    masterVolume = parseFloat(v);
+    if (masterGain) masterGain.gain.value = masterVolume;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RECORDING
+// ══════════════════════════════════════════════════════════════
+async function toggleRecord() {
+    if (!isRecording) {
+        initAudio();
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const url  = URL.createObjectURL(blob);
+                const selectedTrack = tracks.find(t => !t.muted) || tracks[0];
+                if (selectedTrack) loadAudioFromUrl(url, selectedTrack.id, 'Recorded');
+                stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            document.getElementById('recBtn').classList.add('active');
+            if (!isPlaying) togglePlay();
+        } catch(e) { showToast('Mikrofon ruxsati kerak', 'error'); }
+    } else {
+        isRecording = false;
+        document.getElementById('recBtn').classList.remove('active');
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AUDIO LOADING
+// ══════════════════════════════════════════════════════════════
+async function loadAudioFromUrl(url, trackId, name) {
+    if (!audioCtx) initAudio();
+    try {
+        const res = await fetch(url);
+        const arrayBuf = await res.arrayBuffer();
+        const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+        trackBuffers[trackId] = audioBuf;
+        const track = tracks.find(t => t.id === trackId);
+        if (track) {
+            const clip = { id: 'clip_' + Date.now(), name: name || 'Clip', startBeat: 0, durationSec: audioBuf.duration, url };
+            if (!track.clips) track.clips = [];
+            track.clips.push(clip);
+        }
+        drawWaveformForTrack(trackId, audioBuf);
+        renderTimeline();
+        markUnsaved();
+        showToast(`✅ "${name}" yuklandi`, 'success');
+    } catch(e) { showToast('Audio yuklashda xato: ' + e.message, 'error'); }
+}
+
+async function handleGlobalUpload(input) {
+    initAudio();
+    const files = Array.from(input.files);
+    for (const file of files) {
+        // Add new track
+        const id = 'tr' + Date.now();
+        const t = { id, name: file.name.replace(/\.[^.]+$/, ''), muted: false, solo: false, volume: 0.8, pan: 0, clips: [] };
+        tracks.push(t);
+        const g = audioCtx.createGain(); g.gain.value = 0.8;
+        const p = audioCtx.createStereoPanner(); p.pan.value = 0;
+        g.connect(p); p.connect(masterGain);
+        trackGainNodes[id] = g; trackPanNodes[id] = p;
+
+        // Upload to server
+        const fd = new FormData(); fd.append('audio', file);
+        try {
+            const res = await fetch(`/studio/audio-lab/upload/${PROJECT_ID}/`, {
+                method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+            });
+            const data = await res.json();
+            if (data.url) await loadAudioFromUrl(data.url, id, t.name);
+        } catch(e) {
+            // Load locally
+            const url = URL.createObjectURL(file);
+            await loadAudioFromUrl(url, id, t.name);
+        }
+    }
+    renderTracks();
+    input.value = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TRACK RENDERING
+// ══════════════════════════════════════════════════════════════
+const TRACK_COLORS = ['#10b981','#06b6d4','#8b5cf6','#f59e0b','#ef4444','#ec4899','#3b82f6','#84cc16'];
+
+function renderTracks() {
+    renderTrackHeaders();
+    renderTimeline();
+    renderMixerChannels();
+    if (typeof populateAITracks === 'function') populateAITracks();
+}
+
+function renderTrackHeaders() {
+    const container = document.getElementById('trackHeaders');
+    const filler = container.querySelector('.track-ruler-filler');
+    container.innerHTML = '';
+    container.appendChild(filler);
+
+    tracks.forEach((t, i) => {
+        const color = TRACK_COLORS[i % TRACK_COLORS.length];
+        const div = document.createElement('div');
+        div.className = 'track-header';
+        div.id = 'th_' + t.id;
+        div.innerHTML = `
+            <div class="th-color" style="background:${color}"></div>
+            <div class="th-top" style="padding-left:10px;">
+                <input class="th-name" value="${t.name}" style="background:none;border:none;color:var(--text-primary);font-size:0.78rem;font-weight:600;outline:none;flex:1;width:80px;"
+                    onchange="renameTrack('${t.id}',this.value)">
+                <div class="th-controls">
+                    <button class="th-btn ${t.muted?'muted':''}" id="mute_${t.id}" onclick="toggleMute('${t.id}')" title="Mute (M)">M</button>
+                    <button class="th-btn ${t.solo?'soloed':''}" id="solo_${t.id}" onclick="toggleSolo('${t.id}')" title="Solo (S)">S</button>
+                    <button class="th-btn" onclick="uploadToTrack('${t.id}')" title="Upload audio">📁</button>
+                    <input type="file" id="upload_${t.id}" accept="audio/*" style="display:none" onchange="handleTrackUpload('${t.id}',this)">
+                    <button class="th-btn" onclick="removeTrack('${t.id}')" style="color:#fca5a5;" title="Remove">✕</button>
+                </div>
+            </div>
+            <div class="th-bottom" style="padding-left:10px;">
+                <span style="font-size:0.6rem;color:var(--text-muted);width:16px;">Vol</span>
+                <input type="range" class="th-vol" min="0" max="1" step="0.01" value="${t.volume}" oninput="setTrackVolume('${t.id}',this.value)">
+                <span style="font-size:0.6rem;color:var(--text-muted);width:16px;">Pan</span>
+                <input type="range" class="th-pan" min="-1" max="1" step="0.01" value="${t.pan}" oninput="setTrackPan('${t.id}',this.value)">
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-track-btn';
+    addBtn.innerHTML = '+ Track qo\'shish';
+    addBtn.onclick = addTrack;
+    container.appendChild(addBtn);
+}
+
+function renderTimeline() {
+    const content = document.getElementById('timelineContent');
+    // Remove old lanes
+    content.querySelectorAll('.track-lane').forEach(e => e.remove());
+
+    tracks.forEach((t, i) => {
+        const color = TRACK_COLORS[i % TRACK_COLORS.length];
+        const lane = document.createElement('div');
+        lane.className = 'track-lane';
+        lane.id = 'lane_' + t.id;
+        lane.style.width = TIMELINE_W + 'px';
+
+        // Render clips
+        (t.clips || []).forEach(clip => {
+            const beatsPerSec = bpm / 60;
+            const x = clip.startBeat * PPQ;
+            const w = Math.max(clip.durationSec * beatsPerSec * PPQ, 40);
+            const el = document.createElement('div');
+            el.className = 'clip';
+            el.id = 'clip_' + clip.id;
+            el.style.cssText = `left:${x}px;width:${w}px;background:${color}22;border-color:${color}55;`;
+            el.innerHTML = `<div class="clip-label" style="color:${color};">${clip.name}</div>
+                <canvas class="clip-waveform" id="cw_${clip.id}" width="${Math.round(w)}" height="40"></canvas>
+                <div class="clip-trim left"></div><div class="clip-trim right"></div>`;
+            setupClipDrag(el, clip, t, lane);
+            lane.appendChild(el);
+        });
+
+        content.insertBefore(lane, document.getElementById('playhead'));
+    });
+
+    content.style.minWidth = TIMELINE_W + 'px';
+    content.style.minHeight = (tracks.length * 72) + 'px';
+    drawRuler();
+
+    // Scroll sync
+    const tracksWrap = document.getElementById('timelineTracks');
+    const headers    = document.getElementById('trackHeaders');
+    tracksWrap.onscroll = () => {
+        headers.scrollTop = tracksWrap.scrollTop;
+    };
+}
+
+function drawRuler() {
+    const canvas = document.getElementById('rulerCanvas');
+    const wrap   = document.getElementById('timelineTracks');
+    canvas.width = wrap.clientWidth;
+    const ctx    = canvas.getContext('2d');
+    ctx.fillStyle = '#060708';
+    ctx.fillRect(0, 0, canvas.width, 24);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillStyle   = 'rgba(255,255,255,0.3)';
+    ctx.font = '9px monospace';
+    for (let beat = 0; beat * PPQ < TIMELINE_W; beat++) {
+        const x = beat * PPQ;
+        if (x < 0) continue;
+        const barNum = Math.floor(beat / 4) + 1;
+        const beatInBar = beat % 4;
+        ctx.beginPath();
+        if (beatInBar === 0) {
+            ctx.moveTo(x, 0); ctx.lineTo(x, 24); ctx.lineWidth = 1; ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fillText(barNum, x + 3, 14);
+        } else {
+            ctx.moveTo(x, 14); ctx.lineTo(x, 24); ctx.lineWidth = 0.5; ctx.stroke();
+        }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  WAVEFORM DRAWING
+// ══════════════════════════════════════════════════════════════
+function drawWaveformForTrack(trackId, buffer) {
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) return;
+    (track.clips || []).forEach(clip => {
+        const canvas = document.getElementById('cw_' + clip.id);
+        if (!canvas) return;
+        drawWaveformOnCanvas(canvas, buffer, TRACK_COLORS[tracks.indexOf(track) % TRACK_COLORS.length]);
+    });
+}
+
+function drawWaveformOnCanvas(canvas, buffer, color) {
+    const ctx  = canvas.getContext('2d');
+    const data = buffer.getChannelData(0);
+    const step = Math.ceil(data.length / canvas.width);
+    const h    = canvas.height;
+    ctx.clearRect(0, 0, canvas.width, h);
+    ctx.strokeStyle = color + 'cc';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < canvas.width; i++) {
+        let min = 1, max = -1;
+        for (let j = 0; j < step; j++) {
+            const d = data[i * step + j] || 0;
+            if (d < min) min = d; if (d > max) max = d;
+        }
+        ctx.moveTo(i, (1 + min) * h / 2);
+        ctx.lineTo(i, (1 + max) * h / 2);
+    }
+    ctx.stroke();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CLIP DRAG
+// ══════════════════════════════════════════════════════════════
+function setupClipDrag(el, clip, track, lane) {
+    let dragging = false, startX, startLeft;
+    el.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('clip-trim')) return;
+        dragging = true; startX = e.clientX; startLeft = el.offsetLeft;
+        e.stopPropagation();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const newLeft = Math.max(0, startLeft + (e.clientX - startX));
+        el.style.left = newLeft + 'px';
+        const beatsPerSec = bpm / 60;
+        clip.startBeat = newLeft / PPQ;
+        markUnsaved();
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TRACK CONTROLS
+// ══════════════════════════════════════════════════════════════
+function addTrack() {
+    initAudio();
+    const id = 'tr' + Date.now();
+    tracks.push({ id, name: 'Track ' + (tracks.length + 1), muted: false, solo: false, volume: 0.8, pan: 0, clips: [] });
+    const g = audioCtx.createGain(); g.gain.value = 0.8;
+    const p = audioCtx.createStereoPanner(); p.pan.value = 0;
+    g.connect(p); p.connect(masterGain);
+    trackGainNodes[id] = g; trackPanNodes[id] = p;
+    renderTracks(); markUnsaved();
+}
+
+function removeTrack(id) {
+    if (tracks.length <= 1) { showToast('Kamida 1 track kerak', 'error'); return; }
+    tracks = tracks.filter(t => t.id !== id);
+    try { if (trackSources[id]) trackSources[id].stop(); } catch(e) {}
+    renderTracks(); markUnsaved();
+}
+
+function renameTrack(id, name) {
+    const t = tracks.find(t => t.id === id); if (t) { t.name = name; markUnsaved(); }
+}
+
+function toggleMute(id) {
+    const t = tracks.find(t => t.id === id); if (!t) return;
+    t.muted = !t.muted;
+    if (trackGainNodes[id]) trackGainNodes[id].gain.value = t.muted ? 0 : t.volume;
+    document.getElementById('mute_' + id)?.classList.toggle('muted', t.muted);
+    markUnsaved();
+}
+
+function toggleSolo(id) {
+    const t = tracks.find(t => t.id === id); if (!t) return;
+    t.solo = !t.solo;
+    const hasSolo = tracks.some(x => x.solo);
+    tracks.forEach(x => {
+        const g = trackGainNodes[x.id]; if (!g) return;
+        g.gain.value = hasSolo ? (x.solo ? x.volume : 0) : (x.muted ? 0 : x.volume);
+    });
+    document.getElementById('solo_' + id)?.classList.toggle('soloed', t.solo);
+    markUnsaved();
+}
+
+function setTrackVolume(id, v) {
+    const t = tracks.find(t => t.id === id); if (t) t.volume = parseFloat(v);
+    const hasSolo = tracks.some(x => x.solo);
+    const tObj = tracks.find(t => t.id === id);
+    if (trackGainNodes[id] && tObj) {
+        trackGainNodes[id].gain.value = hasSolo ? (tObj.solo ? v : 0) : (tObj.muted ? 0 : v);
+    }
+    markUnsaved();
+}
+
+function setTrackPan(id, v) {
+    const t = tracks.find(t => t.id === id); if (t) t.pan = parseFloat(v);
+    if (trackPanNodes[id]) trackPanNodes[id].pan.value = parseFloat(v);
+    markUnsaved();
+}
+
+function uploadToTrack(id) { document.getElementById('upload_' + id)?.click(); }
+
+async function handleTrackUpload(id, input) {
+    initAudio();
+    const file = input.files[0]; if (!file) return;
+    const fd = new FormData(); fd.append('audio', file);
+    try {
+        const res = await fetch(`/studio/audio-lab/upload/${PROJECT_ID}/`, {
+            method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd
+        });
+        const data = await res.json();
+        if (data.url) await loadAudioFromUrl(data.url, id, file.name.replace(/\.[^.]+$/,''));
+        else await loadAudioFromUrl(URL.createObjectURL(file), id, file.name.replace(/\.[^.]+$/,''));
+    } catch(e) {
+        await loadAudioFromUrl(URL.createObjectURL(file), id, file.name.replace(/\.[^.]+$/,''));
+    }
+    input.value = '';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MIXER CHANNELS (right panel)
+// ══════════════════════════════════════════════════════════════
+function renderMixerChannels() {
+    const container = document.getElementById('mixerChannels');
+    container.innerHTML = `<div class="fx-section-title">🎚 Channels</div>` +
+        tracks.map((t, i) => `
+            <div class="fx-knob-row">
+                <span class="fx-lbl" style="color:${TRACK_COLORS[i%TRACK_COLORS.length]}">${t.name}</span>
+                <input type="range" class="fx-range" min="0" max="1" step="0.01" value="${t.volume}" oninput="setTrackVolume('${t.id}',this.value)">
+                <span class="fx-val">${Math.round(t.volume*100)}%</span>
+            </div>
+        `).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EQ
+// ══════════════════════════════════════════════════════════════
+function buildEQUI() {
+    const container = document.getElementById('eqBands');
+    container.innerHTML = EQ_FREQS.map((freq, i) => `
+        <div class="fx-knob-row">
+            <span class="fx-lbl">${freq >= 1000 ? (freq/1000)+'kHz' : freq+'Hz'}</span>
+            <input type="range" class="fx-range" min="-18" max="18" step="0.5" value="0"
+                oninput="setEQ(${i},this.value);document.getElementById('eq_val_${i}').textContent=this.value+'dB'">
+            <span class="fx-val" id="eq_val_${i}">0dB</span>
+        </div>
+    `).join('');
+}
+
+function setEQ(band, val) {
+    if (eqFilters[band]) eqFilters[band].gain.value = parseFloat(val);
+    markUnsaved();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EFFECTS
+// ══════════════════════════════════════════════════════════════
+function setReverb(v) {
+    if (reverbGain) reverbGain.gain.value = parseFloat(v);
+    document.getElementById('reverbWetVal').textContent = Math.round(v*100) + '%';
+}
+function setReverbRoom(v) { buildImpulseResponse(); }
+function updateComp() {
+    const th = parseFloat(document.getElementById('compThresh').value);
+    const ra = parseFloat(document.getElementById('compRatio').value);
+    if (compressor) { compressor.threshold.value = th; compressor.ratio.value = ra; }
+    document.getElementById('compThreshVal').textContent = th + 'dB';
+    document.getElementById('compRatioVal').textContent = ra + ':1';
+}
+function updateDelay() {
+    const t = parseFloat(document.getElementById('delayTime').value);
+    const f = parseFloat(document.getElementById('delayFb').value);
+    const w = parseFloat(document.getElementById('delayWet').value);
+    if (delayNode) delayNode.delayTime.value = t;
+    if (delayGain) delayGain.gain.value = w;
+    document.getElementById('delayTimeVal').textContent = t + 's';
+    document.getElementById('delayFbVal').textContent = f;
+    document.getElementById('delayWetVal').textContent = Math.round(w*100) + '%';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SPECTRUM ANALYSER
+// ══════════════════════════════════════════════════════════════
+function startSpectrumDraw() {
+    const canvas = document.getElementById('spectrumCanvas');
+    const ctx    = canvas.getContext('2d');
+    function draw() {
+        if (!analyserNode) { requestAnimationFrame(draw); return; }
+        const bufLen = analyserNode.frequencyBinCount;
+        const data   = new Uint8Array(bufLen);
+        analyserNode.getByteFrequencyData(data);
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const bw = w / bufLen;
+        for (let i = 0; i < bufLen; i++) {
+            const pct  = data[i] / 255;
+            const barH = pct * h;
+            const hue  = 140 + (1-pct) * 80;  // green -> yellow -> red
+            ctx.fillStyle = `hsl(${hue},80%,50%)`;
+            ctx.fillRect(i * bw, h - barH, bw - 1, barH);
+        }
+        requestAnimationFrame(draw);
+    }
+    draw();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BEAT SEQUENCER
+// ══════════════════════════════════════════════════════════════
+function buildSequencerUI() {
+    const grid = document.getElementById('seqGrid');
+    grid.innerHTML = DRUMS.map(drum => `
+        <div class="seq-row">
+            <span class="seq-row-label">${DRUM_NAMES[drum]}</span>
+            <input type="range" class="seq-vol" min="0" max="1" step="0.01" value="${drumVolumes[drum]}"
+                oninput="drumVolumes['${drum}']=this.value" title="Volume">
+            <div class="seq-steps" id="steps_${drum}">
+                ${beatPattern[drum].map((on, step) => `
+                    <div class="seq-step ${on?'on':''}" id="step_${drum}_${step}"
+                        onclick="toggleStep('${drum}',${step})"></div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleStep(drum, step) {
+    beatPattern[drum][step] = beatPattern[drum][step] ? 0 : 1;
+    document.getElementById(`step_${drum}_${step}`).classList.toggle('on', beatPattern[drum][step]);
+    markUnsaved();
+}
+
+function toggleSequencer() {
+    seqOn = !seqOn;
+    const btn = document.getElementById('seqToggle');
+    btn.textContent = seqOn ? 'ON' : 'OFF';
+    btn.classList.toggle('active', seqOn);
+    if (seqOn) startSequencer(); else stopSequencer();
+}
+
+function startSequencer() {
+    stopSequencer();
+    const interval = (60 / bpm) * 1000 / 4;  // 16th note in ms
+    seqStep = 0;
+    seqInterval = setInterval(() => {
+        DRUMS.forEach(drum => {
+            if (beatPattern[drum][seqStep]) playDrum(drum);
+        });
+        // Highlight
+        DRUMS.forEach(d => {
+            for (let s = 0; s < 16; s++) {
+                document.getElementById(`step_${d}_${s}`)?.classList.toggle('playing', s === seqStep);
+            }
+        });
+        document.getElementById('seqStep').textContent = seqStep + 1;
+        seqStep = (seqStep + 1) % 16;
+    }, interval);
+}
+
+function stopSequencer() {
+    if (seqInterval) { clearInterval(seqInterval); seqInterval = null; }
+    document.querySelectorAll('.seq-step').forEach(e => e.classList.remove('playing'));
+    document.getElementById('seqStep').textContent = '—';
+}
+
+function playDrum(drum) {
+    if (!audioCtx) return;
+    const gain = audioCtx.createGain();
+    gain.gain.value = parseFloat(drumVolumes[drum]) * masterVolume;
+    gain.connect(audioCtx.destination);
+
+    if (drum === 'kick') {
+        const osc = audioCtx.createOscillator();
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.connect(gain); osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    } else if (drum === 'snare') {
+        const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
+        const d   = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+        const src = audioCtx.createBufferSource(); src.buffer = buf;
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+        src.connect(gain); src.start(); src.stop(audioCtx.currentTime + 0.2);
+    } else if (drum === 'hihat') {
+        const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+        const d   = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+        const src = audioCtx.createBufferSource(); src.buffer = buf;
+        const hipass = audioCtx.createBiquadFilter(); hipass.type = 'highpass'; hipass.frequency.value = 7000;
+        src.connect(hipass); hipass.connect(gain); src.start(); src.stop(audioCtx.currentTime + 0.05);
+    } else if (drum === 'tom') {
+        const osc = audioCtx.createOscillator();
+        osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.connect(gain); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  FX TABS
+// ══════════════════════════════════════════════════════════════
+function switchFxTab(t) {
+    ['mixer','eq','fx','ai'].forEach(tab => {
+        const el = document.getElementById('fx' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        const btn = document.getElementById('fxTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        if (el) el.style.display = tab === t ? '' : 'none';
+        if (btn) btn.classList.toggle('active', tab === t);
+    });
+    if (t === 'ai') populateAITracks();
+}
+
+function populateAITracks() {
+    const select = document.getElementById('aiTrackSelect');
+    if (!select) return;
+    const currentVal = select.value;
+    select.innerHTML = tracks.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    if (currentVal && tracks.some(t => t.id === currentVal)) {
+        select.value = currentVal;
+    }
+}
+
+async function runAIAudio(action) {
+    const trackId = document.getElementById('aiTrackSelect').value;
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) { showToast('Avval track yarating', 'error'); return; }
+    
+    const clips = track.clips || [];
+    const clip = clips[0];
+    if (!clip || !clip.url) { showToast('Ushbu trackda audio klip mavjud emas', 'error'); return; }
+    
+    showToast('🪄 AI ishlov berish boshlandi...', 'success');
+    
+    try {
+        const res = await fetch(`/studio/audio-lab/api/ai/${PROJECT_ID}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ action, track_id: trackId, clip_url: clip.url })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'success') {
+                showToast('✅ AI ishlovi yakunlandi', 'success');
+                clip.url = data.processed_url;
+                clip.name = data.processed_name;
+                
+                // Decode new audio buffer
+                const response = await fetch(data.processed_url);
+                const arrayBuf = await response.arrayBuffer();
+                const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+                trackBuffers[trackId] = audioBuf;
+                clip.durationSec = audioBuf.duration;
+                
+                drawWaveformForTrack(trackId, audioBuf);
+                renderTimeline();
+                markUnsaved();
+            } else {
+                showToast('Xato: ' + data.message, 'error');
+            }
+        } else {
+            showToast('Serverda xatolik yuz berdi', 'error');
+        }
+    } catch(e) {
+        showToast('Aloqada xatolik: ' + e.message, 'error');
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SAVE
+// ══════════════════════════════════════════════════════════════
+async function saveProject() {
+    const data = {
+        title: document.getElementById('projTitleInput').value,
+        project_data: {
+            bpm, masterVolume,
+            tracks: tracks.map(t => ({ ...t, clips: (t.clips || []).map(c => ({ id: c.id, name: c.name, startBeat: c.startBeat, durationSec: c.durationSec, url: c.url || '' })) })),
+            beatPattern,
+            sequencerOn: seqOn,
+        }
+    };
+    try {
+        const res = await fetch(`/studio/audio-lab/save/${PROJECT_ID}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) { markSaved(); showToast('💾 Saqlandi', 'success'); }
+    } catch(e) { showToast('Saqlashda xato', 'error'); }
+}
+
+function markUnsaved() { unsaved = true; document.getElementById('saveDot').classList.add('unsaved'); document.getElementById('saveLabel').textContent = 'Saqlanmagan'; }
+function markSaved()   { unsaved = false; document.getElementById('saveDot').classList.remove('unsaved'); document.getElementById('saveLabel').textContent = 'Saqlangan'; }
+
+// ══════════════════════════════════════════════════════════════
+//  EXPORT AUDIO (OfflineAudioContext -> WAV File)
+// ══════════════════════════════════════════════════════════════
+async function exportAudio() {
+    showToast('🎵 Audio eksport tayyorlanmoqda...', 'success');
+    try {
+        initAudio();
+        
+        // Find maximum duration across all tracks and clips
+        let maxDuration = 10;
+        tracks.forEach(t => {
+            (t.clips || []).forEach(c => {
+                const end = (c.start || 0) + (c.duration || 5);
+                if (end > maxDuration) maxDuration = end;
+            });
+        });
+        
+        const sampleRate = 44100;
+        const totalSamples = Math.ceil(maxDuration * sampleRate);
+        const offlineCtx = new OfflineAudioContext(2, totalSamples, sampleRate);
+        
+        // Mix all track buffers into offline context
+        tracks.forEach(track => {
+            if (track.muted) return;
+            const buf = trackBuffers[track.id];
+            if (buf) {
+                const src = offlineCtx.createBufferSource();
+                src.buffer = buf;
+                const gain = offlineCtx.createGain();
+                gain.gain.value = track.volume !== undefined ? track.volume : 0.8;
+                
+                const panner = offlineCtx.createStereoPanner();
+                panner.pan.value = track.pan !== undefined ? track.pan : 0;
+                
+                src.connect(gain);
+                gain.connect(panner);
+                panner.connect(offlineCtx.destination);
+                src.start(0);
+            }
+        });
+
+        const renderedBuffer = await offlineCtx.startRendering();
+        const wavBlob = audioBufferToWav(renderedBuffer);
+        const url = URL.createObjectURL(wavBlob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `{{ project.title|escapejs }}.wav`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('✅ WAV audio muvaffaqiyatli yuklab olindi!', 'success');
+    } catch(err) {
+        console.error('Export audio error:', err);
+        showToast('Export xatosi: ' + err.message, 'error');
+    }
+}
+
+function audioBufferToWav(buffer) {
+    const numOfChan = buffer.numberOfChannels;
+    const length = buffer.length * numOfChan * 2 + 44;
+    const out = new DataView(new ArrayBuffer(length));
+    let channels = [], sampleRate = buffer.sampleRate, offset = 0, pos = 0;
+
+    function writeString(str) {
+        for (let i = 0; i < str.length; i++) {
+            out.setUint8(pos++, str.charCodeAt(i));
+        }
+    }
+    function setUint16(data) { out.setUint16(pos, data, true); pos += 2; }
+    function setUint32(data) { out.setUint32(pos, data, true); pos += 4; }
+
+    writeString('RIFF');
+    setUint32(length - 8);
+    writeString('WAVE');
+    writeString('fmt ');
+    setUint32(16);
+    setUint16(1); // PCM
+    setUint16(numOfChan);
+    setUint32(sampleRate);
+    setUint32(sampleRate * 2 * numOfChan);
+    setUint16(numOfChan * 2);
+    setUint16(16); // 16-bit
+    writeString('data');
+    setUint32(length - pos - 4);
+
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+        channels.push(buffer.getChannelData(i));
+    }
+
+    while (offset < buffer.length) {
+        for (let i = 0; i < numOfChan; i++) {
+            let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+            sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
+            out.setInt16(pos, sample, true);
+            pos += 2;
+        }
+        offset++;
+    }
+
+    return new Blob([out.buffer], { type: 'audio/wav' });
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveProject(); }
+    if (e.key === 'r' || e.key === 'R') toggleRecord();
+});
+
+// Auto-save every 45s
+setInterval(() => { if (unsaved) saveProject(); }, 45000);
+
+// ══════════════════════════════════════════════════════════════
+//  TIMELINE CLICK TO SEEK
+// ══════════════════════════════════════════════════════════════
+document.getElementById('timelineTracks').addEventListener('click', e => {
+    if (e.target.closest('.clip')) return;
+    const rect = document.getElementById('timelineContent').getBoundingClientRect();
+    const x = e.clientX - rect.left + document.getElementById('timelineTracks').scrollLeft;
+    const beatsPerSec = bpm / 60;
+    currentTime = x / PPQ / beatsPerSec;
+    if (!isPlaying) { updateTimeDisplay(); movePlayhead(currentTime); }
+    else { pause(); play(); }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+renderTracks();
+buildSequencerUI();
+buildEQUI();
+window.addEventListener('resize', drawRuler);
+
+// Restore audio buffers from saved clip URLs on load
+async function restoreClipsFromSavedData() {
+    for (const track of tracks) {
+        for (const clip of (track.clips || [])) {
+            if (clip.url && clip.url.startsWith('/') && !trackBuffers[track.id]) {
+                try {
+                    initAudio();
+                    const res = await fetch(clip.url);
+                    if (!res.ok) continue;
+                    const arrayBuf = await res.arrayBuffer();
+                    const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+                    trackBuffers[track.id] = audioBuf;
+                    drawWaveformForTrack(track.id, audioBuf);
+                } catch(e) {
+                    console.warn('Could not restore clip buffer for', clip.name, e);
+                }
+            }
+        }
+    }
+    // Restore beat pattern from saved data
+    if (projectData.beatPattern) {
+        Object.assign(beatPattern, projectData.beatPattern);
+        buildSequencerUI();
+    }
+    // Restore sequencer state
+    if (projectData.sequencerOn) {
+        seqOn = true;
+        const btn = document.getElementById('seqToggle');
+        if (btn) { btn.textContent = 'ON'; btn.classList.add('active'); }
+    }
+}
+restoreClipsFromSavedData();
+</script>
+{% endblock %}

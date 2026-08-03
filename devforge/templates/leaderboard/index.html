@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.lb-hero {
+    background: linear-gradient(135deg, #000 0%, #0a0e1a 100%);
+    border-bottom: 1px solid var(--accent);
+    padding: 4rem 2rem;
+    text-align: center;
+    font-family: var(--font-mono);
+    box-shadow: 0 0 40px rgba(0,245,255,0.07);
+    margin-bottom: 3rem;
+}
+.lb-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+}
+.lb-hero p { color: var(--text2); font-size: 1rem; }
+
+.tab-bar {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+}
+.tab-btn {
+    padding: 0.65rem 1.4rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+}
+.tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+.tab-btn.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgba(0,245,255,0.25);
+}
+
+.my-rank-bar {
+    background: rgba(99,102,241,0.08);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.my-rank-badge {
+    background: #6366f1;
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.rank-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.85rem;
+    transition: all 0.2s;
+}
+.rank-card:hover {
+    transform: translateX(4px);
+    border-color: var(--border-bright);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.rank-card.rank-1 { background: rgba(0,245,255,0.04); border-color: var(--accent); box-shadow: 0 0 16px rgba(0,245,255,0.12); }
+.rank-card.rank-2 { background: rgba(255,0,255,0.04); border-color: var(--accent2); }
+.rank-card.rank-3 { background: rgba(255,255,0,0.03); border-color: rgba(255,255,0,0.35); }
+
+.medal { font-size: 1.4rem; }
+.rank-num { font-family: var(--font-mono); font-weight: 800; color: var(--text3); font-size: 0.9rem; width: 28px; text-align: center; }
+.user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--surface2); border: 1px solid var(--border); flex-shrink: 0; }
+.rank-name { font-weight: 700; font-size: 0.95rem; color: var(--text); text-decoration: none; }
+.rank-name:hover { color: var(--accent); }
+.rank-role { font-size: 0.68rem; font-family: var(--font-mono); text-transform: uppercase; background: var(--surface2); color: var(--text3); padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); margin-top: 2px; display: inline-block; }
+.rank-score { font-family: var(--font-mono); font-weight: 800; font-size: 1.05rem; color: #a5b4fc; text-align: right; }
+.rank-score-label { font-size: 0.68rem; color: var(--text3); margin-top: 1px; }
+
+.empty-lb { text-align: center; padding: 4rem 2rem; color: var(--text3); font-size: 0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lb-hero">
+    <h1>{{ title }}</h1>
+    <p>{{ subtitle }}</p>
+</div>
+
+<div class="container" style="padding-bottom: 3rem; max-width: 780px;">
+    <!-- Tabs -->
+    <div class="tab-bar">
+        <a href="?tab=xp"     class="tab-btn {% if tab == 'xp' %}active{% endif %}">🏆 Global XP</a>
+        <a href="?tab=weekly" class="tab-btn {% if tab == 'weekly' %}active{% endif %}">📅 Haftalik</a>
+        <a href="?tab=sales"  class="tab-btn {% if tab == 'sales' %}active{% endif %}">💰 Sotuvlar</a>
+        <a href="?tab=posts"  class="tab-btn {% if tab == 'posts' %}active{% endif %}">📝 Faollik</a>
+    </div>
+
+    <!-- My rank -->
+    {% if user.is_authenticated and current_rank %}
+    <div class="my-rank-bar">
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="my-rank-badge">#{{ current_rank }}</div>
+            <div>
+                <div style="font-weight:700; font-size:0.95rem; color:var(--text);">Sizning o'rningiz</div>
+                <div style="font-size:0.8rem; color:#a5b4fc;">Reytingda ko'tarilishda davom eting!</div>
+            </div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-weight:800; color:var(--text); font-family:var(--font-mono);">{{ user.xp }} XP</div>
+            <div style="font-size:0.78rem; color:var(--text3);">Level {{ user.level }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- List -->
+    {% if tab == 'weekly' %}
+        {% for entry in entries %}
+        <div class="rank-card {% if entry.rank == 1 %}rank-1{% elif entry.rank == 2 %}rank-2{% elif entry.rank == 3 %}rank-3{% endif %}">
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <div class="rank-num">
+                    {% if entry.rank == 1 %}<span class="medal">🥇</span>
+                    {% elif entry.rank == 2 %}<span class="medal">🥈</span>
+                    {% elif entry.rank == 3 %}<span class="medal">🥉</span>
+                    {% else %}#{{ entry.rank }}{% endif %}
+                </div>
+                <img src="{% if entry.user.avatar %}{{ entry.user.avatar.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" class="user-avatar" alt="">
+                <div>
+                    <div class="rank-name">{{ entry.user.username }}</div>
+                    <span class="rank-role">{{ entry.user.role }}</span>
+                </div>
+            </div>
+            <div class="rank-score">
+                +{{ entry.xp_gained }} XP
+                <div class="rank-score-label">Bu hafta</div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-lb">Bu hafta uchun hali ma'lumotlar yo'q.</div>
+        {% endfor %}
+    {% else %}
+        {% for u in users %}
+        <div class="rank-card {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% endif %}">
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <div class="rank-num">
+                    {% if forloop.counter == 1 %}<span class="medal">🥇</span>
+                    {% elif forloop.counter == 2 %}<span class="medal">🥈</span>
+                    {% elif forloop.counter == 3 %}<span class="medal">🥉</span>
+                    {% else %}#{{ forloop.counter }}{% endif %}
+                </div>
+                <img src="{% if u.avatar %}{{ u.avatar.url }}{% else %}{% static 'img/default-avatar.png' %}{% endif %}" class="user-avatar" alt="">
+                <div>
+                    <a href="{% url 'profile' u.username %}" class="rank-name">{{ u.username }}</a>
+                    <div>
+                        <span class="rank-role">{{ u.role }}</span>
+                        {% if u.is_verified %}<span style="font-size:0.72rem; color:#60a5fa; margin-left:4px;">✓ Verified</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="rank-score">
+                {% if tab == 'sales' %}
+                    ${{ u.total_sales|default:"0" }}
+                    <div class="rank-score-label">Daromad</div>
+                {% elif tab == 'posts' %}
+                    {{ u.post_count|default:"0" }}
+                    <div class="rank-score-label">Postlar</div>
+                {% else %}
+                    {{ u.xp }} XP
+                    <div class="rank-score-label">Level {{ u.level }}</div>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-lb">Hozircha hech kim yo'q.</div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

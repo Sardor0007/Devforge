@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Imtihon: {{ test.skill_name }} - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #f8fafc; }
+    
+    .exam-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .timer-badge {
+        background: #fee2e2;
+        color: #ef4444;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        display: flex;
+        items-center;
+        gap: 0.5rem;
+        border: 1px solid #fecaca;
+    }
+
+    .timer-urgent {
+        background: #ef4444;
+        color: white;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    .question-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-radius: 1rem;
+        border: 2px solid #f1f5f9;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .option-label:hover {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+    }
+
+    input[type="radio"]:checked + .option-label {
+        background: #f0f7ff;
+        border-color: #3b82f6;
+    }
+
+    .option-circle {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        margin-right: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    input[type="radio"]:checked + .option-label .option-circle {
+        border-color: #3b82f6;
+        background: #3b82f6;
+    }
+
+    .option-circle::after {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: white;
+        border-radius: 50%;
+        display: none;
+    }
+
+    input[type="radio"]:checked + .option-label .option-circle::after {
+        display: block;
+    }
+
+    .progress-bar {
+        height: 4px;
+        background: #e2e8f0;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 100;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: #3b82f6;
+        transition: width 0.3s;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-bar">
+    <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+</div>
+
+<header class="exam-header py-4">
+    <div class="container flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <span class="text-2xl">{{ test.icon }}</span>
+            <div>
+                <h1 class="font-bold text-slate-900">{{ test.skill_name }}</h1>
+                <p class="text-xs text-slate-500">Imtihon jarayoni</p>
+            </div>
+        </div>
+        
+        <div id="timer" class="timer-badge">
+            <span class="timer-icon">⏱️</span>
+            <span id="timeLeft">00:00</span>
+        </div>
+    </div>
+</header>
+
+<div class="container py-12 max-w-3xl">
+    <form id="examForm" method="POST" action="{% url 'assessment_submit' test.pk %}">
+        {% csrf_token %}
+        
+        {% for q in questions %}
+        <div class="question-card" data-question-index="{{ forloop.counter0 }}">
+            <div class="flex items-start gap-4 mb-6">
+                <span class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center text-sm font-bold text-slate-500">{{ forloop.counter }}</span>
+                <h2 class="text-xl font-bold text-slate-900 leading-tight pt-1">{{ q.text }}</h2>
+            </div>
+
+            <div class="space-y-3">
+                {% for key, val in q|get_options_dict %}
+                <div>
+                    <input type="radio" name="q_{{ q.pk }}" id="q_{{ q.pk }}_{{ key }}" value="{{ key }}" class="hidden question-input" required>
+                    <label for="q_{{ q.pk }}_{{ key }}" class="option-label">
+                        <div class="option-circle"></div>
+                        <span class="text-slate-700 font-medium">{{ val }}</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="flex justify-between items-center mt-12 bg-white p-6 rounded-2xl border border-slate-200">
+            <div class="text-slate-500 text-sm">
+                Barcha savollarga javob berganingizga ishonch hosil qiling.
+            </div>
+            <button type="submit" class="px-12 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-xl shadow-indigo-100">
+                Imtihonni yakunlash
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Timer Logic
+    let timeLeft = {{ time_limit_seconds }};
+    const timeLeftDisplay = document.getElementById('timeLeft');
+    const timerBadge = document.getElementById('timer');
+    const examForm = document.getElementById('examForm');
+
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timeLeftDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 60) {
+            timerBadge.classList.add('timer-urgent');
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("Vaqt tugadi! Imtihon avtomatik ravishda yakunlanadi.");
+            examForm.submit();
+        }
+        timeLeft--;
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Progress Logic
+    const inputs = document.querySelectorAll('.question-input');
+    const progressFill = document.getElementById('progressFill');
+    const totalQuestions = {{ questions.count }};
+
+    function updateProgress() {
+        const answered = document.querySelectorAll('.question-input:checked').length;
+        const percent = (answered / totalQuestions) * 100;
+        progressFill.style.width = `${percent}%`;
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('change', updateProgress);
+    });
+
+    // Prevent accidental navigation
+    window.onbeforeunload = function() {
+        return "Hali imtihonni yakunlamadingiz. Sahifadan chiqib ketsangiz natijangiz saqlanmasligi mumkin.";
+    };
+
+    examForm.onsubmit = function() {
+        window.onbeforeunload = null;
+    };
+</script>
+{% endblock %}

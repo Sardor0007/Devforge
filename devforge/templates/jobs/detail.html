@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block title %}{{ job.title }}{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem; max-width:1100px; margin:0 auto;">
+  <a href="{% url 'job_list' %}" style="color:var(--text2); text-decoration:none; font-size:.875rem;">← Ish o'rinlariga qaytish</a>
+  
+  <div class="grid-sidebar" style="margin-top:1rem;">
+    <!-- LEFT: Job Details & Deliveries -->
+    <div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-body">
+          <div style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.85rem;">
+            <span class="badge {% if job.status == 'open' %}badge-blue{% elif job.status == 'funded' %}badge-green{% else %}badge-purple{% endif %}">
+              {{ job.get_status_display }}
+            </span>
+            <span class="badge badge-gray">{{ job.get_visibility_display }}</span>
+            {% if job.deadline %}<span class="badge badge-orange">📅 {{ job.deadline }} gacha</span>{% endif %}
+          </div>
+          <h1 style="font-size:1.6rem; font-weight:800; margin-bottom:.5rem;">{{ job.title }}</h1>
+          <div style="font-size:1.8rem; font-weight:800; color:var(--green); margin-bottom:1.5rem;">
+            💰 ${{ job.budget }}
+          </div>
+          
+          <h3 style="font-size:.95rem; font-weight:700; margin-bottom:.75rem;">📋 Ish tavsifi</h3>
+          <p style="color:var(--text2); line-height:1.8; white-space:pre-wrap;">{{ job.description }}</p>
+        </div>
+      </div>
+
+      <!-- DELIVERIES SECTION (IF ANY) -->
+      {% if deliveries %}
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header">📦 Topshirilgan ishlar (Deliveries)</div>
+        <div class="card-body">
+          {% for d in deliveries %}
+          <div style="border:1px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:1rem; background:var(--surface2);">
+            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+              <div>
+                <div style="font-weight:700;">{{ d.worker.username }} topshirdi</div>
+                <div style="font-size:.75rem; color:var(--text3);">{{ d.created_at|date:"d M, H:i" }}</div>
+              </div>
+              <span class="badge {% if d.status == 'approved' %}badge-green{% else %}badge-blue{% endif %}">{{ d.get_status_display }}</span>
+            </div>
+            
+            <p style="font-size:.9rem; color:var(--text2); margin-bottom:1rem;">{{ d.message }}</p>
+
+            <!-- PREVIEW LOGIC -->
+            {% if d.preview_image %}
+            <div style="margin-bottom:1rem; border-radius:8px; overflow:hidden; border:1px solid var(--border);">
+              <img src="{{ d.preview_image.url }}" style="width:100%; max-height:400px; object-fit:contain; background:#000;" alt="Preview">
+            </div>
+            {% endif %}
+
+            {% if d.demo_link %}
+            <a href="{{ d.demo_link }}" target="_blank" class="btn btn-ghost btn-sm" style="margin-bottom:1rem;">🔗 Demo havola →</a>
+            {% endif %}
+
+            <!-- DOWNLOAD LOGIC -->
+            <div style="border-top:1px solid var(--border); padding-top:1rem; display:flex; gap:1rem; align-items:center;">
+              {% if d.is_downloadable %}
+                <a href="{{ d.file.url }}" class="btn btn-primary btn-sm">⬇️ Faylni yuklab olish</a>
+              {% else %}
+                <div style="display:flex; align-items:center; gap:.5rem; color:var(--text3); font-size:.8rem;">
+                  🔒 Fayl qulflangan. Tasdiqlangandan keyin ochiladi.
+                </div>
+              {% endif %}
+              
+              {% if request.user == job.client and job.status == 'submitted' %}
+              <form method="post" action="{% url 'delivery_approve' pk=job.pk %}" style="margin-left:auto;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-green btn-sm" onclick="return confirm('Ishni tasdiqlaysizmi? Pul ishchiga o\'tkaziladi.')">✅ Tasdiqlash va Pulni chiqarish</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- PROPOSALS (CLIENT VIEW) -->
+      {% if proposals %}
+      <div class="card">
+        <div class="card-header">📝 Kelib tushgan arizalar ({{ proposals.count }})</div>
+        <div class="card-body">
+          {% for p in proposals %}
+          <div style="border:1px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:1rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.75rem;">
+              <div style="display:flex; align-items:center; gap:.75rem;">
+                <div class="avatar-sm">{{ p.worker.username|first|upper }}</div>
+                <div>
+                  <div style="font-weight:700;">{{ p.worker.username }}</div>
+                  <div style="font-size:.75rem; color:var(--text3);">{{ p.delivery_days }} kun ichida yetkazadi</div>
+                </div>
+              </div>
+              <div style="font-size:1.1rem; font-weight:800; color:var(--accent);">${{ p.price }}</div>
+            </div>
+            <p style="font-size:.875rem; color:var(--text2); line-height:1.6; margin-bottom:1rem;">{{ p.message }}</p>
+            
+            {% if job.status == 'open' and not job.selected_worker %}
+            <form method="post" action="{% url 'proposal_accept' prop_pk=p.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary btn-sm w-full" style="justify-content:center;">Developerni tanlash</button>
+            </form>
+            {% elif job.selected_worker == p.worker %}
+              <div class="badge badge-green w-full" style="justify-content:center; padding:.5rem;">Tanlangan ijrochi</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT SIDEBAR: Action Card & Info -->
+    <div>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-body">
+          {% if not user.is_authenticated %}
+            <div style="text-align:center; padding:1rem;">
+              <p style="margin-bottom:1rem; color:var(--text2);">Ariza berish uchun kiring</p>
+              <a href="{% url 'login' %}" class="btn btn-primary w-full" style="justify-content:center;">Kirish</a>
+            </div>
+          {% elif user == job.client %}
+            <!-- CLIENT ACTIONS -->
+            <div style="text-align:center;">
+              <h4 style="margin-bottom:.5rem;">Sizning e'loningiz</h4>
+              {% if job.status == 'open' and job.selected_worker %}
+                <div style="background:var(--surface2); padding:1rem; border-radius:10px; margin-top:1rem;">
+                  <p style="font-size:.8rem; margin-bottom:.5rem;">Ijrochi: <b>{{ job.selected_worker.username }}</b></p>
+                  {% if escrow %}
+                  <div style="font-size:.8rem; color:var(--text2); margin-bottom:.75rem;">
+                    Ish: <b style="color:var(--green);">${{ escrow.amount }}</b> + 6%: ${{ escrow.platform_fee }}
+                  </div>
+                  {% endif %}
+                  <a href="{% url 'escrow_fund' pk=job.pk %}" class="btn btn-primary w-full" style="justify-content:center;background:var(--green);border-color:var(--green);">💰 To'lovni amalga oshirish</a>
+                </div>
+              {% elif job.status == 'funded' %}
+                <div class="badge badge-green w-full" style="margin-top:1rem; padding:.6rem;">💰 Pul Escrowda (Xavfsiz)</div>
+                <p style="font-size:.75rem; color:var(--text3); margin-top:.5rem;">Ishchi ishni topshirishini kuting.</p>
+              {% elif job.status == 'submitted' %}
+                <div class="badge badge-blue w-full" style="margin-top:1rem; padding:.6rem;">📩 Ish topshirildi — Ko'rib chiqing</div>
+                <p style="font-size:.75rem; color:var(--text3); margin-top:.5rem;">Chap tomondan natijani ko'ring va tasdiqlang.</p>
+              {% elif job.status == 'approved' %}
+                <div class="badge badge-green w-full" style="margin-top:1rem; padding:.6rem;">✅ Ish yakunlandi</div>
+              {% endif %}
+
+              {% if job.status in 'funded,submitted,in_progress' %}
+                <a href="{% url 'dispute_open' pk=job.pk %}" class="btn btn-ghost w-full" style="margin-top:1rem; color:var(--red); font-size:0.75rem;">⚖️ Nizo ochish (Dispute)</a>
+              {% endif %}
+            </div>
+          {% else %}
+            <!-- WORKER ACTIONS -->
+            {% if job.selected_worker == user %}
+              <div style="text-align:center;">
+                <div class="badge badge-green w-full" style="padding:.6rem; margin-bottom:1rem;">✅ Siz tanlandingiz!</div>
+                {% if job.status == 'funded' %}
+                  <p style="font-size:.85rem; margin-bottom:1rem;">Mijoz pulni escrow'ga qo'ydi. Ishni boshlang!</p>
+                  <a href="{% url 'delivery_submit' pk=job.pk %}" class="btn btn-primary w-full" style="justify-content:center;">🚀 Ishni topshirish</a>
+                {% elif job.status == 'open' %}
+                  <p style="font-size:.85rem; color:var(--text3);">Mijoz to'lov qilishini kuting.</p>
+                {% elif job.status == 'submitted' %}
+                  <p style="font-size:.85rem; color:var(--text3);">Ish yuborildi. Mijoz tasdiqlashini kuting.</p>
+                {% endif %}
+
+                {% if job.status in 'funded,submitted,in_progress' %}
+                  <a href="{% url 'dispute_open' pk=job.pk %}" class="btn btn-ghost w-full" style="margin-top:1rem; color:var(--red); font-size:0.75rem;">⚖️ Nizo ochish (Dispute)</a>
+                {% endif %}
+              </div>
+            {% elif my_proposal %}
+              <div style="text-align:center; padding:1rem;">
+                <div style="font-size:2rem; margin-bottom:.5rem;">📩</div>
+                <p style="font-weight:700;">Arizangiz yuborilgan</p>
+                <p style="font-size:.8rem; color:var(--text3);">Mijoz ko'rib chiqishini kuting.</p>
+              </div>
+            {% elif job.status == 'open' %}
+              <a href="{% url 'proposal_create' pk=job.pk %}" class="btn btn-primary w-full" style="justify-content:center; font-weight:700;">Ariza topshirish (Proposal)</a>
+            {% else %}
+              <div style="text-align:center; color:var(--text3);">Bu ish uchun ijrochi tanlangan.</div>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- CLIENT INFO -->
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header">👤 Buyurtmachi</div>
+        <div class="card-body">
+          <div style="display:flex; align-items:center; gap:.75rem;">
+            <div class="avatar-sm">{{ job.client.username|first|upper }}</div>
+            <div>
+              <a href="{% url 'profile' username=job.client.username %}" style="font-weight:700; color:var(--text); text-decoration:none;">{{ job.client.username }}</a>
+              <div style="font-size:.75rem; color:var(--text3);">{{ job.client.get_role_display }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {% if job.project %}
+      <div class="card">
+        <div class="card-header">🚀 Loyiha</div>
+        <div class="card-body">
+          <a href="{% url 'project_detail' pk=job.project.pk %}" style="font-weight:700; color:var(--text); text-decoration:none;">{{ job.project.title }}</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

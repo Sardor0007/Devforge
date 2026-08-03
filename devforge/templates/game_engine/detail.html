@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.title }} — Game Engine{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-hero {
+    position: relative; border-radius: var(--radius-lg); overflow: hidden;
+    height: 340px; margin-bottom: 2rem;
+    background: linear-gradient(135deg, #0d1117, #1a1a2e);
+    display: flex; align-items: flex-end;
+}
+.detail-hero-bg {
+    position: absolute; inset: 0; object-fit: cover; width: 100%; height: 100%;
+    opacity: 0.5;
+}
+.detail-hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(5,7,10,0.95) 0%, transparent 60%);
+}
+.detail-hero-content {
+    position: relative; z-index: 1; padding: 2rem; width: 100%;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.detail-title { font-family: var(--font-display); font-size: 2.2rem; font-weight: 900; margin-bottom: 0.4rem; }
+.detail-meta  { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+.detail-badge {
+    padding: 4px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 600;
+    background: rgba(0,245,255,0.15); color: var(--accent); border: 1px solid rgba(0,245,255,0.25);
+}
+
+.play-big-btn {
+    padding: 0.85rem 2rem; font-size: 1.05rem; font-weight: 700;
+    background: var(--accent-gradient); color: #000; border: none; border-radius: var(--radius-md);
+    cursor: pointer; font-family: var(--font-display); display: flex; align-items: center; gap: 8px;
+    text-decoration: none; transition: var(--transition); box-shadow: 0 4px 20px rgba(0,245,255,0.3);
+    white-space: nowrap;
+}
+.play-big-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,245,255,0.4); }
+
+/* Main layout */
+.detail-layout { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; align-items: start; }
+
+/* Stats row */
+.detail-stats { display: flex; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.d-stat { text-align: center; }
+.d-stat-val { font-family: var(--font-display); font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+.d-stat-lbl { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Screenshot preview (mini canvas) */
+.game-preview {
+    border-radius: var(--radius-md); overflow: hidden;
+    border: 1px solid rgba(0,245,255,0.15);
+    background: #08090d; margin-bottom: 1.5rem;
+    aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; group: true;
+}
+.game-preview-icon { font-size: 4rem; }
+.preview-play-hint {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: var(--transition);
+}
+.game-preview:hover .preview-play-hint { opacity: 1; }
+
+/* Sidebar */
+.detail-sidebar-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem;
+}
+.dsc-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 6px; }
+
+.like-btn {
+    width: 100%; padding: 0.65rem 1rem; border-radius: var(--radius-md);
+    font-size: 0.9rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+    background: var(--surface-hover); color: var(--text-secondary);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: var(--transition); margin-bottom: 0.5rem;
+}
+.like-btn:hover { border-color: #ef4444; color: #fca5a5; background: rgba(239,68,68,0.1); }
+.like-btn.liked { background: rgba(239,68,68,0.15); color: #fca5a5; border-color: rgba(239,68,68,0.4); }
+
+/* Related games */
+.related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.related-card {
+    border-radius: var(--radius-md); overflow: hidden; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface);
+    transition: var(--transition); text-decoration: none;
+}
+.related-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.related-thumb {
+    height: 70px; background: #111318; display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; overflow: hidden;
+}
+.related-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.related-body { padding: 0.5rem; }
+.related-title { font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.related-meta  { font-size: 0.68rem; color: var(--text-muted); }
+
+/* Comments */
+.comment-item { display: flex; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.comment-item:last-child { border-bottom: none; }
+.comment-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: var(--accent-gradient); display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #000; overflow: hidden;
+}
+.comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.comment-author { font-size: 0.82rem; font-weight: 600; }
+.comment-body   { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin-top: 2px; }
+.comment-time   { font-size: 0.68rem; color: var(--text-muted); }
+
+@media (max-width: 900px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .detail-title { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="detail-hero">
+    {% if project.thumbnail %}
+    <img class="detail-hero-bg" src="{{ project.thumbnail.url }}" alt="{{ project.title }}">
+    {% endif %}
+    <div class="detail-hero-overlay"></div>
+    <div class="detail-hero-content">
+        <div>
+            <div class="detail-title">{{ project.title }}</div>
+            <div class="detail-meta">
+                <span class="detail-badge">🎮 {{ project.get_genre_display }}</span>
+                <span style="color:var(--text-muted);font-size:0.82rem;">👤 {{ project.owner.username }}</span>
+                <span style="color:var(--text-muted);font-size:0.82rem;">🕐 {{ project.updated_at|date:"d M Y" }}</span>
+            </div>
+        </div>
+        <a href="{% url 'game_engine:play' project.pk %}" class="play-big-btn">▶ O'yinni Ishga Tushirish</a>
+    </div>
+</div>
+
+<div class="detail-layout">
+    <!-- Main Content -->
+    <div>
+        <!-- Stats -->
+        <div class="detail-stats">
+            <div class="d-stat">
+                <div class="d-stat-val">{{ project.play_count }}</div>
+                <div class="d-stat-lbl">▶ O'yinlar</div>
+            </div>
+            <div class="d-stat">
+                <div class="d-stat-val" id="likeCountMain">{{ project.like_count }}</div>
+                <div class="d-stat-lbl">❤️ Layklar</div>
+            </div>
+            <div class="d-stat">
+                <div class="d-stat-val">{{ project.comments.count }}</div>
+                <div class="d-stat-lbl">💬 Izohlar</div>
+            </div>
+        </div>
+
+        <!-- Preview click-to-play -->
+        <a href="{% url 'game_engine:play' project.pk %}" class="game-preview" style="display:block;text-decoration:none;">
+            {% if project.thumbnail %}
+            <img src="{{ project.thumbnail.url }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+            <div class="game-preview-icon">🎮</div>
+            {% endif %}
+            <div class="preview-play-hint">
+                <div style="background:rgba(0,245,255,0.9);color:#000;padding:0.75rem 2rem;border-radius:99px;font-weight:700;font-size:1.1rem;">▶ O'ynash</div>
+            </div>
+        </a>
+
+        <!-- Description -->
+        {% if project.description %}
+        <div class="card card-static" style="margin-bottom:1.5rem;">
+            <div class="card-header">📋 Tavsif</div>
+            <p style="font-size:0.9rem;color:var(--text-secondary);line-height:1.8;">{{ project.description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Comments Section -->
+        <div class="card card-static">
+            <div class="card-header">💬 Izohlar ({{ project.comments.count }})</div>
+
+            {% if user.is_authenticated %}
+            <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;align-items:flex-start;">
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-gradient);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:#000;overflow:hidden;">
+                    {% if user.avatar %}<img src="{{ user.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ user.username|first|upper }}{% endif %}
+                </div>
+                <div style="flex:1;">
+                    <textarea id="commentInput" rows="2" placeholder="Izoh yozing..." style="width:100%;background:var(--surface-hover);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.6rem 0.85rem;color:var(--text-primary);font-size:0.88rem;font-family:var(--font-main);outline:none;resize:none;"></textarea>
+                    <button onclick="submitComment()" class="btn btn-primary btn-sm" style="margin-top:0.5rem;">Yuborish</button>
+                </div>
+            </div>
+            {% endif %}
+
+            <div id="commentsList">
+                {% for comment in comments %}
+                <div class="comment-item">
+                    <div class="comment-avatar">
+                        {% if comment.author.avatar %}<img src="{{ comment.author.avatar.url }}">{% else %}{{ comment.author.username|first|upper }}{% endif %}
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <span class="comment-author">{{ comment.author.username }}</span>
+                            <span class="comment-time">{{ comment.created_at|timesince }} avval</span>
+                        </div>
+                        <div class="comment-body">{{ comment.body }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align:center;color:var(--text-muted);padding:2rem;font-size:0.85rem;">
+                    Hali izoh yo'q. Birinchi bo'ling!
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+        <!-- Action buttons -->
+        <div class="detail-sidebar-card">
+            <a href="{% url 'game_engine:play' project.pk %}" class="play-big-btn" style="width:100%;justify-content:center;margin-bottom:0.75rem;">▶ O'ynash</a>
+            <button class="like-btn {% if liked %}liked{% endif %}" id="likeBtn" onclick="toggleLike()">
+                {% if liked %}❤️ Yoqdi{% else %}🤍 Yoqish{% endif %} &nbsp;·&nbsp; <span id="likeCount">{{ project.like_count }}</span>
+            </button>
+            {% if user == project.owner %}
+            <a href="{% url 'game_engine:editor' project.pk %}" class="like-btn" style="text-decoration:none;">✏️ Tahrirlash</a>
+            {% endif %}
+        </div>
+
+        <!-- Creator -->
+        <div class="detail-sidebar-card">
+            <div class="dsc-title">👤 Yaratuvchi</div>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <div style="width:48px;height:48px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#000;overflow:hidden;flex-shrink:0;">
+                    {% if project.owner.avatar %}<img src="{{ project.owner.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ project.owner.username|first|upper }}{% endif %}
+                </div>
+                <div>
+                    <div style="font-weight:700;">{{ project.owner.username }}</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted);">{{ project.owner.get_role_display }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Info -->
+        <div class="detail-sidebar-card">
+            <div class="dsc-title">ℹ️ Ma'lumot</div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--text-muted);">Janr</span>
+                    <span>{{ project.get_genre_display }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--text-muted);">Engine</span>
+                    <span>DevForge v{{ project.engine_version }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--text-muted);">Yaratilgan</span>
+                    <span>{{ project.created_at|date:"d M Y" }}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.82rem;">
+                    <span style="color:var(--text-muted);">Yangilangan</span>
+                    <span>{{ project.updated_at|date:"d M Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Games -->
+        {% if related %}
+        <div class="detail-sidebar-card">
+            <div class="dsc-title">🎮 O'xshash O'yinlar</div>
+            <div class="related-grid">
+                {% for g in related %}
+                <a href="{% url 'game_engine:detail' g.pk %}" class="related-card">
+                    <div class="related-thumb">
+                        {% if g.thumbnail %}<img src="{{ g.thumbnail.url }}">{% else %}🎮{% endif %}
+                    </div>
+                    <div class="related-body">
+                        <div class="related-title">{{ g.title }}</div>
+                        <div class="related-meta">▶ {{ g.play_count }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PROJECT_ID = {{ project.pk }};
+const API_BASE   = '/game-engine/api';
+let   isLiked    = {% if liked %}true{% else %}false{% endif %};
+
+async function toggleLike() {
+    const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/like/`, {
+        method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    const data = await res.json();
+    isLiked    = data.liked;
+    document.getElementById('likeCount').textContent = data.like_count;
+    document.getElementById('likeCountMain').textContent = data.like_count;
+    const btn = document.getElementById('likeBtn');
+    btn.className = 'like-btn' + (isLiked ? ' liked' : '');
+    btn.innerHTML = `${isLiked ? '❤️ Yoqdi' : '🤍 Yoqish'} &nbsp;·&nbsp; <span id="likeCount">${data.like_count}</span>`;
+}
+
+async function submitComment() {
+    const inp  = document.getElementById('commentInput');
+    const body = inp.value.trim();
+    if (!body) return;
+    const res  = await fetch(`${API_BASE}/projects/${PROJECT_ID}/comment/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ body })
+    });
+    const data = await res.json();
+    if (data.id) {
+        inp.value = '';
+        const list = document.getElementById('commentsList');
+        const item = document.createElement('div');
+        item.className = 'comment-item';
+        item.innerHTML = `
+            <div class="comment-avatar">${data.author_username[0].toUpperCase()}</div>
+            <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <span class="comment-author">${data.author_username}</span>
+                    <span class="comment-time">hozirgina</span>
+                </div>
+                <div class="comment-body">${data.body}</div>
+            </div>`;
+        list.insertBefore(item, list.firstChild);
+        showToast('💬 Izoh qo\'shildi', 'success');
+    }
+}
+</script>
+{% endblock %}

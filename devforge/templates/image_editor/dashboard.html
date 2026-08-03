@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block title %}Image Editor — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.ie-hero {
+    background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(236,72,153,0.08) 100%);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem; margin-bottom: 2.5rem; position: relative; overflow: hidden; text-align: center;
+}
+.ie-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 50%, rgba(236,72,153,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+.ie-hero-title { font-family: var(--font-display); font-size: 2.8rem; font-weight: 900;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; }
+.ie-hero-sub { color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem; }
+
+.ie-stats { display: flex; gap: 1rem; margin-bottom: 2.5rem; }
+.ie-stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 1.25rem; text-align: center; }
+.ie-stat-val { font-family: var(--font-display); font-size: 2rem; font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.ie-stat-lbl { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+
+.ie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; }
+.ie-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; transition: var(--transition); cursor: pointer; }
+.ie-card:hover { transform: translateY(-5px); border-color: #8b5cf6; box-shadow: 0 16px 40px rgba(139,92,246,0.15); }
+.ie-card-thumb { height: 160px; background: #0d0e13; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; }
+.ie-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ie-card-thumb-icon { font-size: 3rem; opacity: 0.3; }
+.ie-card-thumb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; opacity: 0; transition: var(--transition); }
+.ie-card:hover .ie-card-thumb-overlay { opacity: 1; }
+.ie-card-body { padding: 1rem; }
+.ie-card-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ie-card-meta { font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 0.75rem; }
+.ie-card-actions { display: flex; gap: 0.5rem; padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+.ie-card-btn { flex: 1; padding: 0.4rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 500;
+    border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-secondary);
+    cursor: pointer; transition: var(--transition); text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.ie-card-btn:hover { background: #8b5cf6; color: #fff; border-color: #8b5cf6; }
+.ie-card-btn.danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+.ie-empty { text-align: center; padding: 4rem 2rem; border: 2px dashed var(--border); border-radius: var(--radius-lg); }
+.ie-empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+
+/* Modal */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.modal-backdrop.show { display: flex; }
+.modal-box { background: #0d1117; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2rem; width: 100%; max-width: 480px; position: relative; }
+.modal-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; font-size: 0.83rem; font-weight: 500; margin-bottom: 0.4rem; color: var(--text-secondary); }
+.form-input, .form-select { width: 100%; padding: 0.65rem 1rem; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary);
+    font-size: 0.9rem; outline: none; transition: var(--transition); font-family: var(--font-main); }
+.form-input:focus, .form-select:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.1); }
+.form-select option { background: #0d1117; }
+
+/* Preset buttons */
+.preset-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem; }
+.preset-btn { padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface-hover); color: var(--text-secondary); cursor: pointer;
+    font-size: 0.75rem; text-align: center; transition: var(--transition); }
+.preset-btn:hover, .preset-btn.active { border-color: #8b5cf6; color: #8b5cf6; background: rgba(139,92,246,0.1); }
+.size-row { display: flex; gap: 0.5rem; align-items: center; }
+.size-sep { color: var(--text-muted); font-size: 0.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ie-hero">
+    <div class="ie-hero-title">🖼️ Image Editor</div>
+    <p class="ie-hero-sub">Professional raster image editor — brauzerda, hech qanday o'rnatishsiz</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newProjectModal').classList.add('show')" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;">
+        + Yangi Loyiha
+    </button>
+</div>
+
+{% if projects %}
+<div class="ie-stats">
+    <div class="ie-stat">
+        <div class="ie-stat-val">{{ projects.count }}</div>
+        <div class="ie-stat-lbl">Jami Loyihalar</div>
+    </div>
+    <div class="ie-stat">
+        <div class="ie-stat-val" style="background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+            {% for p in projects %}{% if forloop.last %}{{ p.width }}{% endif %}{% endfor %}
+        </div>
+        <div class="ie-stat-lbl">So'nggi kenglik (px)</div>
+    </div>
+    <div class="ie-stat">
+        <div class="ie-stat-val" style="background:linear-gradient(135deg,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">PNG</div>
+        <div class="ie-stat-lbl">Export formati</div>
+    </div>
+</div>
+
+<div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
+    <h2 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;">🗂️ Mening Loyihalarim</h2>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('newProjectModal').classList.add('show')" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;">+ Yangi</button>
+</div>
+
+<div class="ie-grid">
+    {% for project in projects %}
+    <div class="ie-card">
+        <div class="ie-card-thumb">
+            {% if project.canvas_data and project.canvas_data|length > 10 %}
+                <img src="{{ project.canvas_data }}" alt="{{ project.title }}">
+            {% else %}
+                <div class="ie-card-thumb-icon">🖼️</div>
+            {% endif %}
+            <div class="ie-card-thumb-overlay">
+                <a href="{% url 'image_editor:editor' project.id %}" style="background:rgba(139,92,246,0.9);color:#fff;padding:0.5rem 1.25rem;border-radius:99px;font-weight:700;font-size:0.85rem;text-decoration:none;">✏️ Tahrirlash</a>
+            </div>
+        </div>
+        <div class="ie-card-body">
+            <div class="ie-card-title">{{ project.title }}</div>
+            <div class="ie-card-meta">
+                <span>📐 {{ project.width }}×{{ project.height }}</span>
+                <span>🕐 {{ project.updated_at|timesince }} avval</span>
+            </div>
+        </div>
+        <div class="ie-card-actions">
+            <a href="{% url 'image_editor:editor' project.id %}" class="ie-card-btn">✏️ Edit</a>
+            <a href="{% url 'image_editor:delete' project.id %}" class="ie-card-btn danger" onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">🗑️ Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="ie-empty">
+    <div class="ie-empty-icon">🖼️</div>
+    <p style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;">Hali loyihalar yo'q</p>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Birinchi rasmingizni tahrirlang yoki noldan yarating</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newProjectModal').classList.add('show')" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); border: none;">
+        🖼️ Birinchi Loyihani Yaratish
+    </button>
+</div>
+{% endif %}
+
+<!-- New Project Modal -->
+<div class="modal-backdrop" id="newProjectModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('newProjectModal').classList.remove('show')"
+            style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+        <div class="modal-title">🖼️ Yangi Loyiha</div>
+        <div class="form-group">
+            <label class="form-label">Loyiha nomi</label>
+            <input type="text" id="newTitle" class="form-input" placeholder="Misol: My Artwork" autofocus>
+        </div>
+        <div class="form-group">
+            <label class="form-label">O'lcham</label>
+            <div class="preset-grid">
+                <button class="preset-btn active" onclick="setPreset(800,600,this)">800×600<br><small>Standard</small></button>
+                <button class="preset-btn" onclick="setPreset(1280,720,this)">1280×720<br><small>HD</small></button>
+                <button class="preset-btn" onclick="setPreset(1920,1080,this)">1920×1080<br><small>Full HD</small></button>
+                <button class="preset-btn" onclick="setPreset(1080,1080,this)">1080×1080<br><small>Square</small></button>
+                <button class="preset-btn" onclick="setPreset(1080,1920,this)">1080×1920<br><small>Portrait</small></button>
+                <button class="preset-btn" onclick="setPreset(2560,1440,this)">2560×1440<br><small>2K</small></button>
+            </div>
+            <div class="size-row">
+                <input type="number" id="newWidth" class="form-input" value="800" min="100" max="8000" style="flex:1;">
+                <span class="size-sep">×</span>
+                <input type="number" id="newHeight" class="form-input" value="600" min="100" max="8000" style="flex:1;">
+                <span class="size-sep" style="font-size:0.75rem;color:var(--text-muted);">px</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Fon rangi</label>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <button class="preset-btn active" onclick="setBg('#ffffff',this)" style="flex:0 0 auto;padding:0.4rem 0.75rem;">⬜ Oq</button>
+                <button class="preset-btn" onclick="setBg('#000000',this)" style="flex:0 0 auto;padding:0.4rem 0.75rem;">⬛ Qora</button>
+                <button class="preset-btn" onclick="setBg('transparent',this)" style="flex:0 0 auto;padding:0.4rem 0.75rem;">🔲 Shaffof</button>
+                <input type="color" id="bgColor" value="#ffffff" style="width:36px;height:32px;border:1px solid var(--border);border-radius:6px;cursor:pointer;padding:2px;">
+            </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('newProjectModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary" id="createBtn" onclick="createProject()" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);border:none;">✨ Yaratish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let bgColor = '#ffffff';
+function setPreset(w, h, btn) {
+    document.getElementById('newWidth').value = w;
+    document.getElementById('newHeight').value = h;
+    document.querySelectorAll('.preset-grid .preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+function setBg(c, btn) {
+    bgColor = c;
+    document.querySelectorAll('[onclick^="setBg"]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+async function createProject() {
+    const title = document.getElementById('newTitle').value.trim() || 'Untitled Project';
+    const width = parseInt(document.getElementById('newWidth').value) || 800;
+    const height = parseInt(document.getElementById('newHeight').value) || 600;
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true; btn.textContent = 'Yaratilmoqda...';
+    try {
+        const res = await fetch('/studio/image-editor/api/create/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ title, width, height, bg_color: bgColor })
+        });
+        const data = await res.json();
+        if (data.project_id) {
+            window.location.href = `/studio/image-editor/editor/${data.project_id}/`;
+        } else {
+            showToast('Xato: ' + (data.error || 'Noma\'lum'), 'error');
+            btn.disabled = false; btn.textContent = '✨ Yaratish';
+        }
+    } catch(e) {
+        showToast('Server bilan bog\'lanib bo\'lmadi', 'error');
+        btn.disabled = false; btn.textContent = '✨ Yaratish';
+    }
+}
+document.getElementById('newProjectModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+document.getElementById('newTitle').addEventListener('keydown', e => { if(e.key==='Enter') createProject(); });
+</script>
+{% endblock %}

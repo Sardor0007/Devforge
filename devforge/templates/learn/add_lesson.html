@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Add Lessons to {{ course.title }} — DevForge{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 600px;">
+    <div class="card p-4">
+        <h2 class="fw-bold mb-1">📽 Add Lesson</h2>
+        <p class="text-muted mb-4">Course: {{ course.title }}</p>
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" name="add_another" class="btn btn-secondary flex-grow-1">Save & Add Another</button>
+                <button type="submit" class="btn btn-primary flex-grow-1">Finish Course</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block title %}Video Lab — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.vl-hero {
+    background: linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(251,146,60,0.08) 100%);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem; margin-bottom: 2.5rem; text-align: center; position: relative; overflow: hidden;
+}
+.vl-hero::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(239,68,68,0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 40%, rgba(251,146,60,0.1) 0%, transparent 60%);
+    pointer-events:none;
+}
+.vl-hero-title { font-family:var(--font-display); font-size:2.6rem; font-weight:900;
+    background:linear-gradient(135deg,#ef4444,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:.4rem; }
+.vl-hero-sub { color:var(--text-secondary); margin-bottom:1.5rem; }
+
+.vl-stats { display:flex; gap:1rem; margin-bottom:2.5rem; }
+.vl-stat { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; text-align:center; }
+.vl-stat-val { font-family:var(--font-display); font-size:2rem; font-weight:800;
+    background:linear-gradient(135deg,#ef4444,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.vl-stat-lbl { color:var(--text-muted); font-size:.78rem; }
+
+.vl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem; }
+.vl-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; transition:var(--transition); }
+.vl-card:hover { transform:translateY(-4px); border-color:#ef4444; box-shadow:0 12px 36px rgba(239,68,68,.12); }
+.vl-card-thumb { height:150px; background:#0a0b0f; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.vl-card-thumb-icon { font-size:3.5rem; opacity:.3; }
+.vl-card-thumb-overlay { position:absolute; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; opacity:0; transition:var(--transition); }
+.vl-card:hover .vl-card-thumb-overlay { opacity:1; }
+.vl-card-body { padding:1rem; }
+.vl-card-title { font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:.25rem; }
+.vl-card-meta { font-size:.72rem; color:var(--text-muted); display:flex; gap:.75rem; }
+.vl-card-actions { display:flex; gap:.5rem; padding:.75rem 1rem; border-top:1px solid var(--border); }
+.vl-btn { flex:1; padding:.4rem; border-radius:var(--radius-sm); font-size:.78rem; font-weight:500;
+    border:1px solid var(--border); background:var(--surface-hover); color:var(--text-secondary);
+    cursor:pointer; transition:var(--transition); text-decoration:none; text-align:center; display:flex; align-items:center; justify-content:center; gap:3px; }
+.vl-btn:hover { background:#ef4444; color:#fff; border-color:#ef4444; }
+.vl-btn.danger:hover { background:#7f1d1d; border-color:#7f1d1d; }
+.vl-empty { text-align:center; padding:4rem 2rem; border:2px dashed var(--border); border-radius:var(--radius-lg); }
+
+/* Clapperboard animation */
+.clapboard { width:70px; height:60px; margin:0 auto 1rem; position:relative; }
+.clapboard-top { width:70px; height:18px; background:linear-gradient(135deg,#ef4444,#f97316); border-radius:4px 4px 0 0;
+    transform-origin:bottom left; animation:clap 2s ease-in-out infinite; }
+@keyframes clap { 0%,40%,100%{transform:rotate(0)} 20%{transform:rotate(-25deg)} }
+.clapboard-body { width:70px; height:42px; background:#1a1a2e; border:2px solid rgba(239,68,68,.3); border-top:none; border-radius:0 0 4px 4px;
+    display:flex; align-items:center; justify-content:center; }
+
+/* Modal */
+.modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:3000; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+.modal-backdrop.show { display:flex; }
+.modal-box { background:#0d1117; border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; width:100%; max-width:440px; position:relative; }
+.modal-title { font-family:var(--font-display); font-size:1.3rem; font-weight:700; margin-bottom:1.5rem; }
+.form-label { display:block; font-size:.83rem; font-weight:500; margin-bottom:.4rem; color:var(--text-secondary); }
+.form-input { width:100%; padding:.65rem 1rem; background:rgba(255,255,255,.05);
+    border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary);
+    font-size:.9rem; outline:none; transition:var(--transition); font-family:var(--font-main); }
+.form-input:focus { border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.1); }
+.form-group { margin-bottom:1.25rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vl-hero">
+    <div class="clapboard">
+        <div class="clapboard-top"></div>
+        <div class="clapboard-body">🎬</div>
+    </div>
+    <div class="vl-hero-title">🎬 Video Lab</div>
+    <p class="vl-hero-sub">Professional timeline video editor — kesish, filtrlar, sarlavhalar, subtitrlar</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newProjectModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#ef4444,#f97316);border:none;">+ Yangi Loyiha</button>
+</div>
+
+{% if projects %}
+<div class="vl-stats">
+    <div class="vl-stat"><div class="vl-stat-val">{{ projects.count }}</div><div class="vl-stat-lbl">Loyihalar</div></div>
+    <div class="vl-stat"><div class="vl-stat-val" style="background:linear-gradient(135deg,#10b981,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">MP4</div><div class="vl-stat-lbl">Export</div></div>
+    <div class="vl-stat"><div class="vl-stat-val" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">SRT</div><div class="vl-stat-lbl">Subtitles</div></div>
+</div>
+<div style="margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;">
+    <h2 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;">🎞 Loyihalarim</h2>
+    <button class="btn btn-primary btn-sm" onclick="document.getElementById('newProjectModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#ef4444,#f97316);border:none;">+ Yangi</button>
+</div>
+<div class="vl-grid">
+    {% for project in projects %}
+    <div class="vl-card">
+        <div class="vl-card-thumb">
+            <div class="vl-card-thumb-icon">🎬</div>
+            <div class="vl-card-thumb-overlay">
+                <a href="{% url 'video_lab:editor' project.id %}" style="background:rgba(239,68,68,.9);color:#fff;padding:.5rem 1.25rem;border-radius:99px;font-weight:700;font-size:.85rem;text-decoration:none;">▶ Tahrirlash</a>
+            </div>
+        </div>
+        <div class="vl-card-body">
+            <div class="vl-card-title">{{ project.title }}</div>
+            <div class="vl-card-meta">
+                <span>🕐 {{ project.updated_at|timesince }} avval</span>
+            </div>
+        </div>
+        <div class="vl-card-actions">
+            <a href="{% url 'video_lab:editor' project.id %}" class="vl-btn">✏️ Edit</a>
+            <a href="{% url 'video_lab:delete' project.id %}" class="vl-btn danger" onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">🗑️ Delete</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="vl-empty">
+    <div style="font-size:4rem;margin-bottom:1rem;">🎬</div>
+    <p style="font-size:1.1rem;font-weight:600;margin-bottom:.5rem;">Hali video loyihalar yo'q</p>
+    <p style="color:var(--text-muted);margin-bottom:1.5rem;">Birinchi video loyihangizni yarating</p>
+    <button class="btn btn-primary" onclick="document.getElementById('newProjectModal').classList.add('show')"
+        style="background:linear-gradient(135deg,#ef4444,#f97316);border:none;">🎬 Birinchi Loyiha</button>
+</div>
+{% endif %}
+
+<!-- Modal -->
+<div class="modal-backdrop" id="newProjectModal">
+    <div class="modal-box">
+        <button onclick="document.getElementById('newProjectModal').classList.remove('show')"
+            style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer;">✕</button>
+        <div class="modal-title">🎬 Yangi Video Loyiha</div>
+        <div class="form-group">
+            <label class="form-label">Loyiha nomi</label>
+            <input type="text" id="projTitle" class="form-input" placeholder="Misol: Game Trailer 2024" autofocus>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;">
+            <button class="btn btn-secondary" onclick="document.getElementById('newProjectModal').classList.remove('show')">Bekor</button>
+            <button class="btn btn-primary" id="createBtn" onclick="createProject()"
+                style="background:linear-gradient(135deg,#ef4444,#f97316);border:none;">🎬 Yaratish</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('newProjectModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+async function createProject() {
+    const title = document.getElementById('projTitle').value.trim() || 'Untitled Video';
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true; btn.textContent = 'Yaratilmoqda...';
+    const form = document.createElement('form');
+    form.method = 'POST'; form.action = '{% url 'video_lab:create' %}';
+    const csrf = document.createElement('input'); csrf.type='hidden'; csrf.name='csrfmiddlewaretoken'; csrf.value=getCookie('csrftoken');
+    const t = document.createElement('input'); t.type='hidden'; t.name='title'; t.value=title;
+    form.appendChild(csrf); form.appendChild(t);
+    document.body.appendChild(form); form.submit();
+}
+document.getElementById('projTitle').addEventListener('keydown', e => { if(e.key==='Enter') createProject(); });
+</script>
+{% endblock %}

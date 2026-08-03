@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block title %}Savat — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+.cart-hero {
+    background: linear-gradient(135deg, #0a0e1a 0%, #0d1b2a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.cart-hero::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 50%;
+    height: 200%;
+    background: radial-gradient(ellipse, rgba(59,130,246,0.07) 0%, transparent 60%);
+    pointer-events: none;
+}
+.cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+    align-items: start;
+    margin-top: 2rem;
+}
+/* Cart Item Card */
+.cart-item-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+.cart-item-card:hover {
+    border-color: rgba(59,130,246,0.25);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+.cart-item-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0d1b2a, #1e2d45);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    border: 1px solid var(--border);
+}
+.cart-item-thumb img { width:100%; height:100%; object-fit:cover; }
+.cart-item-info { flex: 1; min-width: 0; }
+.cart-item-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+.cart-item-title:hover { color: var(--accent); }
+.cart-item-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+.cart-item-price {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--orange);
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-align: right;
+}
+.remove-btn {
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    color: #f87171;
+    padding: 0.3rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+}
+.remove-btn:hover {
+    background: rgba(239,68,68,0.18);
+    border-color: rgba(239,68,68,0.4);
+    color: #ef4444;
+}
+/* Summary Card */
+.summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: sticky;
+    top: 80px;
+}
+.summary-header {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.summary-body { padding: 1.25rem; }
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text2);
+}
+.summary-row.total {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+}
+.summary-row.total span:last-child { color: var(--accent); font-size: 1.3rem; }
+.balance-indicator {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.82rem;
+}
+.balance-indicator .bal-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+}
+.balance-indicator .bal-row:last-child { margin-bottom: 0; }
+.checkout-btn {
+    width: 100%;
+    padding: 0.85rem;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.checkout-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59,130,246,0.4);
+}
+.checkout-btn:disabled {
+    background: var(--surface2);
+    color: var(--text3);
+    cursor: not-allowed;
+}
+.secure-note {
+    font-size: 0.72rem;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 0.85rem;
+    line-height: 1.5;
+}
+/* Empty Cart */
+.empty-cart {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 4rem 2rem;
+    text-align: center;
+}
+.empty-cart-icon {
+    font-size: 5rem;
+    margin-bottom: 1.25rem;
+    opacity: 0.5;
+    display: block;
+}
+.empty-cart h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+.empty-cart p { color: var(--text2); margin-bottom: 1.5rem; }
+@media (max-width: 768px) {
+    .cart-layout { grid-template-columns: 1fr; }
+    .summary-card { position: static; }
+    .cart-item-card { flex-wrap: wrap; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="cart-hero">
+    <div class="container" style="position:relative;z-index:1;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <a href="{% url 'asset_list' %}" style="color:var(--text3); font-size:0.8rem; text-decoration:none; transition:color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text3)'">← Aktivlar</a>
+        </div>
+        <h1 style="font-size:2rem; font-weight:800; margin-bottom:0.4rem;">🛒 Sizning Savatingiz</h1>
+        <p style="color:var(--text2);">{{ items.count }} ta aktiv tanlangan</p>
+    </div>
+</div>
+
+<div class="container" style="padding-bottom:3rem;">
+    {% if items %}
+    <div class="cart-layout">
+        <!-- Cart Items -->
+        <div>
+            {% for item in items %}
+            <div class="cart-item-card">
+                <div class="cart-item-thumb">
+                    {% if item.asset.thumbnail %}
+                    <img src="{{ item.asset.thumbnail.url }}" alt="{{ item.asset.title }}">
+                    {% else %}📦{% endif %}
+                </div>
+                <div class="cart-item-info">
+                    <a href="{% url 'asset_detail' pk=item.asset.pk %}" class="cart-item-title">{{ item.asset.title }}</a>
+                    <div class="cart-item-meta">
+                        <span class="badge badge-gray">{{ item.asset.get_format_display }}</span>
+                        {% if item.asset.category %}<span class="badge badge-blue">{{ item.asset.category.name }}</span>{% endif %}
+                    </div>
+                    <a href="{% url 'remove_from_cart' pk=item.pk %}" class="remove-btn" onclick="return confirm('Savatdan olib tashlansinmi?')">
+                        🗑 O'chirish
+                    </a>
+                </div>
+                <div class="cart-item-price">${{ item.asset.price }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Summary -->
+        <div>
+            <div class="summary-card">
+                <div class="summary-header">🧾 To'lov Xulosasi</div>
+                <div class="summary-body">
+                    <div class="summary-row">
+                        <span>Aktivlar soni:</span>
+                        <span>{{ items.count }} ta</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Jami:</span>
+                        <span>${{ total }}</span>
+                    </div>
+
+                    <!-- Balance info -->
+                    {% if user.is_authenticated %}
+                    <div class="balance-indicator">
+                        <div class="bal-row">
+                            <span style="color:var(--text3);">Hisobingizdagi mablag':</span>
+                            <strong style="color:{% if user.balance >= total %}var(--green){% else %}var(--red){% endif %};">${{ user.balance }}</strong>
+                        </div>
+                        {% if user.balance < total %}
+                        <div class="bal-row" style="color:var(--red); font-size:0.78rem;">
+                            <span>Yetishmovchi:</span>
+                            <strong>{{ total|floatformat:2 }} - {{ user.balance|floatformat:2 }}</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <form action="{% url 'checkout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="checkout-btn" {% if not items %}disabled{% endif %}>
+                            💳 To'lovni Amalga Oshirish
+                        </button>
+                    </form>
+                    <p class="secure-note">🔒 To'lov simulyatsiya qilinmoqda. Mablag' platformadagi hisobingizdan yechiladi.</p>
+                    {% if user.is_authenticated and user.balance < total %}
+                    <a href="{% url 'subscription_plans' %}" class="btn btn-ghost w-full" style="margin-top:0.75rem; justify-content:center; border:1px dashed var(--border);">
+                        💸 Hisobni To'ldirish
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{% url 'asset_list' %}" class="btn btn-ghost w-full" style="margin-top:1rem; justify-content:center;">
+                ← Xaridni davom ettirish
+            </a>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty Cart -->
+    <div class="empty-cart" style="margin-top:2rem;">
+        <span class="empty-cart-icon">🛒</span>
+        <h2>Savat bo'sh</h2>
+        <p>Aktivlar bo'limiga o'tib, o'zingizga kerakli 3D modellarni qo'shing.</p>
+        <a href="{% url 'asset_list' %}" class="btn btn-primary btn-lg">
+            📦 Aktivlarni Ko'rish
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Discover Projects — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        background: var(--surface);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+    }
+
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .project-card-image {
+        aspect-ratio: 16/9;
+        background: #1e293b;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .project-card-image img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .card:hover .project-card-image img {
+        transform: scale(1.05);
+    }
+
+    .status-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <span class="section-label">Collaboration Hub</span>
+            <h1 style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 700;">Discover Projects</h1>
+            <p style="color: var(--text-secondary);">Join innovative game development teams and build something amazing.</p>
+        </div>
+        <a href="{% url 'project_create' %}" class="btn btn-primary">+ Create New Project</a>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="filter-bar">
+        <div style="flex: 2; min-width: 200px;">
+            <input type="text" name="q" value="{{ query }}" class="input-field" placeholder="Search by title, stack, or genre...">
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <select name="genre" class="input-field">
+                <option value="">All Genres</option>
+                {% for val,label in genre_choices %}
+                <option value="{{ val }}" {% if genre == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <select name="status" class="input-field">
+                <option value="">All Statuses</option>
+                {% for val,label in status_choices %}
+                <option value="{{ val }}" {% if status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+    </form>
+
+    <div class="project-grid">
+        {% for project in projects %}
+        <div class="card" onclick="window.location.href='{% url 'project_detail' pk=project.pk %}'" style="cursor: pointer;">
+            <div class="project-card-image">
+                {% if project.thumbnail %}
+                    <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}">
+                {% else %}
+                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:rgba(255,255,255,0.02);">🎮</div>
+                {% endif %}
+                <div style="position: absolute; top: 12px; right: 12px;">
+                    <span class="badge" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border-color: rgba(255,255,255,0.1);">
+                        <span class="status-dot" style="background: {% if project.status == 'active' %}var(--success){% else %}var(--text-muted){% endif %};"></span>
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-start mb-2">
+                <h3 style="font-family: var(--font-display); font-size: 1.25rem;">{{ project.title }}</h3>
+                <span class="badge badge-accent">{{ project.get_genre_display }}</span>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; height: 3.2rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                {{ project.description }}
+            </p>
+
+            {% if project.tech_stack %}
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                {% for tech in project.tech_stack_list %}
+                    <span style="font-size: 0.7rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 2px 8px; border-radius: 4px;">{{ tech }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="flex items-center justify-between mt-auto pt-4" style="border-top: 1px solid var(--border);">
+                <div class="flex items-center gap-2">
+                    <div class="avatar" style="width: 24px; height: 24px; font-size: 0.6rem;">
+                        {% if project.creator.avatar %}<img src="{{ project.creator.avatar.url }}">{% else %}{{ project.creator.username|first|upper }}{% endif %}
+                    </div>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">@{{ project.creator.username }}</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">👥 {{ project.member_count }}</span>
+                    <a href="{% url 'project_detail' pk=project.pk %}" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Explore</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 6rem 0;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+            <h3 style="font-family: var(--font-display);">No projects found</h3>
+            <p style="color: var(--text-muted);">Try adjusting your filters or search query.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

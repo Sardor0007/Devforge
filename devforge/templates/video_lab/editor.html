@@ -1,0 +1,1001 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.title }} — Video Lab{% endblock %}
+
+{% block extra_css %}
+<style>
+body { overflow:hidden; }
+main.container { max-width:100%!important; padding:0!important; margin:0!important; }
+
+/* ── Shell ── */
+.vl-shell {
+    display:grid;
+    grid-template-rows: 46px 1fr 220px;
+    height:100vh; background:#08090d; font-family:var(--font-mono);
+}
+
+/* ── Top Bar ── */
+.vl-topbar {
+    background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:.4rem; padding:0 .75rem;
+}
+.vl-brand { font-family:var(--font-display); font-weight:800; font-size:.9rem;
+    background:linear-gradient(135deg,#ef4444,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-right:.5rem; }
+.tb-btn { display:inline-flex; align-items:center; gap:4px; padding:.28rem .6rem; border-radius:5px; font-size:.75rem;
+    background:transparent; border:none; color:var(--text-secondary); cursor:pointer; transition:all .15s; white-space:nowrap; }
+.tb-btn:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
+.tb-btn.primary { background:linear-gradient(135deg,#ef4444,#f97316); color:#fff; font-weight:600; border:none; }
+.tb-sep { width:1px; height:22px; background:rgba(255,255,255,.08); margin:0 .35rem; }
+.save-dot { width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block; }
+.save-dot.unsaved { background:#f59e0b; animation:blink 1.5s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── Main: Preview + Panels ── */
+.vl-main {
+    display:grid; grid-template-columns:280px 1fr 260px; overflow:hidden;
+}
+
+/* Left: Media Library */
+.vl-library {
+    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; overflow:hidden;
+}
+.panel-title { font-size:.62rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700;
+    padding:.6rem .75rem; border-bottom:1px solid rgba(255,255,255,.06); }
+.lib-body { flex:1; overflow-y:auto; padding:.5rem; }
+.lib-body::-webkit-scrollbar { width:4px; } .lib-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+.media-item {
+    display:flex; align-items:center; gap:.5rem; padding:.45rem .5rem; border-radius:6px;
+    cursor:grab; transition:all .15s; margin-bottom:3px; border:1px solid transparent;
+}
+.media-item:hover { background:rgba(255,255,255,.04); border-color:rgba(239,68,68,.2); }
+.media-item-icon { width:36px; height:36px; border-radius:6px; background:rgba(239,68,68,.12);
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+.media-item-info { flex:1; min-width:0; }
+.media-item-name { font-size:.72rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.media-item-dur  { font-size:.62rem; color:var(--text-muted); }
+.lib-upload { width:100%; padding:.6rem; background:rgba(239,68,68,.07); border:1px dashed rgba(239,68,68,.25);
+    border-radius:6px; color:#fca5a5; cursor:pointer; font-size:.75rem; text-align:center; margin-top:.5rem; }
+.lib-upload:hover { background:rgba(239,68,68,.12); }
+
+/* Center: Preview */
+.vl-preview-area { display:flex; flex-direction:column; overflow:hidden; background:#080910; }
+.vl-preview-bar { height:32px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; padding:0 .75rem; gap:.5rem; font-size:.68rem; color:var(--text-muted); }
+.vl-preview-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:1rem; overflow:hidden; }
+#previewVideo { max-width:100%; max-height:100%; border-radius:8px; background:#000; box-shadow:0 8px 32px rgba(0,0,0,.8); }
+.preview-placeholder { text-align:center; color:var(--text-muted); }
+.preview-placeholder-icon { font-size:5rem; opacity:.2; margin-bottom:1rem; }
+
+/* Transport */
+.vl-transport { height:46px; background:#0a0b10; border-top:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; gap:.4rem; padding:0 .75rem; flex-shrink:0; }
+.tp-time { font-family:var(--font-mono); font-size:.95rem; font-weight:700; color:#ef4444;
+    background:#050607; border:1px solid rgba(239,68,68,.2); border-radius:6px; padding:3px 10px; min-width:80px; text-align:center; }
+
+/* Right: Properties */
+.vl-props { background:#0a0b10; border-left:1px solid rgba(255,255,255,.06); display:flex; flex-direction:column; overflow:hidden; }
+.props-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.06); }
+.props-tab { flex:1; padding:.45rem; text-align:center; font-size:.62rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.5px; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
+.props-tab.active { color:#ef4444; border-bottom-color:#ef4444; background:rgba(239,68,68,.05); }
+.props-body { flex:1; overflow-y:auto; padding:.75rem; }
+.props-body::-webkit-scrollbar { width:4px; } .props-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+.prop-sec { margin-bottom:1.25rem; }
+.prop-sec-title { font-size:.62rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:.5rem; }
+.prop-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+.prop-label { font-size:.7rem; color:var(--text-muted); min-width:72px; }
+.prop-range { flex:1; accent-color:#ef4444; cursor:pointer; }
+.prop-val { font-size:.68rem; color:#ef4444; min-width:30px; text-align:right; font-family:var(--font-mono); }
+.prop-select { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
+    padding:3px 6px; color:var(--text-primary); font-size:.75rem; outline:none; }
+.prop-select option { background:#0d1117; }
+.prop-input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
+    padding:3px 6px; color:var(--text-primary); font-size:.75rem; outline:none; font-family:var(--font-mono); }
+
+/* ── Timeline ── */
+.vl-timeline {
+    background:#070810; border-top:1px solid rgba(255,255,255,.06);
+    display:flex; flex-direction:column; overflow:hidden;
+}
+.tl-header { height:26px; display:flex; border-bottom:1px solid rgba(255,255,255,.06); flex-shrink:0; }
+.tl-track-col { width:140px; flex-shrink:0; background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
+    display:flex; align-items:center; padding:0 .5rem; font-size:.6rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); }
+.tl-ruler-col { flex:1; overflow:hidden; }
+#tlRulerCanvas { display:block; width:100%; height:26px; }
+.tl-body { flex:1; display:flex; overflow:hidden; }
+.tl-track-labels { width:140px; flex-shrink:0; background:#0a0b10; border-right:1px solid rgba(255,255,255,.06); overflow:hidden; }
+.tl-track-label { height:52px; display:flex; align-items:center; padding:0 .5rem; gap:.4rem;
+    border-bottom:1px solid rgba(255,255,255,.04); font-size:.72rem; font-weight:600; }
+.tl-track-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.tl-lanes { flex:1; overflow:auto; position:relative; }
+.tl-lanes::-webkit-scrollbar { width:5px; height:5px; }
+.tl-lanes::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
+.tl-content { position:relative; }
+.tl-lane { height:52px; border-bottom:1px solid rgba(255,255,255,.03); position:relative; }
+.tl-lane:hover { background:rgba(255,255,255,.01); }
+/* Playhead */
+.tl-playhead { position:absolute; top:0; bottom:0; width:2px; background:#ef4444; z-index:10; pointer-events:none;
+    box-shadow:0 0 6px rgba(239,68,68,.5); }
+.tl-playhead::before { content:'▼'; position:absolute; top:-2px; left:-5px; color:#ef4444; font-size:9px; }
+/* Clips */
+.tl-clip { position:absolute; top:4px; height:44px; border-radius:5px; cursor:move; overflow:hidden; min-width:30px;
+    border:1px solid rgba(255,255,255,.15); display:flex; flex-direction:column; }
+.tl-clip-label { font-size:.6rem; font-weight:700; padding:2px 5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+.tl-clip-body { flex:1; opacity:.5; }
+.tl-clip-trim { position:absolute; top:0; width:5px; height:100%; cursor:ew-resize; background:rgba(255,255,255,.3); }
+.tl-clip-trim.l { left:0; } .tl-clip-trim.r { right:0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vl-shell">
+    <!-- ── TOP BAR ── -->
+    <div class="vl-topbar">
+        <a href="{% url 'video_lab:dashboard' %}" class="tb-btn">◀</a>
+        <span class="vl-brand">🎬</span>
+        <input type="text" id="projTitleInput" value="{{ project.title }}"
+            style="background:none;border:none;color:var(--text-primary);font-size:.85rem;font-weight:600;outline:none;width:150px;"
+            onchange="markUnsaved()">
+        <div class="tb-sep"></div>
+        <button class="tb-btn" onclick="importMedia()" title="Video/Audio import">📁 Import</button>
+        <input type="file" id="mediaFileInput" accept="video/*,audio/*" multiple style="display:none" onchange="handleMediaImport(this)">
+        <div class="tb-sep"></div>
+        <!-- Effects shortcuts -->
+        <button class="tb-btn" onclick="applyVideoFilter('none')">🎨 Normal</button>
+        <button class="tb-btn" onclick="applyVideoFilter('grayscale(1)')">⚫ B&W</button>
+        <button class="tb-btn" onclick="applyVideoFilter('sepia(0.8)')">🟤 Sepia</button>
+        <button class="tb-btn" onclick="applyVideoFilter('contrast(1.5) saturate(1.5)')">🌈 Vivid</button>
+        <div class="tb-sep"></div>
+        <!-- Title overlay -->
+        <button class="tb-btn" onclick="addTitleClip()">📝 Title</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:.68rem;color:var(--text-muted);">
+                <span class="save-dot" id="saveDot"></span>
+                <span id="saveLabel">Saqlangan</span>
+            </span>
+            <button class="tb-btn" onclick="saveProject()">💾 Save</button>
+            <button class="tb-btn primary" onclick="exportVideo()">⬇ Export</button>
+        </div>
+    </div>
+
+    <!-- ── MAIN AREA ── -->
+    <div class="vl-main">
+        <!-- Media Library -->
+        <div class="vl-library">
+            <div class="panel-title">📁 Media Library</div>
+            <div class="lib-body" id="mediaLibrary">
+                <div style="text-align:center;padding:2rem 0;color:var(--text-muted);">
+                    <div style="font-size:2.5rem;margin-bottom:.5rem;">📂</div>
+                    <p style="font-size:.75rem;">Video/audio fayllar import qiling</p>
+                </div>
+            </div>
+            <div style="padding:.5rem;">
+                <div class="lib-upload" onclick="importMedia()">📁 Fayl Import</div>
+                <input type="file" id="libFileInput" accept="video/*,audio/*" multiple style="display:none" onchange="handleMediaImport(this)">
+            </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="vl-preview-area">
+            <div class="vl-preview-bar">
+                <span>👁 Preview</span>
+                <span id="previewDuration" style="margin-left:auto;">0:00 / 0:00</span>
+                <span id="previewSize">—</span>
+            </div>
+            <div class="vl-preview-wrap" id="previewWrap">
+                <div class="preview-placeholder" id="previewPlaceholder">
+                    <div class="preview-placeholder-icon">🎬</div>
+                    <p style="font-size:.85rem;">Video import qilib timeline ga tashlang</p>
+                    <p style="font-size:.72rem;">MP4, WebM, MOV formatlar qo'llab-quvvatlanadi</p>
+                </div>
+                <video id="previewVideo" style="display:none;" controls></video>
+            </div>
+            <!-- Transport -->
+            <div class="vl-transport">
+                <button class="tb-btn" onclick="seek(-10)" title="−10s">⏮ −10s</button>
+                <button class="tb-btn" onclick="seek(-5)" title="−5s">◀◀</button>
+                <button class="tb-btn" id="playPauseBtn" onclick="togglePlayPause()" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;min-width:60px;" title="Space">▶ Play</button>
+                <button class="tb-btn" onclick="seek(5)" title="+5s">▶▶</button>
+                <button class="tb-btn" onclick="seek(10)" title="+10s">+10s ⏭</button>
+                <div class="tp-time" id="currentTime">0:00</div>
+                <input type="range" id="seekBar" min="0" max="100" step="0.1" value="0"
+                    style="flex:1;accent-color:#ef4444;cursor:pointer;"
+                    oninput="seekTo(this.value)" onmousedown="scrubbing=true" onmouseup="scrubbing=false">
+                <div class="tp-time" id="totalTime">0:00</div>
+                <div class="tb-sep"></div>
+                <span style="font-size:.68rem;color:var(--text-muted);">Vol</span>
+                <input type="range" id="videoVol" min="0" max="1" step="0.01" value="1" style="width:60px;accent-color:#ef4444;"
+                    oninput="document.getElementById('previewVideo').volume=this.value">
+                <button class="tb-btn" onclick="toggleMute()" id="muteBtn">🔊</button>
+            </div>
+        </div>
+
+        <!-- Right Properties -->
+        <div class="vl-props">
+            <div class="props-tabs">
+                <div class="props-tab active" id="ptClip" onclick="switchPropTab('clip')">Clip</div>
+                <div class="props-tab" id="ptFilters" onclick="switchPropTab('filters')">Filters</div>
+                <div class="props-tab" id="ptSubs" onclick="switchPropTab('subs')">Subs</div>
+            </div>
+            <!-- Clip tab -->
+            <div class="props-body" id="propClip">
+                <div class="prop-sec">
+                    <div class="prop-sec-title">📹 Selected Clip</div>
+                    <div id="clipInfo" style="font-size:.75rem;color:var(--text-muted);padding:.5rem;background:rgba(255,255,255,.03);border-radius:6px;">
+                        Clip tanlanmagan
+                    </div>
+                </div>
+                <div class="prop-sec">
+                    <div class="prop-sec-title">✂ Trim</div>
+                    <div class="prop-row"><span class="prop-label">Start</span><input type="number" class="prop-input" id="trimStart" value="0" step="0.1" min="0" onchange="updateClipTrim()"> <span style="font-size:.68rem;color:var(--text-muted);">s</span></div>
+                    <div class="prop-row"><span class="prop-label">End</span><input type="number" class="prop-input" id="trimEnd" value="10" step="0.1" min="0" onchange="updateClipTrim()"> <span style="font-size:.68rem;color:var(--text-muted);">s</span></div>
+                </div>
+                <div class="prop-sec">
+                    <div class="prop-sec-title">⚙ Speed</div>
+                    <div class="prop-row"><span class="prop-label">Speed</span><input type="range" class="prop-range" id="clipSpeed" min="0.25" max="4" step="0.25" value="1" oninput="updateClipSpeed(this.value)"><span class="prop-val" id="clipSpeedVal">1×</span></div>
+                </div>
+                <div class="prop-sec">
+                    <div class="prop-sec-title">🔄 Transition</div>
+                    <div class="prop-row"><span class="prop-label">Type</span>
+                        <select class="prop-select" id="transType" onchange="updateTransition()">
+                            <option value="none">None</option>
+                            <option value="fade">Fade</option>
+                            <option value="slide-left">Slide Left</option>
+                            <option value="slide-right">Slide Right</option>
+                            <option value="zoom">Zoom</option>
+                        </select>
+                    </div>
+                    <div class="prop-row"><span class="prop-label">Duration</span><input type="range" class="prop-range" id="transDur" min="0.1" max="2" step="0.1" value="0.5" oninput="document.getElementById('transDurVal').textContent=this.value+'s'"><span class="prop-val" id="transDurVal">0.5s</span></div>
+                </div>
+            </div>
+            <!-- Filters tab -->
+            <div class="props-body" id="propFilters" style="display:none;">
+                <div class="prop-sec">
+                    <div class="prop-sec-title">🎨 Video Filters</div>
+                    <div class="prop-row"><span class="prop-label">Brightness</span><input type="range" class="prop-range" id="fBright" min="0" max="200" value="100" oninput="applyFilterUI()"><span class="prop-val" id="fBrightVal">100%</span></div>
+                    <div class="prop-row"><span class="prop-label">Contrast</span><input type="range" class="prop-range" id="fContrast" min="0" max="200" value="100" oninput="applyFilterUI()"><span class="prop-val" id="fContrastVal">100%</span></div>
+                    <div class="prop-row"><span class="prop-label">Saturation</span><input type="range" class="prop-range" id="fSat" min="0" max="200" value="100" oninput="applyFilterUI()"><span class="prop-val" id="fSatVal">100%</span></div>
+                    <div class="prop-row"><span class="prop-label">Blur</span><input type="range" class="prop-range" id="fBlur" min="0" max="20" value="0" oninput="applyFilterUI()"><span class="prop-val" id="fBlurVal">0px</span></div>
+                    <div class="prop-row"><span class="prop-label">Hue</span><input type="range" class="prop-range" id="fHue" min="-180" max="180" value="0" oninput="applyFilterUI()"><span class="prop-val" id="fHueVal">0°</span></div>
+                </div>
+                <div class="prop-sec">
+                    <div class="prop-sec-title">✨ Presets</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+                        <button onclick="applyVideoFilter('none')" style="padding:.35rem;border-radius:5px;font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary);cursor:pointer;">Normal</button>
+                        <button onclick="applyVideoFilter('grayscale(1)')" style="padding:.35rem;border-radius:5px;font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary);cursor:pointer;">B&W</button>
+                        <button onclick="applyVideoFilter('sepia(0.9)')" style="padding:.35rem;border-radius:5px;font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary);cursor:pointer;">Sepia</button>
+                        <button onclick="applyVideoFilter('contrast(1.4) saturate(1.6)')" style="padding:.35rem;border-radius:5px;font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary);cursor:pointer;">Vivid</button>
+                        <button onclick="applyVideoFilter('brightness(0.6) contrast(1.2)')" style="padding:.35rem;border-radius:5px;font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary);cursor:pointer;">Dark</button>
+                        <button onclick="applyVideoFilter('brightness(1.3) contrast(0.8) saturate(0.7)')" style="padding:.35rem;border-radius:5px;font-size:.7rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-secondary);cursor:pointer;">Fade</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Subtitles tab -->
+            <div class="props-body" id="propSubs" style="display:none;">
+                <div class="prop-sec">
+                    <div class="prop-sec-title">📝 Subtitles / Captions</div>
+                    <textarea id="subsEditor" style="width:100%;min-height:180px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:.6rem;color:var(--text-primary);font-size:.72rem;font-family:var(--font-mono);outline:none;resize:vertical;line-height:1.6;" placeholder="SRT format:
+1
+00:00:01,000 --> 00:00:03,000
+Birinchi subtitle matni
+
+2
+00:00:04,000 --> 00:00:06,000
+Ikkinchi subtitle">{{ project.subtitles }}</textarea>
+                    <div style="display:flex;gap:.4rem;margin-top:.5rem;">
+                        <button onclick="parseAndShowSubs()" style="flex:1;padding:.35rem;border-radius:5px;font-size:.72rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;cursor:pointer;">▶ Preview Subs</button>
+                        <button onclick="exportSRT()" style="flex:1;padding:.35rem;border-radius:5px;font-size:.72rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text-muted);cursor:pointer;">⬇ Export SRT</button>
+                    </div>
+                </div>
+                <div class="prop-sec">
+                    <div class="prop-sec-title">🔤 Text Overlay</div>
+                    <div class="prop-row"><span class="prop-label">Text</span><input type="text" class="prop-input" id="overlayText" placeholder="Overlay text..."></div>
+                    <div class="prop-row"><span class="prop-label">Font Size</span><input type="range" class="prop-range" id="overlaySize" min="12" max="80" value="32" oninput="updateOverlay()"><span class="prop-val" id="overlaySizeVal">32px</span></div>
+                    <div class="prop-row"><span class="prop-label">Color</span><input type="color" id="overlayColor" value="#ffffff" style="width:32px;height:24px;border:1px solid var(--border);border-radius:4px;cursor:pointer;" onchange="updateOverlay()"></div>
+                    <div class="prop-row"><span class="prop-label">Position</span>
+                        <select class="prop-select" id="overlayPos" onchange="updateOverlay()">
+                            <option value="bottom">Bottom</option>
+                            <option value="center">Center</option>
+                            <option value="top">Top</option>
+                        </select>
+                    </div>
+                    <button onclick="addTitleClip()" style="width:100%;margin-top:.5rem;padding:.4rem;border-radius:5px;font-size:.72rem;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#fca5a5;cursor:pointer;">+ Timeline ga Qo'shish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TIMELINE ── -->
+    <div class="vl-timeline">
+        <div class="tl-header">
+            <div class="tl-track-col">TRACKS</div>
+            <div class="tl-ruler-col"><canvas id="tlRulerCanvas" height="26"></canvas></div>
+        </div>
+        <div class="tl-body">
+            <div class="tl-track-labels" id="tlTrackLabels"></div>
+            <div class="tl-lanes" id="tlLanes">
+                <div class="tl-content" id="tlContent">
+                    <div class="tl-playhead" id="tlPlayhead" style="left:0;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subtitle overlay -->
+<div id="subOverlay" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999;
+    background:rgba(0,0,0,.75);color:#fff;padding:6px 16px;border-radius:6px;font-size:1.1rem;
+    display:none;text-align:center;pointer-events:none;text-shadow:1px 1px 2px #000;"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+const PROJECT_ID = {{ project.pk }};
+let tlData = {{ project.timeline|default:'{}'|safe }};
+let unsaved = false;
+let scrubbing = false;
+
+// Tracks - use saved track structure or fall back to defaults
+const TRACK_DEFS = [
+    { id:'video', name:'🎬 Video', color:'#ef4444' },
+    { id:'audio', name:'🎵 Audio', color:'#10b981' },
+    { id:'title', name:'📝 Titles', color:'#8b5cf6' },
+];
+let tracks = (tlData.tracks && tlData.tracks.length > 0)
+    ? tlData.tracks.map(t => ({ ...t, clips: t.clips || [] }))
+    : TRACK_DEFS.map(t => ({ ...t, clips:[] }));
+
+// Restore saved media items from server
+let savedMediaItems = {{ media_items_json|safe }};
+let mediaItems = [];
+let selectedClip = null;
+
+// Timeline
+const PPX = 80;  // px per second
+const TL_W = 6000;
+
+// Subtitle data
+let parsedSubs = [];
+
+const video = document.getElementById('previewVideo');
+
+// Restore saved video filter
+const savedFilter = '{{ project.video_filter|default:"none"|escapejs }}';
+if (savedFilter && savedFilter !== 'none') {
+    video.style.filter = savedFilter;
+}
+
+// ══════════════════════════════════════════════════════════
+//  TIMELINE RENDER
+// ══════════════════════════════════════════════════════════
+function renderTimeline() {
+    renderTrackLabels();
+    renderLanes();
+    drawRuler();
+}
+
+function renderTrackLabels() {
+    const c = document.getElementById('tlTrackLabels');
+    c.innerHTML = tracks.map(t => `
+        <div class="tl-track-label">
+            <div class="tl-track-dot" style="background:${t.color}"></div>
+            <span>${t.name}</span>
+        </div>
+    `).join('');
+}
+
+function renderLanes() {
+    const content = document.getElementById('tlContent');
+    content.querySelectorAll('.tl-lane').forEach(e => e.remove());
+
+    tracks.forEach((t, ti) => {
+        const lane = document.createElement('div');
+        lane.className = 'tl-lane';
+        lane.id = 'lane_' + t.id;
+        lane.style.width = TL_W + 'px';
+        lane.ondragover = e => { e.preventDefault(); };
+        lane.ondrop = e => { e.preventDefault(); handleDrop(e, t.id); };
+
+        (t.clips || []).forEach(clip => {
+            const x = clip.start * PPX;
+            const w = Math.max((clip.duration || 5) * PPX, 30);
+            const el = document.createElement('div');
+            el.className = 'tl-clip';
+            el.id = 'clip_' + clip.id;
+            el.style.cssText = `left:${x}px;width:${w}px;background:${t.color}22;border-color:${t.color}44;`;
+            el.innerHTML = `
+                <div class="tl-clip-label" style="background:${t.color}33;color:${t.color};">${clip.name || 'Clip'}</div>
+                <div class="tl-clip-body"></div>
+                <div class="tl-clip-trim l"></div>
+                <div class="tl-clip-trim r"></div>
+            `;
+            el.onclick = () => selectClip(clip, t);
+            setupClipDrag(el, clip, t, lane);
+            setupTrimHandles(el, clip, t);
+            lane.appendChild(el);
+        });
+
+        content.insertBefore(lane, document.getElementById('tlPlayhead'));
+    });
+
+    content.style.minWidth  = TL_W + 'px';
+    content.style.minHeight = (tracks.length * 52) + 'px';
+}
+
+function drawRuler() {
+    const canvas = document.getElementById('tlRulerCanvas');
+    const laneWrap = document.getElementById('tlLanes');
+    canvas.width  = laneWrap.clientWidth;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#070810'; ctx.fillRect(0, 0, canvas.width, 26);
+    ctx.strokeStyle = 'rgba(255,255,255,.1)';
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    ctx.font = '9px monospace';
+    for (let s = 0; s * PPX < TL_W; s++) {
+        const x = s * PPX;
+        if (x < 0) continue;
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 26); ctx.lineWidth = s % 5 === 0 ? 1 : 0.4; ctx.stroke();
+        if (s % 5 === 0) { ctx.fillText(`${m}:${String(sec).padStart(2,'0')}`, x + 3, 15); }
+    }
+}
+
+// ══════════════════════════════════════════════════════════
+//  DRAG & DROP
+// ══════════════════════════════════════════════════════════
+function handleDrop(e, trackId) {
+    const mediaId = e.dataTransfer.getData('mediaId');
+    const item = mediaItems.find(m => m.id === mediaId);
+    if (!item) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scrollLeft = document.getElementById('tlLanes').scrollLeft;
+    const x = e.clientX - rect.left + scrollLeft;
+    const start = x / PPX;
+
+    const track = tracks.find(t => t.id === trackId);
+    if (!track) return;
+
+    const clip = {
+        id: 'c' + Date.now(),
+        name: item.name,
+        mediaId: item.id,
+        url: item.url,
+        type: item.type,
+        start: Math.max(0, start),
+        duration: item.duration || 10,
+        trimStart: 0,
+        trimEnd: item.duration || 10,
+        speed: 1,
+        transition: 'none',
+    };
+    if (!track.clips) track.clips = [];
+    track.clips.push(clip);
+    renderLanes();
+    loadClipInPreview(clip);
+    markUnsaved();
+}
+
+// ══════════════════════════════════════════════════════════
+//  CLIP DRAG & TRIM
+// ══════════════════════════════════════════════════════════
+function setupClipDrag(el, clip, track, lane) {
+    let dragging = false, startX, origLeft;
+    el.addEventListener('mousedown', e => {
+        if (e.target.classList.contains('tl-clip-trim')) return;
+        dragging = true; startX = e.clientX; origLeft = el.offsetLeft;
+        e.stopPropagation();
+    });
+    document.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const newLeft = Math.max(0, origLeft + (e.clientX - startX));
+        el.style.left = newLeft + 'px';
+        clip.start = newLeft / PPX;
+        updatePlayhead();
+        markUnsaved();
+    });
+    document.addEventListener('mouseup', () => { dragging = false; });
+}
+
+function setupTrimHandles(el, clip, track) {
+    const lHandle = el.querySelector('.tl-clip-trim.l');
+    const rHandle = el.querySelector('.tl-clip-trim.r');
+
+    let active = false, side, startX, origW, origL;
+    [lHandle, rHandle].forEach((h, i) => {
+        h.addEventListener('mousedown', e => {
+            active = true; side = i === 0 ? 'l' : 'r';
+            startX = e.clientX; origW = el.offsetWidth; origL = el.offsetLeft;
+            e.stopPropagation();
+        });
+    });
+    document.addEventListener('mousemove', e => {
+        if (!active) return;
+        const dx = e.clientX - startX;
+        if (side === 'r') {
+            const w = Math.max(30, origW + dx);
+            el.style.width = w + 'px';
+            clip.duration = w / PPX;
+        } else {
+            const w = Math.max(30, origW - dx);
+            const l = Math.max(0, origL + dx);
+            el.style.width = w + 'px'; el.style.left = l + 'px';
+            clip.duration = w / PPX; clip.start = l / PPX;
+        }
+        markUnsaved();
+    });
+    document.addEventListener('mouseup', () => { active = false; });
+}
+
+// ══════════════════════════════════════════════════════════
+//  MEDIA IMPORT
+// ══════════════════════════════════════════════════════════
+function importMedia() { document.getElementById('libFileInput').click(); }
+
+async function handleMediaImport(input) {
+    const files = Array.from(input.files);
+    for (const file of files) {
+        const localUrl = URL.createObjectURL(file);
+        const type = file.type.startsWith('video') ? 'video' : 'audio';
+        const id = 'm' + Date.now() + Math.random();
+        const name = file.name.replace(/\.[^.]+$/, '');
+
+        // Get duration from media element
+        const duration = await new Promise(resolve => {
+            const el = document.createElement(type);
+            el.src = localUrl;
+            el.onloadedmetadata = () => resolve(el.duration);
+            el.onerror = () => resolve(0);
+        });
+
+        // Try to upload to server for persistent URL
+        let serverUrl = localUrl;
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch(`/studio/video-lab/upload/${PROJECT_ID}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: fd
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.url) serverUrl = data.url;
+            }
+        } catch(e) {
+            console.warn('Upload failed, using local URL:', e);
+        }
+
+        const item = { id, name, url: serverUrl, type, duration };
+        mediaItems.push(item);
+        renderLibrary();
+    }
+    input.value = '';
+    markUnsaved();
+}
+
+function renderLibrary() {
+    const lib = document.getElementById('mediaLibrary');
+    lib.innerHTML = mediaItems.length ? mediaItems.map(item => `
+        <div class="media-item" draggable="true" ondragstart="event.dataTransfer.setData('mediaId','${item.id}')"
+            onclick="previewMediaItem('${item.id}')">
+            <div class="media-item-icon">${item.type==='video'?'🎬':'🎵'}</div>
+            <div class="media-item-info">
+                <div class="media-item-name">${item.name}</div>
+                <div class="media-item-dur">${fmtTime(item.duration||0)} · ${item.type}</div>
+            </div>
+        </div>
+    `).join('') : `<div style="text-align:center;padding:2rem 0;color:var(--text-muted);"><div style="font-size:2.5rem;margin-bottom:.5rem;">📂</div><p style="font-size:.75rem;">Fayl import qiling</p></div>`;
+}
+
+function previewMediaItem(id) {
+    const item = mediaItems.find(m => m.id === id);
+    if (!item) return;
+    if (item.type === 'video') {
+        video.src = item.url; video.style.display = '';
+        document.getElementById('previewPlaceholder').style.display = 'none';
+        video.load(); video.onloadedmetadata = updateVideoUI;
+    }
+}
+
+function loadClipInPreview(clip) {
+    if (!clip.url) return;
+    const track = tracks.find(t => (t.clips || []).some(c => c.id === clip.id));
+    if (!track || track.id !== 'video') return;
+    video.src = clip.url; video.style.display = '';
+    document.getElementById('previewPlaceholder').style.display = 'none';
+    video.load(); video.onloadedmetadata = updateVideoUI;
+}
+
+// ══════════════════════════════════════════════════════════
+//  VIDEO CONTROLS
+// ══════════════════════════════════════════════════════════
+function togglePlayPause() {
+    if (video.paused) { video.play(); document.getElementById('playPauseBtn').textContent = '⏸ Pause'; }
+    else { video.pause(); document.getElementById('playPauseBtn').textContent = '▶ Play'; }
+}
+
+function seek(delta) { video.currentTime = Math.max(0, Math.min(video.duration || 0, video.currentTime + delta)); }
+function seekTo(pct) { if (video.duration) video.currentTime = (pct / 100) * video.duration; }
+function toggleMute() {
+    video.muted = !video.muted;
+    document.getElementById('muteBtn').textContent = video.muted ? '🔇' : '🔊';
+}
+
+function updateVideoUI() {
+    document.getElementById('totalTime').textContent = fmtTime(video.duration || 0);
+    document.getElementById('previewSize').textContent = `${Math.round(video.videoWidth)}×${Math.round(video.videoHeight)}`;
+}
+
+video.ontimeupdate = () => {
+    if (!scrubbing && video.duration) {
+        document.getElementById('seekBar').value = (video.currentTime / video.duration) * 100;
+    }
+    document.getElementById('currentTime').textContent = fmtTime(video.currentTime);
+    document.getElementById('previewDuration').textContent = `${fmtTime(video.currentTime)} / ${fmtTime(video.duration || 0)}`;
+    // Move timeline playhead
+    const x = video.currentTime * PPX;
+    document.getElementById('tlPlayhead').style.left = x + 'px';
+    // Subtitle display
+    showSubtitleAt(video.currentTime);
+};
+video.onended = () => { document.getElementById('playPauseBtn').textContent = '▶ Play'; };
+
+function updatePlayhead() {}
+
+// ══════════════════════════════════════════════════════════
+//  FILTERS
+// ══════════════════════════════════════════════════════════
+function applyVideoFilter(filterStr) {
+    video.style.filter = filterStr;
+    markUnsaved();
+}
+function applyFilterUI() {
+    const b = document.getElementById('fBright').value;
+    const c = document.getElementById('fContrast').value;
+    const s = document.getElementById('fSat').value;
+    const bl = document.getElementById('fBlur').value;
+    const h = document.getElementById('fHue').value;
+    document.getElementById('fBrightVal').textContent = b + '%';
+    document.getElementById('fContrastVal').textContent = c + '%';
+    document.getElementById('fSatVal').textContent = s + '%';
+    document.getElementById('fBlurVal').textContent = bl + 'px';
+    document.getElementById('fHueVal').textContent = h + '°';
+    video.style.filter = `brightness(${b/100}) contrast(${c/100}) saturate(${s/100}) blur(${bl}px) hue-rotate(${h}deg)`;
+    markUnsaved();
+}
+
+// ══════════════════════════════════════════════════════════
+//  TITLES / OVERLAYS
+// ══════════════════════════════════════════════════════════
+function addTitleClip() {
+    const text = document.getElementById('overlayText').value || 'Title Text';
+    const track = tracks.find(t => t.id === 'title');
+    if (!track) return;
+    const clip = { id: 'c' + Date.now(), name: text, type: 'title', start: video.currentTime || 0, duration: 5, text, color: document.getElementById('overlayColor').value, fontSize: document.getElementById('overlaySize').value };
+    if (!track.clips) track.clips = [];
+    track.clips.push(clip);
+    renderLanes();
+    markUnsaved();
+    showToast('📝 Title qo\'shildi', 'success');
+}
+
+function updateOverlay() {
+    document.getElementById('overlaySizeVal').textContent = document.getElementById('overlaySize').value + 'px';
+}
+
+// ══════════════════════════════════════════════════════════
+//  SUBTITLES
+// ══════════════════════════════════════════════════════════
+function parseAndShowSubs() {
+    const text = document.getElementById('subsEditor').value;
+    parsedSubs = parseSRT(text);
+    showToast(`✅ ${parsedSubs.length} ta subtitle yuklandi`, 'success');
+}
+
+function parseSRT(text) {
+    const subs = []; const blocks = text.trim().split(/\n\s*\n/);
+    blocks.forEach(block => {
+        const lines = block.trim().split('\n');
+        if (lines.length < 3) return;
+        const time = lines[1].match(/(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})/);
+        if (!time) return;
+        const start = +time[1]*3600 + +time[2]*60 + +time[3] + +time[4]/1000;
+        const end   = +time[5]*3600 + +time[6]*60 + +time[7] + +time[8]/1000;
+        subs.push({ start, end, text: lines.slice(2).join('\n') });
+    });
+    return subs;
+}
+
+function showSubtitleAt(t) {
+    const overlay = document.getElementById('subOverlay');
+    const sub = parsedSubs.find(s => t >= s.start && t <= s.end);
+    if (sub) { overlay.textContent = sub.text; overlay.style.display = 'block'; }
+    else overlay.style.display = 'none';
+}
+
+function exportSRT() {
+    const text = document.getElementById('subsEditor').value;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '{{ project.title|escapejs }}.srt';
+    a.click();
+    showToast('⬇ SRT eksport qilindi', 'success');
+}
+
+// ══════════════════════════════════════════════════════════
+//  CLIP SELECTION
+// ══════════════════════════════════════════════════════════
+function selectClip(clip, track) {
+    selectedClip = { clip, track };
+    document.getElementById('clipInfo').innerHTML = `
+        <b>${clip.name}</b><br>
+        <span style="color:var(--text-muted)">Start: ${fmtTime(clip.start)} | Dur: ${fmtTime(clip.duration)}</span><br>
+        <span style="color:${track.color}">${track.name}</span>
+    `;
+    document.getElementById('trimStart').value = clip.trimStart || 0;
+    document.getElementById('trimEnd').value = clip.trimEnd || clip.duration;
+    document.getElementById('clipSpeed').value = clip.speed || 1;
+    document.getElementById('clipSpeedVal').textContent = (clip.speed || 1) + '×';
+}
+
+function updateClipTrim() {
+    if (!selectedClip) return;
+    selectedClip.clip.trimStart = parseFloat(document.getElementById('trimStart').value);
+    selectedClip.clip.trimEnd = parseFloat(document.getElementById('trimEnd').value);
+    markUnsaved();
+}
+function updateClipSpeed(v) {
+    if (!selectedClip) return;
+    selectedClip.clip.speed = parseFloat(v);
+    document.getElementById('clipSpeedVal').textContent = v + '×';
+    if (video.src) video.playbackRate = parseFloat(v);
+    markUnsaved();
+}
+function updateTransition() { if (selectedClip) { selectedClip.clip.transition = document.getElementById('transType').value; markUnsaved(); } }
+
+// ══════════════════════════════════════════════════════════
+//  PROP TABS
+// ══════════════════════════════════════════════════════════
+function switchPropTab(t) {
+    ['clip','filters','subs'].forEach(p => {
+        document.getElementById('prop' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = p === t ? '' : 'none';
+        document.getElementById('pt' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === t);
+    });
+}
+
+// ══════════════════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════════════════
+function exportVideo() {
+    const videoClip = tracks.flatMap(t => (t.clips||[])).find(c => c.type === 'video');
+    
+    showToast('🎬 Export tayyorlanmoqda...', 'success');
+
+    if (videoClip && videoClip.url) {
+        const expVideo = document.createElement('video');
+        expVideo.src = videoClip.url;
+        expVideo.muted = true; // Crucial for browser autoplay policy!
+        expVideo.playsInline = true;
+        expVideo.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+        document.body.appendChild(expVideo);
+        
+        // Only set crossOrigin if external URL (blob: URLs fail with crossOrigin in Chrome)
+        if (videoClip.url.startsWith('http://') || videoClip.url.startsWith('https://')) {
+            expVideo.crossOrigin = 'anonymous';
+        }
+        expVideo.playbackRate = videoClip.speed || 1;
+
+        const expCanvas = document.createElement('canvas');
+        const expCtx = expCanvas.getContext('2d');
+
+        expVideo.onloadedmetadata = () => {
+            expCanvas.width  = expVideo.videoWidth  || 1280;
+            expCanvas.height = expVideo.videoHeight || 720;
+
+            const trimStart = videoClip.trimStart || 0;
+            const trimEnd   = videoClip.trimEnd   || expVideo.duration;
+            expVideo.currentTime = trimStart;
+
+            const stream = expCanvas.captureStream(30);
+            let mimeType = 'video/webm';
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                mimeType = 'video/webm;codecs=vp9';
+            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+                mimeType = 'video/webm;codecs=vp8';
+            }
+
+            let recorder;
+            try {
+                recorder = new MediaRecorder(stream, { mimeType });
+            } catch(e) {
+                recorder = new MediaRecorder(stream);
+            }
+
+            const chunks = [];
+            recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: mimeType });
+                const url  = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `{{ project.title|escapejs }}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast('✅ Video fayl muvaffaqiyatli eksport qilindi!', 'success');
+                try { expVideo.pause(); expVideo.remove(); } catch(e){}
+            };
+
+            const currentFilter = video.style.filter || 'none';
+            function drawFrame() {
+                if (expVideo.ended || expVideo.currentTime >= trimEnd) {
+                    if (recorder.state === 'recording') recorder.stop();
+                    return;
+                }
+                expCtx.filter = currentFilter;
+                expCtx.drawImage(expVideo, 0, 0, expCanvas.width, expCanvas.height);
+                expCtx.filter = 'none';
+
+                // Draw title overlays
+                const titleTrack = tracks.find(t => t.id === 'title');
+                if (titleTrack && titleTrack.clips) {
+                    titleTrack.clips.forEach(clip => {
+                        if (expVideo.currentTime >= clip.start && expVideo.currentTime < clip.start + clip.duration) {
+                            expCtx.font = `bold ${clip.fontSize || 32}px sans-serif`;
+                            expCtx.fillStyle = clip.color || '#fff';
+                            expCtx.textAlign = 'center';
+                            expCtx.fillText(clip.text || '', expCanvas.width / 2, expCanvas.height - 60);
+                        }
+                    });
+                }
+
+                if (recorder.state === 'recording') {
+                    requestAnimationFrame(drawFrame);
+                }
+            }
+
+            recorder.start(100);
+            expVideo.play().then(() => {
+                requestAnimationFrame(drawFrame);
+            }).catch(err => {
+                console.warn('Offscreen play restricted, downloading canvas snapshot...', err);
+                exportCanvasSnapshot();
+            });
+        };
+
+        expVideo.onerror = () => {
+            console.warn('Video element load failed, downloading canvas snapshot...');
+            exportCanvasSnapshot();
+        };
+    } else {
+        exportCanvasSnapshot();
+    }
+}
+
+function exportCanvasSnapshot() {
+    try {
+        const snapCanvas = document.createElement('canvas');
+        snapCanvas.width = 1280;
+        snapCanvas.height = 720;
+        const ctx = snapCanvas.getContext('2d');
+        
+        if (video && video.readyState >= 2) {
+            ctx.filter = video.style.filter || 'none';
+            ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
+            ctx.filter = 'none';
+        } else {
+            ctx.fillStyle = '#0a0d14';
+            ctx.fillRect(0, 0, snapCanvas.width, snapCanvas.height);
+        }
+
+        const titleTrack = tracks.find(t => t.id === 'title');
+        if (titleTrack && titleTrack.clips) {
+            titleTrack.clips.forEach(clip => {
+                if (currentTime >= clip.start && currentTime < clip.start + clip.duration) {
+                    ctx.font = `bold ${clip.fontSize || 32}px sans-serif`;
+                    ctx.fillStyle = clip.color || '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(clip.text || '', snapCanvas.width / 2, snapCanvas.height - 60);
+                }
+            });
+        }
+
+        const dataUrl = snapCanvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `{{ project.title|escapejs }}_snapshot.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('✅ Video snapshot fayli yuklab olindi!', 'success');
+    } catch(e) {
+        showToast('Export xatosi: ' + e.message, 'error');
+    }
+}
+
+// ══════════════════════════════════════════════
+//  SAVE
+// ══════════════════════════════════════════════
+async function saveProject() {
+    // Save media item URLs so they can be restored later
+    const mediaData = mediaItems.map(m => ({ id: m.id, name: m.name, type: m.type, url: m.url, duration: m.duration || 0 }));
+    const payload = {
+        title: document.getElementById('projTitleInput').value,
+        timeline: { tracks: tracks.map(t => ({ ...t, clips: (t.clips||[]) })) },
+        subtitles: document.getElementById('subsEditor').value,
+        videoFilter: video.style.filter || 'none',
+        mediaItems: mediaData,
+    };
+    try {
+        const res = await fetch(`/studio/video-lab/save/${PROJECT_ID}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) { markSaved(); showToast('💾 Saqlandi', 'success'); }
+        else { const d = await res.json(); showToast('Xato: ' + (d.message || ''), 'error'); }
+    } catch(e) { showToast('Saqlashda xato', 'error'); }
+}
+
+function markUnsaved() { unsaved = true; document.getElementById('saveDot').classList.add('unsaved'); document.getElementById('saveLabel').textContent = 'Saqlanmagan'; }
+function markSaved() { unsaved = false; document.getElementById('saveDot').classList.remove('unsaved'); document.getElementById('saveLabel').textContent = 'Saqlangan'; }
+
+// ══════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════
+function fmtTime(s) { const m = Math.floor(s/60), sec = Math.floor(s%60); return `${m}:${String(sec).padStart(2,'0')}`; }
+
+// Keyboard
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code === 'Space') { e.preventDefault(); togglePlayPause(); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveProject(); }
+});
+
+// Timeline click to seek
+document.getElementById('tlLanes').addEventListener('click', e => {
+    if (e.target.closest('.tl-clip')) return;
+    const rect = document.getElementById('tlContent').getBoundingClientRect();
+    const scrollLeft = document.getElementById('tlLanes').scrollLeft;
+    const x = e.clientX - rect.left + scrollLeft;
+    if (video.duration) { video.currentTime = x / PPX; document.getElementById('tlPlayhead').style.left = x + 'px'; }
+});
+
+// Auto-save
+setInterval(() => { if (unsaved) saveProject(); }, 45000);
+window.addEventListener('resize', drawRuler);
+
+// Init
+renderTimeline();
+parseAndShowSubs();
+
+// Restore saved media items on reload
+function restoreSavedMedia() {
+    if (!savedMediaItems || savedMediaItems.length === 0) return;
+    savedMediaItems.forEach(item => {
+        // Only restore server-side URLs (not blob: URLs which expire)
+        if (item.url && !item.url.startsWith('blob:')) {
+            mediaItems.push({ ...item });
+        }
+    });
+    if (mediaItems.length > 0) renderLibrary();
+    // Restore video preview from first video clip with valid URL
+    const firstVideoClip = tracks.flatMap(t => t.clips || []).find(c => c.type === 'video' && c.url && !c.url.startsWith('blob:'));
+    if (firstVideoClip && firstVideoClip.url) {
+        video.src = firstVideoClip.url;
+        video.style.display = '';
+        document.getElementById('previewPlaceholder').style.display = 'none';
+        video.onloadedmetadata = updateVideoUI;
+    }
+}
+restoreSavedMedia();
+</script>
+{% endblock %}

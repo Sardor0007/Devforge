@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ jam.title }} - Game Jams - DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+    .jam-detail-hero {
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #9333ea 100%);
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .jam-detail-hero.past {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    }
+
+    .jam-detail-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.08) 0%, transparent 60%);
+    }
+
+    .jam-detail-hero-content { position: relative; z-index: 1; }
+
+    .jam-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .jam-info-grid { grid-template-columns: 1fr; }
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .submission-card {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: border-color 0.2s, transform 0.2s;
+        margin-bottom: 1rem;
+    }
+
+    .submission-card:hover {
+        border-color: var(--border-bright);
+        transform: translateY(-2px);
+    }
+
+    .submission-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .rank-badge {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .rank-1 { background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff; }
+    .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; }
+    .rank-3 { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; }
+    .rank-n { background: var(--surface-raised); color: var(--text-muted); }
+
+    .vote-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        background: rgba(99,102,241,0.1);
+        color: #818cf8;
+        border: 1px solid rgba(99,102,241,0.25);
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .vote-btn:hover {
+        background: rgba(99,102,241,0.2);
+        border-color: rgba(99,102,241,0.4);
+    }
+
+    .vote-btn.voted {
+        background: rgba(16,185,129,0.12);
+        color: #34d399;
+        border-color: rgba(16,185,129,0.3);
+    }
+
+    .submission-meta {
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .submission-body {
+        padding: 0 1.5rem 1.25rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.65;
+    }
+
+    .info-card {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        position: sticky;
+        top: 1.5rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.85rem;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+    .info-row-label { color: var(--text-muted); font-weight: 600; }
+    .info-row-value { color: var(--text-primary); font-weight: 700; }
+
+    .submit-cta {
+        background: linear-gradient(135deg, #6366f1, #9333ea);
+        border-radius: var(--radius-md);
+        padding: 1.25rem;
+        text-align: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(16,185,129,0.15);
+        color: #34d399;
+        border: 1px solid rgba(16,185,129,0.3);
+        padding: 0.4rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .live-dot {
+        width: 7px; height: 7px;
+        background: #34d399;
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.2; }
+    }
+
+    .empty-submissions {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        border: 2px dashed var(--border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 2rem 3rem;">
+
+    <!-- Breadcrumb -->
+    <nav style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.5rem; font-weight: 600;">
+        <a href="{% url 'jams:list' %}" style="color: #818cf8; text-decoration: none;">🎮 Game Jams</a>
+        <span style="margin: 0 0.5rem;">›</span>
+        <span>{{ jam.title }}</span>
+    </nav>
+
+    <!-- Hero -->
+    <div class="jam-detail-hero {% if not jam.is_running and now > jam.end_date %}past{% endif %}" style="margin-bottom: 2rem;">
+        <div class="jam-detail-hero-content">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                {% if jam.is_running %}
+                <span class="live-indicator">
+                    <span class="live-dot"></span> Live
+                </span>
+                {% elif now < jam.start_date %}
+                <span style="background: rgba(251,191,36,0.2); color: #fcd34d; border: 1px solid rgba(251,191,36,0.3); padding: 0.3rem 0.85rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;">⏳ Kutilmoqda</span>
+                {% else %}
+                <span style="background: rgba(107,114,128,0.2); color: #9ca3af; border: 1px solid rgba(107,114,128,0.3); padding: 0.3rem 0.85rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;">⏹ Yakunlandi</span>
+                {% endif %}
+                {% if jam.theme %}
+                <span style="background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.3rem 0.85rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">🎯 {{ jam.theme }}</span>
+                {% endif %}
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 900; color: #fff; margin-bottom: 0.75rem;">{{ jam.title }}</h1>
+            <p style="color: rgba(255,255,255,0.7); max-width: 600px; line-height: 1.65; font-size: 0.95rem;">{{ jam.description }}</p>
+            <div style="margin-top: 1.25rem; font-size: 0.8rem; color: rgba(255,255,255,0.55); font-weight: 600;">
+                👤 Tashkilotchi: {{ jam.created_by.username }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="jam-info-grid">
+        <!-- Left: Submissions -->
+        <div>
+            <div class="section-title">
+                🎮 Topshiriqlar
+                <span style="background: var(--surface-raised); color: var(--text-muted); padding: 0.2rem 0.65rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; margin-left: 0.5rem;">
+                    {{ submissions.count }}
+                </span>
+            </div>
+
+            {% for sub in submissions %}
+            <div class="submission-card" data-submission-id="{{ sub.pk }}">
+                <div class="submission-card-header">
+                    <div style="display: flex; align-items: center; gap: 0.85rem;">
+                        <div class="rank-badge {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-n{% endif %}">
+                            {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}#{{ forloop.counter }}{% endif %}
+                        </div>
+                        <div>
+                            <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">{{ sub.title }}</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                👤 {{ sub.creator.username }}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.2rem; font-weight: 900; color: var(--text-primary);">{{ sub.votes }}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">ovoz</span>
+                        {% if user.is_authenticated and sub.creator != user %}
+                        <button class="vote-btn" onclick="voteSubmission({{ sub.pk }}, this)">
+                            ▲ Ovoz
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if sub.description %}
+                <div class="submission-body">{{ sub.description|truncatechars:200 }}</div>
+                {% endif %}
+                <div class="submission-meta">
+                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">
+                        📅 {{ sub.created_at|date:"d M Y, H:i" }}
+                    </span>
+                    {% if sub.demo_url %}
+                    <a href="{{ sub.demo_url }}" target="_blank" rel="noopener"
+                       style="font-size: 0.78rem; color: #60a5fa; font-weight: 700; text-decoration: none;">
+                        🌐 Demo Ko'rish →
+                    </a>
+                    {% endif %}
+                    {% if sub.file %}
+                    <a href="{{ sub.file.url }}" target="_blank"
+                       style="font-size: 0.78rem; color: #a78bfa; font-weight: 700; text-decoration: none;">
+                        📦 Yuklab olish
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-submissions">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎮</div>
+                <h3 style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Hali topshiriq yo'q</h3>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Birinchi bo'lib topshiriq yuboring!</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Right: Sidebar -->
+        <div>
+            <div class="info-card">
+                <!-- Submit CTA -->
+                {% if user.is_authenticated %}
+                    {% if jam.is_running %}
+                        {% if user_submission %}
+                        <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">✅</div>
+                            <div style="font-weight: 800; color: #34d399; margin-bottom: 0.25rem;">Topshirildi!</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">{{ user_submission.title }}</div>
+                        </div>
+                        {% else %}
+                        <div class="submit-cta">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🚀</div>
+                            <div style="font-weight: 800; color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Qatnashasizmi?</div>
+                            <div style="font-size: 0.8rem; color: rgba(255,255,255,0.65); margin-bottom: 1rem;">Loyihangizni topshiring!</div>
+                            <a href="{% url 'jams:submit' jam.pk %}" class="btn btn-primary" style="display: block; width: 100%; text-align: center;">
+                                📤 Topshiriq Yuborish
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% elif now < jam.start_date %}
+                    <div style="background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⏳</div>
+                        <div style="font-weight: 800; color: #fcd34d; margin-bottom: 0.25rem;">Jam hali boshlanmagan</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">{{ jam.start_date|date:"d M Y, H:i" }}da boshlanadi</div>
+                    </div>
+                    {% else %}
+                    <div style="background: var(--surface-raised); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;">
+                        <div style="font-weight: 700; color: var(--text-muted);">Bu jam yakunlangan</div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                <div class="submit-cta">
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">Qatnashish uchun kiring</div>
+                    <a href="{% url 'account_login' %}" class="btn btn-secondary" style="display: block; text-align: center;">Kirish</a>
+                </div>
+                {% endif %}
+
+                <!-- Info -->
+                <div class="info-row">
+                    <span class="info-row-label">📅 Boshlanishi</span>
+                    <span class="info-row-value">{{ jam.start_date|date:"d M Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label">🏁 Tugashi</span>
+                    <span class="info-row-value">{{ jam.end_date|date:"d M Y" }}</span>
+                </div>
+                {% if jam.is_running %}
+                <div class="info-row">
+                    <span class="info-row-label">⏱ Qoldi</span>
+                    <span class="info-row-value" style="color: #f87171;">{{ jam.end_date|timeuntil }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="info-row-label">🎮 Topshiriqlar</span>
+                    <span class="info-row-value">{{ submissions.count }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-row-label">👤 Tashkilotchi</span>
+                    <span class="info-row-value">{{ jam.created_by.username }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function voteSubmission(submissionId, btn) {
+    const card = btn.closest('.submission-card');
+    btn.disabled = true;
+
+    fetch(`{% url 'jams:vote' 0 %}`.replace('0', submissionId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '',
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const voteCount = card.querySelector('.vote-btn').previousElementSibling.previousElementSibling;
+            // find the vote count span
+            const spans = card.querySelectorAll('.submission-card-header span');
+            spans.forEach(s => {
+                if (!isNaN(parseInt(s.textContent))) {
+                    s.textContent = data.votes;
+                }
+            });
+            btn.classList.add('voted');
+            btn.textContent = '✅ Ovoz berildi';
+        } else {
+            alert(data.error || 'Xatolik yuz berdi');
+            btn.disabled = false;
+        }
+    })
+    .catch(() => { btn.disabled = false; });
+}
+</script>
+{% endblock %}
