@@ -31,3 +31,7 @@ Thumbs.db
 
 # Node (agar kerak bo'lsa)
 node_modules/
+
+# Workspace paketlari va kompilyatsiya fayllari
+workspaces/*/packages/
+*.exe

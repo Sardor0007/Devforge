@@ -118,7 +118,7 @@ TEMPLATES = [{
         'django.template.context_processors.request',
         'django.contrib.auth.context_processors.auth',
         'django.contrib.messages.context_processors.messages',
-        'apps.accounts.context_processors.site_settings',
+        'apps.accounts.context_processors.subscription_status',
     ]},
 }]
 
@@ -295,6 +295,9 @@ if not DEBUG:
     SESSION_COOKIE_SECURE          = True
     CSRF_COOKIE_SECURE             = True
     X_FRAME_OPTIONS                = 'DENY'
+    SECURE_HSTS_PRELOAD             = True
+    SESSION_COOKIE_SAMESITE         = 'Lax'
+    CSRF_COOKIE_SAMESITE            = 'Lax'
 
 # ── BOSHQA ───────────────────────────────────────────────────────────────────
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
@@ -372,7 +375,8 @@ SPECTACULAR_SETTINGS = {
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # faqat local devda ochiq
 
 if not DEBUG:
-    cors_origins_raw = os.environ.get('CORS_ALLOWED_ORIGINS', '').strip()
-    if cors_origins_raw:
-        CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_raw.split(',') if origin.strip()]
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+        if origin.strip()
+    ]
     CORS_ALLOW_CREDENTIALS = True
