@@ -8,16 +8,21 @@ def site_settings(request):
 
 def subscription_status(request):
     """Inject the current user's subscription info into template context."""
+    res = {
+        'all_studios_enabled': SiteConfig.get_bool('all_studios_enabled', default=False)
+    }
     if request.user.is_authenticated:
-        return {
+        res.update({
             'subscription_type': request.user.subscription_type,
             'is_pro': request.user.subscription_type in ('pro', 'gold'),
             'is_studio': request.user.subscription_type in ('studio', 'platinum'),
             'is_enterprise': request.user.subscription_type == 'enterprise',
-        }
-    return {
-        'subscription_type': 'free',
-        'is_pro': False,
-        'is_studio': False,
-        'is_enterprise': False,
-    }
+        })
+    else:
+        res.update({
+            'subscription_type': 'free',
+            'is_pro': False,
+            'is_studio': False,
+            'is_enterprise': False,
+        })
+    return res

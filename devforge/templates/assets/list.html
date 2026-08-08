@@ -107,13 +107,20 @@
 
 {% block content %}
 <div class="animate-fade">
-    <div class="marketplace-hero">
-        <span class="section-label">Digital Assets</span>
-        <h1 style="font-family: var(--font-display); font-size: 3rem; font-weight: 800;">Asset Marketplace</h1>
-        <p style="color: var(--text-secondary); max-width: 600px;">
-            High-fidelity 3D models, textures, and UI kits ready for your next project. 
-            Built for Unreal Engine, Unity, and Godot.
-        </p>
+    <div class="marketplace-hero" style="display: flex; justify-content: space-between; align-items: flex-center; flex-wrap: wrap; gap: 1.5rem;">
+        <div>
+            <span class="section-label">Digital Assets</span>
+            <h1 style="font-family: var(--font-display); font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;">Asset Marketplace</h1>
+            <p style="color: var(--text-secondary); max-width: 600px;">
+                High-fidelity 3D models, textures, and UI kits ready for your next project. 
+                Built for Unreal Engine, Unity, and Godot.
+            </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="{% url 'asset_upload' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.6rem; font-weight: 700; font-size: 0.95rem; border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(99,102,241,0.3);">
+                <span>📤 Aktiv Yuklash</span>
+            </a>
+        </div>
     </div>
 
     <!-- Category Filter -->
