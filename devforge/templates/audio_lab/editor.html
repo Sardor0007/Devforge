@@ -3,14 +3,16 @@
 
 {% block extra_css %}
 <style>
-body { overflow: hidden; }
-main.container { max-width:100%!important; padding:0!important; margin:0!important; }
+body { overflow: hidden !important; }
+footer.footer { display: none !important; }
+main.container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; height: calc(100vh - 72px) !important; height: calc(100dvh - 72px) !important; overflow: hidden !important; }
 
 /* Shell */
 .daw-shell {
     display: grid;
-    grid-template-rows: 48px 1fr 220px;
-    height: calc(100vh);
+    grid-template-rows: 48px 1fr 160px;
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px);
     background: #08090d; font-family: var(--font-mono); color: var(--text-primary);
     user-select: none;
 }

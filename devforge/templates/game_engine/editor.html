@@ -4,12 +4,16 @@
 {% block extra_css %}
 <style>
 /* ══ EDITOR SHELL ══ */
-body { overflow: hidden; }
+body { overflow: hidden !important; }
+footer.footer { display: none !important; }
+main.container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; height: calc(100vh - 72px) !important; height: calc(100dvh - 72px) !important; overflow: hidden !important; }
+
 .editor-shell {
     display: grid;
     grid-template-columns: 240px 1fr 280px;
-    grid-template-rows: 48px 1fr 200px;
-    height: calc(100vh - 0px);
+    grid-template-rows: 48px 1fr 180px;
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px);
     gap: 0; background: #08090d;
     font-family: var(--font-mono);
 }
