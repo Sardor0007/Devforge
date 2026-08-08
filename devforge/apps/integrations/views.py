@@ -44,8 +44,8 @@ def feed_to_editor(request, post_id):
         proj = ImageProject.objects.create(
             title=f"Feed #{post.id} - Rasm Tahriri",
             owner=request.user,
-            image=post.image,
-            layers={"background": post.image.url}
+            base_image=post.image,
+            layers=[{"id": "bg", "name": "Background", "url": post.image.url}]
         )
         # Create link
         ContentLink.objects.create(

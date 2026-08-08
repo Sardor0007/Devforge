@@ -777,33 +777,56 @@ function switchPropTab(t) {
 //  EXPORT
 // ══════════════════════════════════════════════════════════
 function exportVideo() {
-    const videoClip = tracks.flatMap(t => (t.clips||[])).find(c => c.type === 'video');
-    
-    showToast('🎬 Export tayyorlanmoqda...', 'success');
+    // 1. Target video URL selection
+    const videoClip = tracks.flatMap(t => (t.clips || [])).find(c => c.type === 'video');
+    const mediaVideo = mediaItems.find(m => m.type === 'video');
+    const targetUrl = (videoClip && videoClip.url) || (video.src && video.src !== window.location.href ? video.src : null) || (mediaVideo && mediaVideo.url);
 
-    if (videoClip && videoClip.url) {
+    if (!targetUrl) {
+        showToast('⚠️ Eksport qilish uchun loyihaga kamida 1 ta video fayl import qiling!', 'warning');
+        return;
+    }
+
+    showToast('🎬 Real video fayl eksport qilinmoqda (WebM/MP4)...', 'info');
+
+    // 2. Direct Video Download helper function
+    function triggerDirectVideoDownload(url) {
+        const a = document.createElement('a');
+        a.href = url;
+        let ext = 'webm';
+        if (url.includes('.mp4')) ext = 'mp4';
+        a.download = `{{ project.title|escapejs }}.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('✅ Video fayl muvaffaqiyatli yuklab olindi!', 'success');
+    }
+
+    // 3. Canvas stream MediaRecorder with filters & subtitles
+    try {
         const expVideo = document.createElement('video');
-        expVideo.src = videoClip.url;
-        expVideo.muted = true; // Crucial for browser autoplay policy!
+        expVideo.src = targetUrl;
+        expVideo.muted = true;
         expVideo.playsInline = true;
-        expVideo.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;';
+        expVideo.style.cssText = 'position:fixed;top:0;left:0;width:320px;height:180px;opacity:0.01;pointer-events:none;z-index:9999;';
         document.body.appendChild(expVideo);
-        
-        // Only set crossOrigin if external URL (blob: URLs fail with crossOrigin in Chrome)
-        if (videoClip.url.startsWith('http://') || videoClip.url.startsWith('https://')) {
+
+        if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
             expVideo.crossOrigin = 'anonymous';
         }
-        expVideo.playbackRate = videoClip.speed || 1;
 
-        const expCanvas = document.createElement('canvas');
-        const expCtx = expCanvas.getContext('2d');
+        const trimStart = (videoClip && videoClip.trimStart) || 0;
+        const trimEnd = (videoClip && videoClip.trimEnd) || 0;
 
         expVideo.onloadedmetadata = () => {
-            expCanvas.width  = expVideo.videoWidth  || 1280;
-            expCanvas.height = expVideo.videoHeight || 720;
+            const w = expVideo.videoWidth || 1280;
+            const h = expVideo.videoHeight || 720;
 
-            const trimStart = videoClip.trimStart || 0;
-            const trimEnd   = videoClip.trimEnd   || expVideo.duration;
+            const expCanvas = document.createElement('canvas');
+            expCanvas.width = w;
+            expCanvas.height = h;
+            const expCtx = expCanvas.getContext('2d');
+
             expVideo.currentTime = trimStart;
 
             const stream = expCanvas.captureStream(30);
@@ -812,6 +835,8 @@ function exportVideo() {
                 mimeType = 'video/webm;codecs=vp9';
             } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
                 mimeType = 'video/webm;codecs=vp8';
+            } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+                mimeType = 'video/mp4';
             }
 
             let recorder;
@@ -825,102 +850,67 @@ function exportVideo() {
             recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
             recorder.onstop = () => {
                 const blob = new Blob(chunks, { type: mimeType });
-                const url  = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `{{ project.title|escapejs }}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-                showToast('✅ Video fayl muvaffaqiyatli eksport qilindi!', 'success');
+                if (blob.size > 0) {
+                    const blobUrl = URL.createObjectURL(blob);
+                    triggerDirectVideoDownload(blobUrl);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                } else {
+                    triggerDirectVideoDownload(targetUrl);
+                }
                 try { expVideo.pause(); expVideo.remove(); } catch(e){}
             };
 
             const currentFilter = video.style.filter || 'none';
-            function drawFrame() {
-                if (expVideo.ended || expVideo.currentTime >= trimEnd) {
+            function renderVideoFrame() {
+                if (expVideo.ended || (trimEnd > 0 && expVideo.currentTime >= trimEnd)) {
                     if (recorder.state === 'recording') recorder.stop();
                     return;
                 }
+
                 expCtx.filter = currentFilter;
-                expCtx.drawImage(expVideo, 0, 0, expCanvas.width, expCanvas.height);
+                expCtx.drawImage(expVideo, 0, 0, w, h);
                 expCtx.filter = 'none';
 
                 // Draw title overlays
                 const titleTrack = tracks.find(t => t.id === 'title');
                 if (titleTrack && titleTrack.clips) {
                     titleTrack.clips.forEach(clip => {
-                        if (expVideo.currentTime >= clip.start && expVideo.currentTime < clip.start + clip.duration) {
-                            expCtx.font = `bold ${clip.fontSize || 32}px sans-serif`;
-                            expCtx.fillStyle = clip.color || '#fff';
+                        if (expVideo.currentTime >= clip.start && expVideo.currentTime < (clip.start + clip.duration)) {
+                            expCtx.font = `bold ${clip.fontSize || 36}px sans-serif`;
+                            expCtx.fillStyle = clip.color || '#ffffff';
                             expCtx.textAlign = 'center';
-                            expCtx.fillText(clip.text || '', expCanvas.width / 2, expCanvas.height - 60);
+                            expCtx.shadowColor = 'rgba(0,0,0,0.8)';
+                            expCtx.shadowBlur = 8;
+                            expCtx.fillText(clip.text || '', w / 2, h - 70);
+                            expCtx.shadowBlur = 0;
                         }
                     });
                 }
 
                 if (recorder.state === 'recording') {
-                    requestAnimationFrame(drawFrame);
+                    requestAnimationFrame(renderVideoFrame);
                 }
             }
 
             recorder.start(100);
             expVideo.play().then(() => {
-                requestAnimationFrame(drawFrame);
+                requestAnimationFrame(renderVideoFrame);
             }).catch(err => {
-                console.warn('Offscreen play restricted, downloading canvas snapshot...', err);
-                exportCanvasSnapshot();
+                console.warn('Canvas recorder play restriction, downloading source video...', err);
+                try { recorder.stop(); } catch(e){}
+                triggerDirectVideoDownload(targetUrl);
+                try { expVideo.remove(); } catch(e){}
             });
         };
 
         expVideo.onerror = () => {
-            console.warn('Video element load failed, downloading canvas snapshot...');
-            exportCanvasSnapshot();
+            console.warn('Video load error, downloading source video directly...');
+            triggerDirectVideoDownload(targetUrl);
+            try { expVideo.remove(); } catch(e){}
         };
-    } else {
-        exportCanvasSnapshot();
-    }
-}
-
-function exportCanvasSnapshot() {
-    try {
-        const snapCanvas = document.createElement('canvas');
-        snapCanvas.width = 1280;
-        snapCanvas.height = 720;
-        const ctx = snapCanvas.getContext('2d');
-        
-        if (video && video.readyState >= 2) {
-            ctx.filter = video.style.filter || 'none';
-            ctx.drawImage(video, 0, 0, snapCanvas.width, snapCanvas.height);
-            ctx.filter = 'none';
-        } else {
-            ctx.fillStyle = '#0a0d14';
-            ctx.fillRect(0, 0, snapCanvas.width, snapCanvas.height);
-        }
-
-        const titleTrack = tracks.find(t => t.id === 'title');
-        if (titleTrack && titleTrack.clips) {
-            titleTrack.clips.forEach(clip => {
-                if (currentTime >= clip.start && currentTime < clip.start + clip.duration) {
-                    ctx.font = `bold ${clip.fontSize || 32}px sans-serif`;
-                    ctx.fillStyle = clip.color || '#fff';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(clip.text || '', snapCanvas.width / 2, snapCanvas.height - 60);
-                }
-            });
-        }
-
-        const dataUrl = snapCanvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = dataUrl;
-        a.download = `{{ project.title|escapejs }}_snapshot.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        showToast('✅ Video snapshot fayli yuklab olindi!', 'success');
-    } catch(e) {
-        showToast('Export xatosi: ' + e.message, 'error');
+    } catch(err) {
+        console.warn('Export recorder error, downloading video directly...', err);
+        triggerDirectVideoDownload(targetUrl);
     }
 }
 

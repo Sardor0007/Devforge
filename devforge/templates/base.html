@@ -649,7 +649,72 @@
         @media (max-width:900px) {
             .grid-sidebar, .grid-sidebar-wide { grid-template-columns:1fr; }
         }
+
+        /* ── Nav Collapse / Sidebar Toggle System for Editors ── */
+        header.nav-wrapper {
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+        }
+
+        body.nav-collapsed header.nav-wrapper {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 2500;
+        }
+
+        /* Floating Nav Trigger Pill when navbar is collapsed */
+        #floatingNavBtn {
+            display: none;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3500;
+            background: rgba(13, 17, 23, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--border-bright, rgba(255,255,255,0.18));
+            border-radius: 50px;
+            padding: 6px 18px;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            transition: all 0.22s ease;
+        }
+
+        #floatingNavBtn:hover {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: #7aa2f7;
+            color: #7aa2f7;
+            box-shadow: 0 0 20px rgba(122,162,247,0.35);
+            transform: translateX(-50%) translateY(-1px);
+        }
+
+        body.nav-collapsed #floatingNavBtn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* When nav is collapsed, force editor shells to fill 100vh completely */
+        body.nav-collapsed main.container {
+            height: 100vh !important;
+            height: 100dvh !important;
+        }
+
+        body.nav-collapsed .ie-shell,
+        body.nav-collapsed .vl-shell,
+        body.nav-collapsed .daw-shell,
+        body.nav-collapsed .wb-shell,
+        body.nav-collapsed .editor-shell {
+            height: 100vh !important;
+            height: 100dvh !important;
+        }
     </style>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -716,6 +781,10 @@
 
             <div class="nav-actions">
                 {% if user.is_authenticated %}
+                    <!-- People Finder / User Search -->
+                    <button id="peopleFinderBtn" onclick="openPeopleFinder()" class="btn btn-ghost" style="padding: 0.5rem; position: relative;" title="Foydalanuvchi qidirish">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    </button>
                     <a href="{% url 'inbox' %}" class="btn btn-ghost" style="padding: 0.5rem;" title="Xabarlar">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     </a>
@@ -748,6 +817,10 @@
                     <a href="{% url 'register' %}" class="btn btn-primary">Qo'shilish</a>
                 {% endif %}
                 
+                <button onclick="toggleNavCollapse()" class="btn btn-ghost" style="padding: 0.5rem;" title="Menyuni Berkitish / Ochish" id="nav-collapse-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+                </button>
+
                 <button onclick="toggleTheme()" class="btn btn-ghost" style="padding: 0.5rem;" id="theme-toggle">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="18.36" x2="5.64" y2="16.94"></line><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"></line></svg>
                 </button>
@@ -760,6 +833,13 @@
             </div>
         </nav>
     </header>
+
+    <!-- Floating Trigger Pill when Navbar is collapsed -->
+    <button id="floatingNavBtn" onclick="toggleNavCollapse()" title="Navigatsiya menyusini ochish">
+        <span style="font-size: 0.9rem;">⚡</span>
+        <span>DevForge Navigation</span>
+        <span style="font-size: 0.7rem; opacity: 0.7;">▼</span>
+    </button>
 
     <div class="drawer-overlay" id="drawerOverlay"></div>
     <div class="mobile-drawer" id="mobileDrawer">
@@ -833,6 +913,33 @@
         if (savedTheme) {
             document.documentElement.setAttribute('data-theme', savedTheme);
         }
+
+        // ── Nav Collapse / Toggle System ──
+        function toggleNavCollapse() {
+            const isCollapsed = document.body.classList.toggle('nav-collapsed');
+            localStorage.setItem('editorNavCollapsed', isCollapsed ? 'true' : 'false');
+            
+            const collapseBtn = document.getElementById('nav-collapse-btn');
+            if (collapseBtn) {
+                collapseBtn.innerHTML = isCollapsed 
+                    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>'
+                    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>';
+            }
+
+            // Dispatch resize event so canvas/WebGL/timeline re-adjust heights
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 330);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            const isEditorPage = path.includes('/editor/') || path.includes('/studio/') || path.includes('/lab/') || path.includes('/builder/');
+            
+            if (isEditorPage && localStorage.getItem('editorNavCollapsed') === 'true') {
+                document.body.classList.add('nav-collapsed');
+            }
+        });
 
         // Global CSRF cookie helper — available to ALL templates
         function getCookie(name) {
@@ -918,5 +1025,269 @@
         }
     </script>
     {% block extra_js %}{% endblock %}
+
+    {% if user.is_authenticated %}
+    <!-- ═══════════════════════════════════════════════════════
+         PEOPLE FINDER MODAL — Global User Search + Chat
+    ═══════════════════════════════════════════════════════ -->
+    <div id="peopleFinderOverlay" onclick="closePeopleFinder()" style="
+        display: none;
+        position: fixed; inset: 0; z-index: 9998;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        animation: pfFadeIn 0.2s ease;
+    "></div>
+
+    <div id="peopleFinderModal" style="
+        display: none;
+        position: fixed;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -48%) scale(0.96);
+        z-index: 9999;
+        width: 100%;
+        max-width: 520px;
+        background: rgba(13,17,23,0.97);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 20px;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,245,255,0.08);
+        padding: 0;
+        overflow: hidden;
+        transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease;
+        opacity: 0;
+    ">
+        <!-- Header -->
+        <div style="padding: 1.25rem 1.5rem 0; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 1rem;">
+            <div style="width: 36px; height: 36px; background: linear-gradient(135deg,#00f5ff,#8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </div>
+            <div>
+                <div style="font-family: var(--font-display); font-weight: 800; font-size: 1rem; color: var(--text-primary);">People Finder</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Username bo'yicha qidiring va chat boshlang</div>
+            </div>
+            <button onclick="closePeopleFinder()" style="margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- Search Input -->
+        <div style="padding: 1rem 1.5rem; position: relative;">
+            <div style="position: relative;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input
+                    id="pfSearchInput"
+                    type="text"
+                    placeholder="Username yoki ism kiriting..."
+                    autocomplete="off"
+                    oninput="pfSearch(this.value)"
+                    onkeydown="pfKeyNav(event)"
+                    style="
+                        width: 100%; box-sizing: border-box;
+                        background: rgba(255,255,255,0.05);
+                        border: 1px solid rgba(255,255,255,0.1);
+                        border-radius: 12px;
+                        padding: 0.75rem 1rem 0.75rem 2.5rem;
+                        font-family: var(--font-main);
+                        font-size: 0.95rem;
+                        color: var(--text-primary);
+                        outline: none;
+                        transition: border-color 0.2s, box-shadow 0.2s;
+                    "
+                    onfocus="this.style.borderColor='rgba(0,245,255,0.4)'; this.style.boxShadow='0 0 0 3px rgba(0,245,255,0.08)';"
+                    onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none';"
+                >
+                <div id="pfSpinner" style="display:none; position:absolute; right:14px; top:50%; transform:translateY(-50%);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" style="animation: pfSpin 0.8s linear infinite;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="pfResults" style="max-height: 360px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;">
+            <div id="pfEmpty" style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.4;">👥</div>
+                Qidirish uchun username kiriting...
+            </div>
+        </div>
+
+        <!-- Footer hint -->
+        <div style="padding: 0.75rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 1rem;">
+            <span style="font-size: 0.72rem; color: var(--text-muted);"><kbd style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:0.68rem;">↑↓</kbd> navigatsiya</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);"><kbd style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:0.68rem;">Enter</kbd> chat</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);"><kbd style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:0.68rem;">Esc</kbd> yopish</span>
+        </div>
+    </div>
+
+    <style>
+        @keyframes pfFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pfSpin   { to { transform: rotate(360deg); } }
+
+        .pf-user-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            text-decoration: none;
+        }
+        .pf-user-row:hover,
+        .pf-user-row.pf-active {
+            background: rgba(0,245,255,0.06);
+        }
+        .pf-user-row.pf-active {
+            outline: none;
+        }
+        .pf-avatar {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg,rgba(0,245,255,0.2),rgba(139,92,246,0.2));
+            border: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1rem; color: var(--accent);
+            font-family: var(--font-display);
+        }
+        .pf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .pf-username { font-weight: 700; font-size: 0.88rem; color: var(--text-primary); }
+        .pf-displayname { font-size: 0.75rem; color: var(--text-muted); }
+        .pf-chat-btn {
+            margin-left: auto;
+            background: rgba(0,245,255,0.1);
+            border: 1px solid rgba(0,245,255,0.25);
+            border-radius: 8px;
+            padding: 0.35rem 0.8rem;
+            font-size: 0.75rem; font-weight: 700;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.18s;
+            text-decoration: none;
+            display: flex; align-items: center; gap: 4px;
+            white-space: nowrap;
+        }
+        .pf-chat-btn:hover {
+            background: rgba(0,245,255,0.2);
+            box-shadow: 0 0 16px rgba(0,245,255,0.2);
+        }
+    </style>
+
+    <script>
+        let pfDebounce = null;
+        let pfCurrentFocus = -1;
+        let pfUserList = [];
+
+        // Ctrl+K / Cmd+K global shortcut
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                openPeopleFinder();
+            }
+            if (e.key === 'Escape') closePeopleFinder();
+        });
+
+        function openPeopleFinder() {
+            const overlay = document.getElementById('peopleFinderOverlay');
+            const modal   = document.getElementById('peopleFinderModal');
+            const input   = document.getElementById('pfSearchInput');
+            overlay.style.display = 'block';
+            modal.style.display   = 'block';
+            requestAnimationFrame(() => {
+                modal.style.transform = 'translate(-50%, -50%) scale(1)';
+                modal.style.opacity   = '1';
+            });
+            setTimeout(() => input && input.focus(), 80);
+        }
+
+        function closePeopleFinder() {
+            const overlay = document.getElementById('peopleFinderOverlay');
+            const modal   = document.getElementById('peopleFinderModal');
+            modal.style.transform = 'translate(-50%, -48%) scale(0.96)';
+            modal.style.opacity   = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                modal.style.display   = 'none';
+                document.getElementById('pfSearchInput').value = '';
+                document.getElementById('pfResults').innerHTML = '<div id="pfEmpty" style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.4;">👥</div>Qidirish uchun username kiriting...</div>';
+                pfUserList = []; pfCurrentFocus = -1;
+            }, 200);
+        }
+
+        function pfSearch(q) {
+            clearTimeout(pfDebounce);
+            const spinner = document.getElementById('pfSpinner');
+            if (q.trim().length === 0) {
+                document.getElementById('pfResults').innerHTML = '<div id="pfEmpty" style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.4;">👥</div>Qidirish uchun username kiriting...</div>';
+                pfUserList = []; pfCurrentFocus = -1;
+                spinner.style.display = 'none';
+                return;
+            }
+            spinner.style.display = 'block';
+            pfDebounce = setTimeout(() => {
+                fetch(`/messages/api/search/?q=${encodeURIComponent(q)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        spinner.style.display = 'none';
+                        pfUserList = data.users || [];
+                        pfCurrentFocus = -1;
+                        renderPfResults(pfUserList, q);
+                    })
+                    .catch(() => { spinner.style.display = 'none'; });
+            }, 260);
+        }
+
+        function renderPfResults(users, q) {
+            const container = document.getElementById('pfResults');
+            if (users.length === 0) {
+                container.innerHTML = `<div style="padding:2.5rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">
+                    <div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.3;">🔍</div>
+                    "<strong style="color:var(--text-primary);">${q}</strong>" bo'yicha foydalanuvchi topilmadi
+                </div>`;
+                return;
+            }
+            container.innerHTML = users.map((u, i) => `
+                <a class="pf-user-row" id="pf-row-${i}" href="${u.chat_url}" title="${u.username}">
+                    <div class="pf-avatar">
+                        ${u.avatar ? `<img src="${u.avatar}" alt="${u.username}">` : u.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div class="pf-username">@${u.username}</div>
+                        ${u.display_name && u.display_name !== u.username ? `<div class="pf-displayname">${u.display_name}</div>` : ''}
+                    </div>
+                    <a class="pf-chat-btn" href="${u.chat_url}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Chat
+                    </a>
+                </a>
+            `).join('');
+        }
+
+        function pfKeyNav(e) {
+            const rows = document.querySelectorAll('.pf-user-row');
+            if (!rows.length) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                pfCurrentFocus = Math.min(pfCurrentFocus + 1, rows.length - 1);
+                pfUpdateActive(rows);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                pfCurrentFocus = Math.max(pfCurrentFocus - 1, 0);
+                pfUpdateActive(rows);
+            } else if (e.key === 'Enter' && pfCurrentFocus >= 0) {
+                e.preventDefault();
+                rows[pfCurrentFocus].click();
+            }
+        }
+
+        function pfUpdateActive(rows) {
+            rows.forEach(r => r.classList.remove('pf-active'));
+            if (pfCurrentFocus >= 0 && pfCurrentFocus < rows.length) {
+                rows[pfCurrentFocus].classList.add('pf-active');
+                rows[pfCurrentFocus].scrollIntoView({ block: 'nearest' });
+            }
+        }
+    </script>
+    {% endif %}
 </body>
 </html>

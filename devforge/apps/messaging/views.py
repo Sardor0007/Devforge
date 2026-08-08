@@ -214,3 +214,27 @@ def unread_count_api(request):
         is_read=False
     ).exclude(sender=request.user).count()
     return JsonResponse({'count': count})
+
+
+@login_required
+def user_search_api(request):
+    """AJAX — foydalanuvchilarni username bo'yicha qidirish"""
+    q = request.GET.get('q', '').strip()
+    if len(q) < 1:
+        return JsonResponse({'users': []})
+
+    users = User.objects.filter(
+        Q(username__icontains=q) | Q(display_name__icontains=q)
+    ).exclude(pk=request.user.pk).order_by('username')[:15]
+
+    results = []
+    for u in users:
+        avatar_url = u.avatar.url if u.avatar else None
+        results.append({
+            'username':     u.username,
+            'display_name': getattr(u, 'display_name', '') or u.username,
+            'avatar':       avatar_url,
+            'chat_url':     f'/messages/start/{u.username}/',
+            'profile_url':  f'/profile/{u.username}/',
+        })
+    return JsonResponse({'users': results})

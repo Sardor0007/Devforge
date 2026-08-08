@@ -28,9 +28,11 @@ def feed_view(request):
         posts = Post.objects.filter(is_public=True).select_related('author').prefetch_related('likes', 'comments')
 
     # Tag filter
-    tag = request.GET.get('tag', '')
+    tag = request.GET.get('tag', '').strip()
     if tag:
-        posts = posts.filter(tags__icontains=tag)
+        posts = posts.filter(
+            Q(tags__name__icontains=tag) | Q(tags__slug__icontains=tag) | Q(content__icontains=tag)
+        ).distinct()
 
     posts = posts.order_by('-created_at')
     paginator = Paginator(posts, 15)

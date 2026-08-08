@@ -166,6 +166,35 @@
             <span id="totalUnread" class="badge badge-accent" style="{% if total_unread == 0 %}display:none;{% endif %}">{{ total_unread }}</span>
         </div>
 
+        <!-- Inline user search for inbox sidebar -->
+        <div style="padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <div style="position: relative;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input
+                    id="inboxSearchInput"
+                    type="text"
+                    placeholder="Foydalanuvchi qidirish..."
+                    autocomplete="off"
+                    oninput="inboxSearch(this.value)"
+                    style="
+                        width:100%;box-sizing:border-box;
+                        background:rgba(255,255,255,0.04);
+                        border:1px solid rgba(255,255,255,0.08);
+                        border-radius:10px;
+                        padding:0.55rem 0.75rem 0.55rem 2.1rem;
+                        font-size:0.82rem;
+                        color:var(--text-primary);
+                        outline:none;
+                        transition:border-color 0.2s;
+                        font-family:var(--font-main);
+                    "
+                    onfocus="this.style.borderColor='rgba(0,245,255,0.35)'"
+                    onblur="this.style.borderColor='rgba(255,255,255,0.08)'"
+                >
+            </div>
+            <div id="inboxSearchResults" style="display:none; margin-top:0.5rem; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.07); background:var(--surface-hover);"></div>
+        </div>
+
         <div class="conversation-list">
             {% for item in conv_data %}
             <a href="{% url 'conversation' conv_id=item.conv.pk %}" class="conversation-item {% if item.unread > 0 %}unread{% endif %}">
@@ -222,5 +251,48 @@
                 }
             });
     }, 5000);
+
+    // Inbox sidebar user search
+    let _ibDebounce = null;
+    function inboxSearch(q) {
+        clearTimeout(_ibDebounce);
+        const results = document.getElementById('inboxSearchResults');
+        if (!q.trim()) { results.style.display = 'none'; results.innerHTML = ''; return; }
+        _ibDebounce = setTimeout(() => {
+            fetch(`/messages/api/search/?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(data => {
+                    const users = data.users || [];
+                    if (!users.length) {
+                        results.style.display = 'block';
+                        results.innerHTML = `<div style="padding:0.75rem 1rem;font-size:0.8rem;color:var(--text-muted);">Foydalanuvchi topilmadi</div>`;
+                        return;
+                    }
+                    results.style.display = 'block';
+                    results.innerHTML = users.map(u => `
+                        <a href="${u.chat_url}" style="display:flex;align-items:center;gap:10px;padding:0.6rem 0.85rem;text-decoration:none;transition:background 0.15s;border-bottom:1px solid rgba(255,255,255,0.03);"
+                           onmouseover="this.style.background='rgba(0,245,255,0.06)'" onmouseout="this.style.background='transparent'">
+                            <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,rgba(0,245,255,0.2),rgba(139,92,246,0.2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.85rem;color:var(--accent);flex-shrink:0;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
+                                ${u.avatar ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;">` : u.username.charAt(0).toUpperCase()}
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:700;font-size:0.82rem;color:var(--text-primary);">@${u.username}</div>
+                                ${u.display_name && u.display_name !== u.username ? `<div style="font-size:0.72rem;color:var(--text-muted);">${u.display_name}</div>` : ''}
+                            </div>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </a>
+                    `).join('');
+                });
+        }, 250);
+    }
+
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        const sr = document.getElementById('inboxSearchResults');
+        const inp = document.getElementById('inboxSearchInput');
+        if (sr && inp && !sr.contains(e.target) && e.target !== inp) {
+            sr.style.display = 'none';
+        }
+    });
 </script>
 {% endblock %}
