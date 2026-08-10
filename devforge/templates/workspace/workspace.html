@@ -1461,9 +1461,9 @@ async function runCurrentFile() {
         case 'js':   cmd = `node "${name}"`; break;
         case 'ts':   cmd = `tsc "${name}" --outFile "${base}.js" && node "${base}.js"`; break;
         case 'java': cmd = `javac "${name}" && java "${base.replace(/\//g, '.')}"`; break;
-        case 'c':    cmd = `gcc "${name}" -o "${base}.exe" && "${base}.exe"`; break;
-        case 'cpp':  cmd = `g++ "${name}" -o "${base}.exe" && "${base}.exe"`; break;
-        case 'cs':   cmd = `csc "${name}" && "${base}.exe"`; break;
+        case 'c':    cmd = `gcc "${name}" -o "${base}.exe" && "./${base}.exe"`; break;
+        case 'cpp':  cmd = `g++ "${name}" -o "${base}.exe" && "./${base}.exe"`; break;
+        case 'cs':   cmd = `csc "${name}" && "./${base}.exe"`; break;
         case 'go':   cmd = `go run "${name}"`; break;
         case 'php':  cmd = `php "${name}"`; break;
         case 'rb':   cmd = `ruby "${name}"`; break;
