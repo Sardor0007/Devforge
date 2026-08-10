@@ -557,6 +557,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Last chat id
     const all = document.querySelectorAll('#chatBody [data-id]');
     if (all.length) chatLastId = parseInt(all[all.length-1].dataset.id) || 0;
+
+    // ── Auto-open file arriving from Feed integration ─────────────────────
+    {% if auto_open_file %}
+    setTimeout(() => {
+        openTab({{ auto_open_file.id }}, '{{ auto_open_file.name|escapejs }}', '{{ auto_open_file.language|escapejs }}');
+    }, 600);  // slight delay so loadFileTree finishes rendering
+    {% endif %}
 });
 
 // ── RESPONSIVE TOGGLES ────────────────────────────────────────────────────────

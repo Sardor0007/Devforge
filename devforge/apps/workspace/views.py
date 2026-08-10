@@ -26,6 +26,18 @@ def workspace_view(request, pk):
     chat_room, _ = ChatRoom.objects.get_or_create(project=project)
     messages_qs = chat_room.messages.select_related('sender').order_by('-created_at')[:50]
 
+    # Auto-open a specific file (e.g. when arriving from feed integration)
+    auto_open_file = None
+    open_file_id = request.GET.get('open_file')
+    if open_file_id:
+        try:
+            auto_open_file = workspace.files.get(pk=int(open_file_id))
+        except (WorkspaceFile.DoesNotExist, ValueError):
+            pass
+    # If no explicit file, auto-open the first file (e.g. newly created snippet)
+    if auto_open_file is None:
+        auto_open_file = workspace.files.filter(is_folder=False).order_by('created_at').first()
+
     return render(request, 'workspace/workspace.html', {
         'project': project,
         'workspace': workspace,
@@ -33,7 +45,9 @@ def workspace_view(request, pk):
         'chat_room': chat_room,
         'chat_messages': reversed(list(messages_qs)),
         'members': project.members.filter(is_approved=True).select_related('user'),
+        'auto_open_file': auto_open_file,
     })
+
 
 
 @login_required

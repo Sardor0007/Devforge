@@ -14,76 +14,208 @@ from apps.video_lab.models import VideoProject
 from apps.world_builder.models import WorldMap
 from .models import ContentLink
 
+
+# ─── Language → file extension map ────────────────────────────────────────────
+LANG_EXT = {
+    'python':     'py',
+    'javascript': 'js',
+    'typescript': 'ts',
+    'java':       'java',
+    'kotlin':     'kt',
+    'swift':      'swift',
+    'c':          'c',
+    'cpp':        'cpp',
+    'csharp':     'cs',
+    'cs':         'cs',
+    'go':         'go',
+    'rust':       'rs',
+    'php':        'php',
+    'ruby':       'rb',
+    'dart':       'dart',
+    'html':       'html',
+    'css':        'css',
+    'scss':       'scss',
+    'json':       'json',
+    'yaml':       'yml',
+    'xml':        'xml',
+    'bash':       'sh',
+    'shell':      'sh',
+    'sql':        'sql',
+    'lua':        'lua',
+    'r':          'r',
+    'matlab':     'm',
+    'scala':      'scala',
+    'haskell':    'hs',
+    'elixir':     'ex',
+    'gdscript':   'gd',
+    'glsl':       'glsl',
+    'hlsl':       'hlsl',
+}
+
+# ─── Smart language detector from code content ────────────────────────────────
+def _detect_lang(code: str, hint: str = '') -> str:
+    """Return a language key from hint or crude content sniffing."""
+    if hint:
+        h = hint.lower().strip()
+        if h in LANG_EXT:
+            return h
+        # common aliases
+        aliases = {
+            'js': 'javascript', 'ts': 'typescript', 'py': 'python',
+            'c++': 'cpp', 'c#': 'csharp', 'rb': 'ruby', 'sh': 'bash',
+            'gd': 'gdscript',
+        }
+        if h in aliases:
+            return aliases[h]
+
+    # crude sniff from code
+    code_l = code[:600]
+    if 'def ' in code_l or 'import ' in code_l and ':' in code_l:
+        return 'python'
+    if 'function' in code_l or 'const ' in code_l or 'let ' in code_l or '=>' in code_l:
+        return 'javascript'
+    if 'public class' in code_l or 'System.out' in code_l:
+        return 'java'
+    if '#include' in code_l:
+        return 'cpp'
+    if '<?php' in code_l:
+        return 'php'
+    if 'fn ' in code_l and 'let mut' in code_l:
+        return 'rust'
+    if 'package main' in code_l or 'func ' in code_l:
+        return 'go'
+    if 'using System' in code_l or 'namespace ' in code_l:
+        return 'csharp'
+    if '<html' in code_l.lower() or '<!DOCTYPE' in code_l:
+        return 'html'
+    return 'python'  # safe default
+
+
 @login_required
 def feed_to_editor(request, post_id):
     """
-    Open a feed post in the corresponding editor:
-    - If the post contains an image -> Open in Image Editor
-    - If it's a code snippet or text -> Open in 3D Studio
+    Smart post-to-editor router:
+      image   → Image Editor  (new ImageProject with base_image pre-loaded)
+      video   → Video Lab     (new VideoProject with video_file pre-loaded)
+      snippet → Workspace     (new Project + WorkspaceFile with code & correct extension)
+      text    → Workspace     (creates a .txt note file)
     """
+    from apps.workspace.models import Workspace, WorkspaceFile
+    from apps.projects.models import Project as DevProject
+
     post = get_object_or_404(Post, id=post_id)
-    
-    # Check if a link already exists
+
+    # ── Already linked? Redirect to existing target ─────────────────────────
+    source_ct = ContentType.objects.get_for_model(Post)
     link = ContentLink.objects.filter(
         link_type='feed_editor',
-        source_ct=ContentType.objects.get_for_model(Post),
-        source_id=post.id
+        source_ct=source_ct,
+        source_id=post.id,
     ).first()
-    
+
     if link:
-        # Redirect directly to the existing project
         target = link.target
         if isinstance(target, ImageProject):
             return redirect('image_editor:editor', project_id=target.id)
-        elif isinstance(target, StudioProject):
-            return redirect('studio:editor', project_id=target.id)
-            
-    # If not linked, create a new project based on the post type
-    if post.image:
-        # Create an ImageProject
+        if isinstance(target, VideoProject):
+            return redirect('video_lab:editor', project_id=target.id)
+        if isinstance(target, DevProject):
+            ws = Workspace.objects.filter(project=target).first()
+            if ws:
+                return redirect('workspace', pk=target.id)
+        # fallback — just go to the target if we can figure it out
+        return redirect('feed')
+
+    # ── IMAGE post ───────────────────────────────────────────────────────────
+    if post.post_type == 'image' or post.image:
         proj = ImageProject.objects.create(
-            title=f"Feed #{post.id} - Rasm Tahriri",
+            title=f"Feed #{post.id} — {post.author.username} rasmi",
             owner=request.user,
             base_image=post.image,
-            layers=[{"id": "bg", "name": "Background", "url": post.image.url}]
+            layers=[{
+                "id":   "bg",
+                "name": "Background",
+                "type": "image",
+                "url":  post.image.url if post.image else "",
+                "visible": True,
+                "opacity": 1.0,
+            }],
         )
-        # Create link
         ContentLink.objects.create(
-            link_type='feed_editor',
-            source=post,
-            target=proj
+            link_type='feed_editor', source=post, target=proj
         )
-        messages.success(request, "Post rasmi Image Editor tahrirchisiga yuklandi!")
+        messages.success(request, "🖼️ Post rasmi Image Editor da yangi loyiha sifatida ochildi!")
         return redirect('image_editor:editor', project_id=proj.id)
-    else:
-        # Create a StudioProject
-        proj = StudioProject.objects.create(
-            title=f"Feed #{post.id} - 3D Sahna",
+
+    # ── VIDEO post ───────────────────────────────────────────────────────────
+    if post.post_type == 'video' or post.video:
+        video_url  = post.video.url if post.video else ""
+        video_name = post.video.name.split('/')[-1] if post.video else "clip"
+        proj = VideoProject.objects.create(
+            title=f"Feed #{post.id} — {post.author.username} videosi",
             owner=request.user,
-            description=post.content,
-            settings_data={
-                "environment": "dark",
-                "fog_density": 0.01,
-                "ambient_light": "#ff00ff" if "neon" in post.content.lower() else "#ffffff",
-                "ambient_intensity": 0.7
-            }
+            video_file=post.video if post.video else None,
+            timeline={
+                "tracks": [{
+                    "id":    "track_1",
+                    "name":  "Feed Video",
+                    "type":  "video",
+                    "clips": [{
+                        "id":       "clip_1",
+                        "name":     video_name,
+                        "url":      video_url,
+                        "start":    0,
+                        "duration": 30,
+                    }],
+                }],
+                "transitions": [],
+            },
         )
-        # Add a default primitive representing the post snippet
-        StudioObject.objects.create(
-            project=proj,
-            name="Feed Text Node",
-            object_type="primitive",
-            transform_data={"position": [0, 1, 0], "rotation": [0, 0, 0], "scale": [1, 1, 1]},
-            properties_data={"color": "#00f5ff", "geometry": "box"}
-        )
-        # Create link
         ContentLink.objects.create(
-            link_type='feed_editor',
-            source=post,
-            target=proj
+            link_type='feed_editor', source=post, target=proj
         )
-        messages.success(request, "Post matni 3D Studio sahnalashtirish oynasiga yuklandi!")
-        return redirect('studio:editor', project_id=proj.id)
+        messages.success(request, "🎬 Post videosi Video Lab da yangi loyiha sifatida ochildi!")
+        return redirect('video_lab:editor', project_id=proj.id)
+
+    # ── CODE / SNIPPET post ──────────────────────────────────────────────────
+    code_content = post.code.strip() if post.code else post.content.strip()
+    lang = _detect_lang(code_content, post.code_lang or '')
+    ext  = LANG_EXT.get(lang, 'txt')
+    safe_title = f"feed_{post.id}_{post.author.username}"
+    file_name  = f"{safe_title}.{ext}"
+
+    # Create a throwaway Project to host the Workspace
+    dev_proj = DevProject.objects.create(
+        creator=request.user,
+        title=f"Feed #{post.id} — {post.author.username} kod snippeti",
+        description=post.content[:500] if post.content else "Feed'dan import qilingan kod",
+        genre='other',
+        status='active',
+        visibility='private',
+    )
+    workspace = Workspace.objects.create(project=dev_proj)
+
+    # Create the code file with correct language & content
+    wf = WorkspaceFile.objects.create(
+        workspace=workspace,
+        name=file_name,
+        path='/',
+        language=lang,
+        content=code_content,
+        created_by=request.user,
+    )
+
+    ContentLink.objects.create(
+        link_type='feed_editor', source=post, target=dev_proj
+    )
+    messages.success(
+        request,
+        f"💻 Kod snippeti ({lang.upper()}) Workspace'da `{file_name}` fayli sifatida ochildi!"
+    )
+    # Redirect to workspace, frontend will auto-open the first file
+    return redirect('workspace', pk=dev_proj.id)
+
+
 
 @login_required
 def asset_to_studio(request, asset_id, studio_project_id):
