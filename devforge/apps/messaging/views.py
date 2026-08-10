@@ -224,15 +224,19 @@ def user_search_api(request):
         return JsonResponse({'users': []})
 
     users = User.objects.filter(
-        Q(username__icontains=q) | Q(display_name__icontains=q)
+        Q(username__icontains=q) |
+        Q(first_name__icontains=q) |
+        Q(last_name__icontains=q) |
+        Q(email__icontains=q)
     ).exclude(pk=request.user.pk).order_by('username')[:15]
 
     results = []
     for u in users:
         avatar_url = u.avatar.url if u.avatar else None
+        full_name = f"{u.first_name} {u.last_name}".strip()
         results.append({
             'username':     u.username,
-            'display_name': getattr(u, 'display_name', '') or u.username,
+            'display_name': full_name or u.username,
             'avatar':       avatar_url,
             'chat_url':     f'/messages/start/{u.username}/',
             'profile_url':  f'/profile/{u.username}/',
