@@ -1340,9 +1340,14 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
 <script id="dj-settings" type="application/json">{{ settings_data|safe|default:"{}" }}</script>
 <script>
 window.DJ = {
-  saveUrl: "{% url 'studio:save_project' project_id=project.id %}",
-  csrf:    document.querySelector('meta[name="csrf-token"]').content,
-  title:   "{{ project.title|escapejs|default:'Untitled' }}"
+  saveUrl:      "{% url 'studio:save_project' project_id=project.id %}",
+  autosaveUrl:  "{% url 'studio:autosave' project_id=project.id %}",
+  renameUrl:    "{% url 'studio:rename_project' project_id=project.id %}",
+  uploadUrl:    "{% url 'studio:upload_asset' project_id=project.id %}",
+  duplicateUrl: "{% url 'studio:duplicate_project' project_id=project.id %}",
+  apiUrl:       "{% url 'studio:project_api' project_id=project.id %}",
+  csrf:         document.querySelector('meta[name="csrf-token"]').content,
+  title:        "{{ project.title|escapejs|default:'Untitled' }}"
 };
 </script>
 
@@ -1483,8 +1488,10 @@ class StudioApp {
     this.renderer.domElement.addEventListener('contextmenu', e => { e.preventDefault(); this._showCtxMenu(e); });
     document.addEventListener('keydown', e => this._onKeyDown(e));
     document.addEventListener('click', e => {
-      if (!e.target.closest('.overlay-panel') && !e.target.closest('.top-menu-item') && !e.target.closest('.vp-btn')) {
-        this._closeAllMenus();
+      if (!e.target.closest('.overlay-panel') && !e.target.closest('.top-menu-item') && !e.target.closest('.vp-btn') && !e.target.closest('.mode-badge')) {
+        hidePopups();
+        document.querySelectorAll('.top-menu-item.open').forEach(m => m.classList.remove('open'));
+        document.querySelectorAll('.vp-btn.open').forEach(m => m.classList.remove('open'));
       }
     });
 
@@ -1578,8 +1585,11 @@ class StudioApp {
   /* ── RESIZE ───────────────────────────────── */
   _resize() {
     const c = document.getElementById('canvas-wrap');
-    const w = c.clientWidth, h = c.clientHeight || 1;
-    this.renderer.setSize(w, h);
+    if (!c) return;
+    const w = c.clientWidth  || c.offsetWidth  || 800;
+    const h = c.clientHeight || c.offsetHeight || 600;
+    if (w < 1 || h < 1) return;
+    this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
   }
@@ -2961,15 +2971,29 @@ function handleImport(input) {
 const app = new StudioApp();
 window.app = app;
 
-// Close menus on click outside
-document.addEventListener('mousedown', e => {
-  if (!e.target.closest('.overlay-panel')) hidePopups();
-  if (!e.target.closest('.top-menu-item') && !e.target.closest('.mode-badge')) {
-    document.querySelectorAll('.top-menu-item.open').forEach(m => m.classList.remove('open'));
-  }
-  if (!e.target.closest('.vp-btn')) {
-    document.querySelectorAll('.vp-btn.open').forEach(m => m.classList.remove('open'));
-  }
+// ── CRITICAL: Expose module-scoped functions to window so HTML onclick= handlers work ──
+window.toggleMenu        = toggleMenu;
+window.openAddMenu       = openAddMenu;
+window.hidePopups        = hidePopups;
+window.newScene          = newScene;
+window.saveProject       = saveProject;
+window.exportGLTF        = exportGLTF;
+window.takeScreenshot    = takeScreenshot;
+window.setMode           = setMode;
+window.switchNTab        = switchNTab;
+window.switchPropTab     = switchPropTab;
+window.togglePropSection = togglePropSection;
+window.toggleNSection    = toggleNSection;
+window.simulateRender    = simulateRender;
+window.handleImport      = handleImport;
+window.toast             = toast;
+window.openModifierMenu  = (btn) => app.openModifierMenu(btn);
+window.lastCtxEvent      = null;
+
+// Force canvas resize after layout is fully calculated
+requestAnimationFrame(() => {
+  app._resize();
+  setTimeout(() => app._resize(), 200);
 });
 
 // Redraw ruler on resize
