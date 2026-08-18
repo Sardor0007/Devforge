@@ -147,6 +147,7 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
   grid-area:main;
   display:flex; flex-direction:row;
   overflow:hidden; position:relative;
+  min-height:0;
 }
 
 /* ── LEFT TOOL SHELF (T-Panel) ────────────────── */
@@ -179,12 +180,14 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
 #viewport-wrap {
   flex:1; display:flex; flex-direction:column;
   position:relative; overflow:hidden; min-width:0;
+  min-height:0;
 }
 
 /* Viewport Header */
 #vp-header {
   height:28px; background:var(--header); border-bottom:1px solid var(--border);
   display:flex; align-items:stretch; flex-shrink:0; gap:2px; padding:0 4px;
+  position:relative; z-index:50;
 }
 .vp-header-group { display:flex; align-items:center; gap:2px; border-right:1px solid var(--border); padding:0 4px; }
 .vp-header-group:last-child { border-right:none; margin-left:auto; }
@@ -228,14 +231,23 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
   font-size:10px; color:var(--text3); padding:0 6px; display:flex; align-items:center;
 }
 
-/* 3D Canvas Container */
-#canvas-wrap {
-  flex:1; position:relative; overflow:hidden;
+/* ── 3D CANVAS CONTAINER ──────────────────────── */
+#canvas-row {
+  flex:1; display:flex; overflow:hidden; min-height:0;
+  position:relative;
 }
-#canvas-wrap canvas { display:block; width:100%!important; height:100%!important; }
+#canvas-wrap {
+  flex:1; position:relative; overflow:hidden; min-width:0;
+}
+#canvas-wrap canvas:not(#axes-canvas) {
+  position:absolute !important;
+  top:0 !important; left:0 !important;
+  width:100% !important; height:100% !important;
+  display:block !important;
+}
 
 /* Viewport overlays */
-.vp-overlay { position:absolute; pointer-events:none; }
+.vp-overlay { position:absolute; pointer-events:none; z-index:10; }
 #vp-fps { top:8px; left:8px; font-size:11px; color:var(--text3); font-family:var(--mono); }
 #vp-stats { top:8px; right:8px; font-size:10px; color:var(--text3); text-align:right; line-height:1.6; }
 #vp-mode-badge { top:36px; left:8px; background:rgba(0,0,0,0.6); border-radius:var(--radius); padding:3px 8px; font-size:11px; color:var(--text); }
@@ -243,9 +255,9 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
 /* Gizmo Axes */
 #axes-gizmo {
   position:absolute; bottom:12px; right:12px; width:80px; height:80px;
-  pointer-events:none;
+  pointer-events:none; z-index:10;
 }
-#axes-gizmo canvas { width:80px!important; height:80px!important; }
+#axes-gizmo canvas { width:80px!important; height:80px!important; position:static!important; }
 
 /* ── N-PANEL (Properties strip in viewport) ──── */
 #npanel {
@@ -793,7 +805,7 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
       </div>
 
       <!-- Canvas + N-panel row -->
-      <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
+      <div id="canvas-row">
         <!-- 3D Canvas -->
         <div id="canvas-wrap">
           <!-- Viewport overlays (non-interactive) -->
@@ -1437,8 +1449,10 @@ class StudioApp {
     const canvas = document.getElementById('canvas-wrap');
 
     /* Renderer */
-    this.renderer.domElement.style.display = 'block';
-    canvas.appendChild(this.renderer.domElement);
+    /* ── Renderer DOM setup ── */
+    const canvasEl = this.renderer.domElement;
+    canvasEl.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:block;';
+    canvas.appendChild(canvasEl);
 
     /* Camera position */
     this.camera.position.set(8, 6, 8);
@@ -1478,10 +1492,20 @@ class StudioApp {
     /* Load saved objects */
     this._loadInitialData();
 
-    /* ResizeObserver */
+    /* ResizeObserver — watches canvas-wrap for size changes */
     const ro = new ResizeObserver(() => this._resize());
     ro.observe(canvas);
+
+    /* Fallback window resize */
+    window.addEventListener('resize', () => this._resize());
+
+    /* Call resize multiple times to catch late layout paint */
     this._resize();
+    requestAnimationFrame(() => {
+      this._resize();
+      setTimeout(() => this._resize(), 50);
+      setTimeout(() => this._resize(), 300);
+    });
 
     /* Events */
     this.renderer.domElement.addEventListener('mousedown', e => this._onMouseDown(e));
@@ -1586,9 +1610,10 @@ class StudioApp {
   _resize() {
     const c = document.getElementById('canvas-wrap');
     if (!c) return;
-    const w = c.clientWidth  || c.offsetWidth  || 800;
-    const h = c.clientHeight || c.offsetHeight || 600;
-    if (w < 1 || h < 1) return;
+    const rect = c.getBoundingClientRect();
+    const w = Math.round(rect.width)  || c.offsetWidth  || 800;
+    const h = Math.round(rect.height) || c.offsetHeight || 600;
+    if (w < 2 || h < 2) return;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
