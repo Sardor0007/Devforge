@@ -63,7 +63,7 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
 ::-webkit-scrollbar-thumb:hover { background:var(--text3); }
 
 /* ── APP SHELL ───────────────────────────────── */
-#app {
+#studio-layout {
   display:grid;
   grid-template-rows:auto 1fr 180px 22px;
   grid-template-columns:1fr;
@@ -209,9 +209,21 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
 .mode-badge {
   background:var(--surface2); border:1px solid var(--border2); border-radius:var(--radius);
   padding:2px 8px; font-size:11px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:4px;
+  position:relative;
 }
-.mode-badge:hover { background:var(--active); }
+.mode-badge:hover, .mode-badge.open { background:var(--active); }
 .mode-badge .arrow { font-size:8px; color:var(--text3); }
+.mode-badge > .dropdown {
+  display:none; position:absolute; top:100%; left:0;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); min-width:160px;
+  box-shadow:0 8px 24px var(--shadow); z-index:400; padding:4px 0; margin-top:2px;
+}
+.mode-badge.open > .dropdown { display:block; }
+.mode-badge .dropdown .dd-item { padding:5px 10px; cursor:pointer; transition:background 0.1s; display:flex; align-items:center; justify-content:space-between; gap:16px; font-weight:normal; }
+.mode-badge .dropdown .dd-item:hover { background:var(--accent); color:#fff; }
+.mode-badge .dropdown .dd-item .dd-shortcut { color:var(--text3); font-size:10px; }
+.mode-badge .dropdown .dd-item:hover .dd-shortcut { color:rgba(255,255,255,0.6); }
 /* Shading buttons */
 .shade-btns { display:flex; gap:1px; }
 .shade-btn {
@@ -549,7 +561,7 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
 </style>
 </head>
 <body>
-<div id="app">
+<div id="studio-layout">
 
   <!-- ═══ TOP MENU BAR ═══ -->
   <header id="topbar">
@@ -719,7 +731,7 @@ kbd { background:var(--surface3); border:1px solid var(--border2); border-radius
       <div id="vp-header">
         <div class="vp-header-group">
           <!-- Mode selector -->
-          <div class="mode-badge" id="mode-selector" onclick="toggleMenu(document.getElementById('mode-drop'))">
+          <div class="mode-badge" id="mode-selector" onclick="toggleMenu(this)">
             <span id="mode-label">Object Mode</span>
             <span class="arrow">▾</span>
             <div class="dropdown" id="mode-drop" style="min-width:160px;">
@@ -1528,10 +1540,10 @@ class StudioApp {
 
   /* ── DEFAULT LIGHTING ─────────────────────── */
   _setupDefaultLighting() {
-    this.ambLight = new THREE.AmbientLight(0xffffff, 0.4);
+    this.ambLight = new THREE.AmbientLight(0xffffff, 0.6);
     this.scene.add(this.ambLight);
 
-    this.sunLight = new THREE.DirectionalLight(0xfff0e0, 1.2);
+    this.sunLight = new THREE.DirectionalLight(0xfff0e0, 1.4);
     this.sunLight.position.set(8, 14, 6);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(2048, 2048);
@@ -1542,18 +1554,26 @@ class StudioApp {
     this.sunLight.shadow.bias = -0.0005;
     this.scene.add(this.sunLight);
 
-    this.scene.background = new THREE.Color(0x1D1D1D);
+    const fillLight = new THREE.DirectionalLight(0x90b0e0, 0.5);
+    fillLight.position.set(-8, 6, -6);
+    this.scene.add(fillLight);
+
+    this.scene.background = new THREE.Color(0x282828);
   }
 
   /* ── GRID ─────────────────────────────────── */
   _buildGrid() {
-    this.gridMain = new THREE.GridHelper(40, 40, 0x333333, 0x2A2A2A);
-    this.gridMain.material.opacity = 0.8;
-    this.gridMain.material.transparent = true;
+    this.gridMain = new THREE.GridHelper(40, 40, 0x888888, 0x484848);
+    this.gridMain.position.y = 0;
     this.scene.add(this.gridMain);
 
-    this.gridCenter = new THREE.GridHelper(40, 4, 0x444444, 0x444444);
+    this.gridCenter = new THREE.GridHelper(40, 4, 0xaaaaaa, 0x666666);
+    this.gridCenter.position.y = 0.001;
     this.scene.add(this.gridCenter);
+
+    const floorAxes = new THREE.AxesHelper(10);
+    floorAxes.position.y = 0.002;
+    this.scene.add(floorAxes);
   }
 
   toggleGrid() {
@@ -2649,20 +2669,29 @@ class StudioApp {
     try {
       const raw = document.getElementById('dj-objects')?.textContent?.trim();
       const objs = raw ? JSON.parse(raw) : [];
-      objs.forEach(d => {
-        const td = d.transform_data || {};
-        const pd = d.properties_data || {};
-        const mesh = this.addObject(pd.geometry || d.object_type || 'box', {
-          name:      d.name,
-          position:  td.position || [0,0,0],
-          rotation:  (td.rotation || [0,0,0]).map(r => THREE.MathUtils.radToDeg(r)),
-          scale:     td.scale    || [1,1,1],
-          color:     parseInt((pd.color || '#AAAAAA').replace('#',''), 16),
-          metalness: pd.metalness ?? 0,
-          roughness: pd.roughness ?? 0.5,
+      if (objs && objs.length > 0) {
+        objs.forEach(d => {
+          const td = d.transform_data || {};
+          const pd = d.properties_data || {};
+          const mesh = this.addObject(pd.geometry || d.object_type || 'box', {
+            name:      d.name,
+            position:  td.position || [0,0,0],
+            rotation:  (td.rotation || [0,0,0]).map(r => THREE.MathUtils.radToDeg(r)),
+            scale:     td.scale    || [1,1,1],
+            color:     parseInt((pd.color || '#AAAAAA').replace('#',''), 16),
+            metalness: pd.metalness ?? 0,
+            roughness: pd.roughness ?? 0.5,
+          });
+          if (mesh && pd.emissive) mesh.material?.emissive?.set(pd.emissive);
         });
-        if (mesh && pd.emissive) mesh.material?.emissive?.set(pd.emissive);
-      });
+      } else {
+        // Default Blender scene: Cube, Light, Camera
+        this.addObject('box', { name: 'Cube', position: [0, 1, 0] });
+        this.addObject('light_point', { name: 'Light', position: [4, 6, 4] });
+        this.addObject('camera', { name: 'Camera', position: [7, 6, 7] });
+        const cube = this.sceneObjects.find(o => o.meta.name === 'Cube');
+        if (cube) this._setSelected([cube.mesh]);
+      }
 
       // Apply scene settings
       const settingsRaw = document.getElementById('dj-settings')?.textContent?.trim();
@@ -2881,30 +2910,56 @@ function toast(msg) {
 }
 
 function toggleMenu(el) {
+  if (!el) return;
   const isOpen = el.classList.contains('open');
-  document.querySelectorAll('.top-menu-item.open, .vp-btn.open').forEach(m => m.classList.remove('open'));
+  document.querySelectorAll('.top-menu-item.open, .vp-btn.open, .mode-badge.open').forEach(m => m.classList.remove('open'));
   if (!isOpen) el.classList.add('open');
 }
 
 function openAddMenu(e) {
+  if (e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.preventDefault) e.preventDefault();
+  }
   hidePopups();
+  document.querySelectorAll('.top-menu-item.open, .vp-btn.open, .mode-badge.open').forEach(m => m.classList.remove('open'));
   const popup = document.getElementById('add-popup');
-  const x = e.clientX || (e.currentTarget?.getBoundingClientRect?.()?.left ?? 100);
-  const y = e.clientY || (e.currentTarget?.getBoundingClientRect?.()?.bottom ?? 100);
-  popup.style.left = x + 'px';
-  popup.style.top  = y + 'px';
+  if (!popup) return;
+  let x = 140, y = 80;
+  if (e && e.clientX) {
+    x = e.clientX;
+    y = e.clientY;
+  } else if (e && e.currentTarget) {
+    const r = e.currentTarget.getBoundingClientRect();
+    x = r.left;
+    y = r.bottom + 4;
+  }
+  if (x + 220 > window.innerWidth) x = window.innerWidth - 230;
+  if (y + 360 > window.innerHeight) y = window.innerHeight - 370;
+  popup.style.left = Math.max(10, x) + 'px';
+  popup.style.top  = Math.max(10, y) + 'px';
   popup.classList.add('visible');
 }
 
 function hidePopups() {
   document.querySelectorAll('.overlay-panel').forEach(p => p.classList.remove('visible'));
+  document.querySelectorAll('.top-menu-item.open, .vp-btn.open, .mode-badge.open').forEach(m => m.classList.remove('open'));
 }
 
-function newScene()        { window.app?.newScene(); }
-function saveProject()     { window.app?._doSave(); }
-function exportGLTF()      { window.app?.exportGLTF(); }
-function takeScreenshot()  { window.app?.takeScreenshot(); }
-function setMode(m)        { window.app?._toggleEditMode(); hidePopups(); }
+function newScene()        { window.app?.newScene(); hidePopups(); }
+function saveProject()     { window.app?._doSave(); hidePopups(); }
+function exportGLTF()      { window.app?.exportGLTF(); hidePopups(); }
+function takeScreenshot()  { window.app?.takeScreenshot(); hidePopups(); }
+function setMode(m) {
+  hidePopups();
+  const badge = document.getElementById('mode-label');
+  const vpBadge = document.getElementById('vp-mode-badge');
+  const modeNames = { 'object': 'Object Mode', 'edit': 'Edit Mode', 'sculpt': 'Sculpt Mode' };
+  if (badge) badge.textContent = modeNames[m] || 'Object Mode';
+  if (vpBadge) vpBadge.textContent = modeNames[m] || 'Object Mode';
+  if (window.app) window.app.currentMode = m;
+  toast(modeNames[m] || m);
+}
 
 function switchNTab(tab, el) {
   document.querySelectorAll('.npanel-tab').forEach(t => t.classList.remove('active'));
@@ -3008,6 +3063,15 @@ window.handleImport      = handleImport;
 window.toast             = toast;
 window.openModifierMenu  = (btn) => app.openModifierMenu(btn);
 window.lastCtxEvent      = null;
+
+// Close menus when clicking any menu item or clicking outside
+document.addEventListener('click', e => {
+  if (e.target.closest('.dd-item, .ovl-item')) {
+    hidePopups();
+  } else if (!e.target.closest('.overlay-panel') && !e.target.closest('.top-menu-item') && !e.target.closest('.vp-btn') && !e.target.closest('.mode-badge')) {
+    hidePopups();
+  }
+});
 
 // Force canvas resize after layout is fully calculated
 requestAnimationFrame(() => {
