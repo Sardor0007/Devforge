@@ -6,10 +6,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{{ project.title|default:"Untitled" }} — DevForge 3D Studio</title>
 <meta name="csrf-token" content="{{ csrf_token }}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.165.0",
+    "three/addons/": "https://esm.sh/three@0.165.0/examples/jsm/"
+  }
+}
+</script>
 <style>
 /* ═══════════════════════════════════════════════
    BLENDER DARK THEME — DEVFORGE 3D STUDIO
@@ -1373,12 +1378,12 @@ window.DJ = {
      THREE.JS APPLICATION MODULE
 ═══════════════════════════════════════════ -->
 <script type="module">
-import * as THREE           from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
-import { OrbitControls }    from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/controls/OrbitControls.js';
-import { TransformControls } from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/controls/TransformControls.js';
-import { GLTFLoader }       from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/GLTFLoader.js';
-import { OBJLoader }        from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/loaders/OBJLoader.js';
-import { GLTFExporter }     from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/exporters/GLTFExporter.js';
+import * as THREE           from 'https://esm.sh/three@0.165.0';
+import { OrbitControls }    from 'https://esm.sh/three@0.165.0/examples/jsm/controls/OrbitControls.js';
+import { TransformControls } from 'https://esm.sh/three@0.165.0/examples/jsm/controls/TransformControls.js';
+import { GLTFLoader }       from 'https://esm.sh/three@0.165.0/examples/jsm/loaders/GLTFLoader.js';
+import { OBJLoader }        from 'https://esm.sh/three@0.165.0/examples/jsm/loaders/OBJLoader.js';
+import { GLTFExporter }     from 'https://esm.sh/three@0.165.0/examples/jsm/exporters/GLTFExporter.js';
 
 /* ═══════════════════════════════
    GEOMETRY FACTORY
