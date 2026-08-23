@@ -478,15 +478,19 @@ def set_language_view(request, lang_code):
     supported = [code for code, _ in settings.LANGUAGES]
     if lang_code in supported:
         translation.activate(lang_code)
-        request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
+        request.session['_language'] = lang_code
         request.session['django_language'] = lang_code
 
     # Qaytish manzili
     next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
+    if 'set-language' in next_url:
+        next_url = '/'
+
     response = redirect(next_url)
     if lang_code in supported:
+        cookie_name = getattr(settings, 'LANGUAGE_COOKIE_NAME', 'django_language')
         response.set_cookie(
-            settings.LANGUAGE_COOKIE_NAME if hasattr(settings, 'LANGUAGE_COOKIE_NAME') else 'django_language',
+            cookie_name,
             lang_code,
             max_age=365 * 24 * 60 * 60,
             samesite='Lax'
