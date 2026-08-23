@@ -970,8 +970,18 @@ kbd {
       <input id="project-title" type="text" value="{{ project.title|default:'Untitled Project' }}" onchange="studio.markDirty()" autocomplete="off">
     </div>
 
-    <!-- Right: Save controls -->
+    <!-- Right: Language & Save controls -->
     <div class="top-right">
+      <!-- Language Switcher in 3D Studio -->
+      <div class="top-menu-item" style="padding:0 6px;height:24px;border-radius:var(--radius);" onclick="studio.toggleMenu(this)" title="Til / Язык / Language">
+        <span class="lang-btn-current">🌐 <span class="lang-code">UZ</span> <span class="lang-arrow" style="font-size:8px;">▾</span></span>
+        <div class="dropdown" style="min-width:140px;">
+          <div class="dd-item lang-opt-item" data-lang="uz" onclick="window.devforgeI18n?.setLanguage('uz')"><span>🇺🇿 O'zbekcha</span><span class="lang-chk">✓</span></div>
+          <div class="dd-item lang-opt-item" data-lang="ru" onclick="window.devforgeI18n?.setLanguage('ru')"><span>🇷🇺 Русский</span><span class="lang-chk">✓</span></div>
+          <div class="dd-item lang-opt-item" data-lang="en" onclick="window.devforgeI18n?.setLanguage('en')"><span>🇬🇧 English</span><span class="lang-chk">✓</span></div>
+        </div>
+      </div>
+
       <div class="save-indicator">
         <div class="save-dot" id="save-dot"></div>
         <span class="save-txt" id="save-txt">Saqlangan</span>
@@ -2663,5 +2673,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<!-- ── DevForge Multi-Language (i18n) Engine ── -->
+<script src="{% static 'js/i18n.js' %}"></script>
 </body>
 </html>

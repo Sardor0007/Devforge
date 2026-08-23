@@ -468,3 +468,27 @@ def transfer_to_deposit_view(request):
         messages.error(request, f"Xato: {e}")
 
     return redirect('wallet')
+
+
+def set_language_view(request, lang_code):
+    """Foydalanuvchi tilini o'zgartirish (uz, ru, en)"""
+    from django.utils import translation
+    from django.conf import settings
+
+    supported = [code for code, _ in settings.LANGUAGES]
+    if lang_code in supported:
+        translation.activate(lang_code)
+        request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
+        request.session['django_language'] = lang_code
+
+    # Qaytish manzili
+    next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
+    response = redirect(next_url)
+    if lang_code in supported:
+        response.set_cookie(
+            settings.LANGUAGE_COOKIE_NAME if hasattr(settings, 'LANGUAGE_COOKIE_NAME') else 'django_language',
+            lang_code,
+            max_age=365 * 24 * 60 * 60,
+            samesite='Lax'
+        )
+    return response

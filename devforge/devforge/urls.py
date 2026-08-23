@@ -12,6 +12,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', auth_views.home_view, name='home'),
+    path('i18n/', include('django.conf.urls.i18n')),
+    path('set-language/<str:lang_code>/', auth_views.set_language_view, name='set_language_direct'),
     path('manifest.json', TemplateView.as_view(template_name='manifest.json', content_type='application/json'), name='manifest_json'),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript'), name='sw_js'),
     path('auth/', include('apps.accounts.urls')),
