@@ -394,14 +394,14 @@
 
     updateLanguagePickers() {
       const labels = {
-        uz: { flag: '🇺🇿', name: "O'zbekcha", code: 'UZ' },
-        ru: { flag: '🇷🇺', name: 'Русский',   code: 'RU' },
-        en: { flag: '🇬🇧', name: 'English',   code: 'EN' }
+        uz: { name: "O'zbekcha", code: 'UZ' },
+        ru: { name: 'Русский',   code: 'RU' },
+        en: { name: 'English',   code: 'EN' }
       };
       const cur = labels[this.currentLang] || labels.uz;
 
       document.querySelectorAll('.lang-btn-current').forEach(el => {
-        el.innerHTML = `${cur.flag} <span class="lang-code">${cur.code}</span> <span class="lang-arrow">▾</span>`;
+        el.innerHTML = `🌐 <span class="lang-code">${cur.code}</span> <span class="lang-arrow" style="font-size:0.7rem;opacity:0.7;">▼</span>`;
       });
 
       document.querySelectorAll('.lang-opt-item').forEach(el => {
