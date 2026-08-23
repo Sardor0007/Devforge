@@ -273,6 +273,10 @@
         <a href="{% url 'payments:plans' %}" class="w-btn w-btn-primary" style="background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.4);">
           <i class="bi bi-arrow-up"></i> Yangilash
         </a>
+      {% else %}
+        <a href="{% url 'payments:manage_subscription' %}" class="w-btn w-btn-primary" style="background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.4);">
+          <i class="bi bi-gear"></i> Boshqarish
+        </a>
       {% endif %}
     </div>
   </div>

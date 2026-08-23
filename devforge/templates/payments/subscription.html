@@ -1,49 +1,755 @@
-{% extends "base.html" %}
-{% block title %}{{ plan_data.name }} Obuna — DevForge{% endblock %}
-{% block content %}
-<div style="min-height:70vh; display:flex; align-items:center; justify-content:center; padding:2rem;">
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:2.5rem; max-width:480px; width:100%;">
-    <div style="font-size:2.5rem; margin-bottom:1rem;">
-      {% if plan == 'gold' %}🥇{% else %}💎{% endif %}
-    </div>
-    <h1 style="font-size:1.6rem; font-weight:800; margin-bottom:0.5rem;">{{ plan_data.name }}</h1>
-    <p style="color:var(--text2); margin-bottom:1.5rem;">
-      {% if plan == 'gold' %}
-        3D Studio, Workspace va freelancer imkoniyatlaridan foydalaning.
-      {% else %}
-        Barcha imkoniyatlar + cheksiz yuklash va premium qo'llab-quvvatlash.
-      {% endif %}
-    </p>
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Subscription — DevForge{% endblock %}
 
-    <div style="background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:12px; padding:1rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-weight:600;">Oylik to'lov:</span>
-      <div style="text-align:right;">
-        <div style="font-size:1.5rem; font-weight:800; color:var(--accent); line-height:1;">
-          {% if plan == 'gold' %}$4.00{% else %}$8.00{% endif %}
+{% block extra_css %}
+<style>
+/* ══════════════════════════════════════════
+   DEVFORGE SUBSCRIPTION DASHBOARD (Pro UI)
+══════════════════════════════════════════ */
+:root {
+  --indigo:  #6366f1;
+  --purple:  #9333ea;
+  --green:   #10b981;
+  --orange:  #f97316;
+  --cyan:    #06b6d4;
+  --red:     #ef4444;
+  --pink:    #ec4899;
+}
+
+.sub-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ── PAGE HEADER ── */
+.sub-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.sub-page-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+}
+.sub-page-sub { color: var(--text-secondary); font-size: 0.9rem; }
+
+/* ── CURRENT PLAN HERO CARD ── */
+.current-plan-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.current-plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--indigo), var(--purple), var(--pink));
+}
+.current-plan-card.plan-free::before  { background: rgba(255,255,255,0.1); }
+.current-plan-card.plan-pro::before   { background: linear-gradient(90deg, #6366f1, #9333ea); }
+.current-plan-card.plan-studio::before { background: linear-gradient(90deg, #9333ea, #ec4899); }
+.current-plan-card.plan-enterprise::before { background: linear-gradient(90deg, #06b6d4, #6366f1); }
+
+.plan-card-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  align-items: center;
+}
+@media (max-width: 700px) { .plan-card-inner { grid-template-columns: 1fr; } }
+
+.plan-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.icon-free     { background: rgba(255,255,255,0.06); }
+.icon-pro      { background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(147,51,234,0.2)); border: 1px solid rgba(99,102,241,0.25); }
+.icon-studio   { background: linear-gradient(135deg, rgba(147,51,234,0.2), rgba(236,72,153,0.2)); border: 1px solid rgba(147,51,234,0.25); }
+.icon-enterprise { background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(99,102,241,0.2)); border: 1px solid rgba(6,182,212,0.25); }
+
+.plan-info {}
+.plan-name-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.plan-name-big {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.plan-meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.plan-meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-secondary); }
+.plan-meta-icon { font-size: 0.9rem; }
+
+.plan-actions { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+@media (max-width: 700px) { .plan-actions { align-items: flex-start; flex-direction: row; flex-wrap: wrap; } }
+
+/* ── STATUS BADGE ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.status-active   { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: #34d399; }
+.status-canceled { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.25);  color: #f87171; }
+.status-trialing { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.25); color: #fb923c; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ── BUTTONS ── */
+.sub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+}
+.sub-btn-primary { background: linear-gradient(135deg, var(--indigo), var(--purple)); color: #fff; }
+.sub-btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.sub-btn-ghost { background: rgba(255,255,255,0.06); color: var(--text-primary); border: 1px solid var(--border); }
+.sub-btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.sub-btn-danger { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+.sub-btn-danger:hover { background: rgba(239,68,68,0.2); }
+.sub-btn-sm { padding: 7px 14px; font-size: 0.78rem; border-radius: 8px; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+@media (max-width: 800px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 20px 16px;
+}
+.stat-card-icon { font-size: 1.4rem; margin-bottom: 10px; }
+.stat-card-value {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+.stat-card-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+.stat-card-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.stat-card-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--indigo), var(--purple));
+}
+
+/* ── TWO COLUMN LAYOUT ── */
+.sub-two-col {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) { .sub-two-col { grid-template-columns: 1fr; } }
+
+/* ── PANEL CARD ── */
+.panel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.panel-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.panel-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-title-icon { font-size: 1rem; }
+.panel-body { padding: 24px; }
+.panel-body-sm { padding: 16px 24px; }
+
+/* ── FEATURE LIST (What's included) ── */
+.feature-included-list { display: flex; flex-direction: column; gap: 4px; }
+.feat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.875rem;
+}
+.feat-row:last-child { border-bottom: none; }
+.feat-name { display: flex; align-items: center; gap: 10px; color: var(--text-secondary); }
+.feat-name-icon { font-size: 1rem; }
+.feat-value { font-weight: 700; font-size: 0.82rem; }
+.feat-yes   { color: #34d399; }
+.feat-no    { color: var(--text-muted); }
+.feat-limit { color: var(--text-primary); }
+
+/* ── BILLING INFO ── */
+.billing-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.billing-row:last-child { border-bottom: none; }
+.billing-key { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+.billing-val { font-size: 0.875rem; font-weight: 600; text-align: right; }
+
+/* ── INVOICES TABLE ── */
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.invoice-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.invoice-table td {
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.invoice-table tr:last-child td { border-bottom: none; }
+.invoice-table tr:hover td { background: rgba(255,255,255,0.02); }
+.invoice-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
+}
+.inv-paid { background: rgba(16,185,129,0.12); color: #34d399; }
+.inv-pending { background: rgba(249,115,22,0.12); color: #fb923c; }
+
+/* ── UPGRADE NUDGE ── */
+.upgrade-nudge {
+  background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(147,51,234,0.06));
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.nudge-icon { font-size: 2.5rem; flex-shrink: 0; }
+.nudge-text h3 { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+.nudge-text p { font-size: 0.82rem; color: var(--text-secondary); }
+.nudge-actions { margin-left: auto; flex-shrink: 0; }
+@media (max-width: 680px) { .upgrade-nudge { flex-wrap: wrap; } .nudge-actions { margin-left: 0; } }
+
+/* ── CANCEL MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 460px;
+  width: 90%;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+.modal-icon { font-size: 2.5rem; margin-bottom: 16px; }
+.modal-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; }
+.modal-sub { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.7; }
+.modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ── PLAN COMPARE QUICK TABLE ── */
+.quick-compare {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.qc-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.qc-plans {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 650px) { .qc-plans { grid-template-columns: repeat(2, 1fr); } }
+.qc-plan {
+  padding: 16px 12px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+}
+.qc-plan:last-child { border-right: none; }
+.qc-plan-name { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.qc-plan-price { font-family: var(--font-display); font-size: 1.4rem; font-weight: 800; }
+.qc-plan.current-col { background: rgba(99,102,241,0.06); }
+.qc-rows {}
+.qc-row {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, 1fr);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.qc-row:last-child { border-bottom: none; }
+.qc-cell {
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  border-right: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qc-cell:first-child { justify-content: flex-start; color: var(--text-secondary); padding-left: 24px; }
+.qc-cell:last-child { border-right: none; }
+.qc-yes { color: #34d399; font-weight: 700; }
+.qc-no  { color: var(--text-muted); }
+.qc-cell.current-col { background: rgba(99,102,241,0.04); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if request.user.subscription_type == 'free' or not request.user.subscription_type %}
+  {% with plan_type='free' %}
+{% elif request.user.subscription_type == 'pro' or request.user.subscription_type == 'gold' %}
+  {% with plan_type='pro' %}
+{% elif request.user.subscription_type == 'studio' or request.user.subscription_type == 'platinum' %}
+  {% with plan_type='studio' %}
+{% else %}
+  {% with plan_type='enterprise' %}
+{% endif %}
+
+<div class="sub-shell">
+
+  <!-- Page Header -->
+  <div class="sub-page-header">
+    <div>
+      <h1 class="sub-page-title">Subscription</h1>
+      <p class="sub-page-sub">Manage your plan, billing, and usage</p>
+    </div>
+    {% if request.user.subscription_type == 'free' %}
+    <a href="{% url 'payments:plans' %}" class="sub-btn sub-btn-primary">⚡ Upgrade Plan</a>
+    {% else %}
+    <a href="{% url 'payments:plans' %}" class="sub-btn sub-btn-ghost">View All Plans</a>
+    {% endif %}
+  </div>
+
+  <!-- ── UPGRADE NUDGE (only for free) ── -->
+  {% if request.user.subscription_type == 'free' %}
+  <div class="upgrade-nudge">
+    <div class="nudge-icon">🚀</div>
+    <div class="nudge-text">
+      <h3>Unlock the Full DevForge Suite</h3>
+      <p>You're on the Free plan. Upgrade to Pro for $9/mo to get 3D Studio, all creative tools, file uploads, and marketplace selling.</p>
+    </div>
+    <div class="nudge-actions">
+      <a href="{% url 'payments:subscribe' 'pro' %}" class="sub-btn sub-btn-primary">Upgrade to Pro →</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── CURRENT PLAN CARD ── -->
+  <div class="current-plan-card plan-{{ request.user.subscription_type|default:'free' }}">
+    <div class="plan-card-inner">
+      <!-- Icon -->
+      <div class="plan-icon-wrap icon-{{ request.user.subscription_type|default:'free' }}">
+        {% if request.user.subscription_type == 'free' %}🆓
+        {% elif request.user.subscription_type == 'pro' or request.user.subscription_type == 'gold' %}⭐
+        {% elif request.user.subscription_type == 'studio' or request.user.subscription_type == 'platinum' %}🎬
+        {% else %}🏢{% endif %}
+      </div>
+
+      <!-- Info -->
+      <div class="plan-info">
+        <div class="plan-name-label">Current Plan</div>
+        <div class="plan-name-big">
+          {% if request.user.subscription_type == 'free' %}<span style="color:var(--text-primary);">Free</span>
+          {% elif request.user.subscription_type == 'pro' or request.user.subscription_type == 'gold' %}<span style="background:linear-gradient(135deg,#6366f1,#9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Pro</span>
+          {% elif request.user.subscription_type == 'studio' or request.user.subscription_type == 'platinum' %}<span style="background:linear-gradient(135deg,#9333ea,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Studio</span>
+          {% else %}<span style="color:var(--cyan);">Enterprise</span>{% endif %}
+          &nbsp;
+          <span class="status-badge status-active"><span class="status-dot"></span> Active</span>
         </div>
-        <div style="font-size:0.8rem; color:var(--text3); margin-top:2px;">
-          {% if plan == 'gold' %}≈ 50,000 so'm{% else %}≈ 100,000 so'm{% endif %}
+        <div class="plan-meta">
+          {% if request.user.subscription_type == 'free' %}
+            <span class="plan-meta-item"><span class="plan-meta-icon">💳</span> $0 / month</span>
+            <span class="plan-meta-item"><span class="plan-meta-icon">📅</span> Lifetime Free</span>
+          {% elif request.user.subscription_type in 'pro,gold' %}
+            <span class="plan-meta-item"><span class="plan-meta-icon">💳</span> $9.00 / month</span>
+            {% if current_sub.current_period_end %}<span class="plan-meta-item"><span class="plan-meta-icon">📅</span> Renews {{ current_sub.current_period_end|date:"M d, Y" }}</span>{% endif %}
+          {% elif request.user.subscription_type in 'studio,platinum' %}
+            <span class="plan-meta-item"><span class="plan-meta-icon">💳</span> $25.00 / month</span>
+            {% if current_sub.current_period_end %}<span class="plan-meta-item"><span class="plan-meta-icon">📅</span> Renews {{ current_sub.current_period_end|date:"M d, Y" }}</span>{% endif %}
+          {% else %}
+            <span class="plan-meta-item"><span class="plan-meta-icon">💳</span> Custom Pricing</span>
+          {% endif %}
+          <span class="plan-meta-item"><span class="plan-meta-icon">👤</span> {{ request.user.email }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="plan-actions">
+        {% if request.user.subscription_type == 'free' %}
+          <a href="{% url 'payments:subscribe' 'pro' %}" class="sub-btn sub-btn-primary">Upgrade to Pro →</a>
+          <a href="{% url 'payments:subscribe' 'studio' %}" class="sub-btn sub-btn-ghost sub-btn-sm">View Studio Plan</a>
+        {% elif request.user.subscription_type in 'pro,gold' %}
+          <a href="{% url 'payments:subscribe' 'studio' %}" class="sub-btn sub-btn-primary">Upgrade to Studio →</a>
+          <button class="sub-btn sub-btn-danger sub-btn-sm" onclick="document.getElementById('cancel-modal').classList.add('show')">Cancel Plan</button>
+        {% elif request.user.subscription_type in 'studio,platinum' %}
+          <a href="mailto:enterprise@devforge.io" class="sub-btn sub-btn-ghost">Contact for Enterprise →</a>
+          <button class="sub-btn sub-btn-danger sub-btn-sm" onclick="document.getElementById('cancel-modal').classList.add('show')">Cancel Plan</button>
+        {% else %}
+          <a href="mailto:enterprise@devforge.io" class="sub-btn sub-btn-ghost">Contact Account Manager</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── USAGE STATS ── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card-icon">📁</div>
+      <div class="stat-card-value">
+        {% if request.user.subscription_type == 'free' %}0
+        {% elif request.user.subscription_type in 'pro,gold' %}10
+        {% elif request.user.subscription_type in 'studio,platinum' %}50
+        {% else %}∞{% endif %}
+      </div>
+      <div class="stat-card-label">File Uploads / Month</div>
+      {% if request.user.subscription_type == 'free' %}
+      <div class="stat-card-bar"><div class="stat-card-bar-fill" style="width:0%;"></div></div>
+      {% elif request.user.subscription_type in 'pro,gold' %}
+      <div class="stat-card-bar"><div class="stat-card-bar-fill" style="width:40%;"></div></div>
+      {% endif %}
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">🧊</div>
+      <div class="stat-card-value">
+        {% if request.user.subscription_type == 'free' %}—
+        {% else %}✓{% endif %}
+      </div>
+      <div class="stat-card-label">3D Studio Access</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">🏪</div>
+      <div class="stat-card-value">
+        {% if request.user.subscription_type == 'free' %}—
+        {% else %}✓{% endif %}
+      </div>
+      <div class="stat-card-label">Marketplace Selling</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">🏆</div>
+      <div class="stat-card-value">
+        {% if request.user.subscription_type in 'studio,platinum,enterprise' %}✓
+        {% else %}—{% endif %}
+      </div>
+      <div class="stat-card-label">Tournament Hosting</div>
+    </div>
+  </div>
+
+  <!-- ── TWO COLUMN ── -->
+  <div class="sub-two-col">
+
+    <!-- LEFT: Features Included -->
+    <div class="panel-card">
+      <div class="panel-header">
+        <span class="panel-title"><span class="panel-title-icon">📋</span> What's Included</span>
+        <a href="{% url 'payments:plans' %}" class="sub-btn sub-btn-ghost sub-btn-sm">Compare Plans</a>
+      </div>
+      <div class="panel-body-sm">
+        <div class="feature-included-list">
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">👥</span> Social Feed & Community</span>
+            <span class="feat-value feat-yes">✓ All Plans</span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🏅</span> Game Jams Participation</span>
+            <span class="feat-value feat-yes">✓ All Plans</span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🛒</span> Marketplace (Browse)</span>
+            <span class="feat-value feat-yes">✓ All Plans</span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">📁</span> File Uploads / Month</span>
+            <span class="feat-value feat-limit">
+              {% if request.user.subscription_type == 'free' %}<span style="color:var(--text-muted);">— Free</span>
+              {% elif request.user.subscription_type in 'pro,gold' %}10 files
+              {% elif request.user.subscription_type in 'studio,platinum' %}50 files
+              {% else %}Unlimited{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🧊</span> 3D Studio Pro</span>
+            <span class="feat-value {% if request.user.subscription_type != 'free' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type != 'free' %}✓ Included{% else %}Pro+ only{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🖼️</span> Image Editor</span>
+            <span class="feat-value {% if request.user.subscription_type != 'free' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type != 'free' %}✓ Included{% else %}Pro+ only{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🎵</span> Audio Lab (DAW)</span>
+            <span class="feat-value {% if request.user.subscription_type != 'free' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type != 'free' %}✓ Included{% else %}Pro+ only{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🏪</span> Marketplace Selling</span>
+            <span class="feat-value {% if request.user.subscription_type != 'free' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type != 'free' %}✓ Included{% else %}Pro+ only{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">🏆</span> Tournament Hosting</span>
+            <span class="feat-value {% if request.user.subscription_type in 'studio,platinum,enterprise' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type in 'studio,platinum,enterprise' %}✓ Included{% else %}Studio+ only{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">👨‍👩‍👧</span> Team Workspace</span>
+            <span class="feat-value {% if request.user.subscription_type in 'studio,platinum,enterprise' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type in 'studio,platinum,enterprise' %}✓ 5 members{% else %}Studio+ only{% endif %}
+            </span>
+          </div>
+          <div class="feat-row">
+            <span class="feat-name"><span class="feat-name-icon">📊</span> Advanced Analytics</span>
+            <span class="feat-value {% if request.user.subscription_type in 'studio,platinum,enterprise' %}feat-yes{% else %}feat-no{% endif %}">
+              {% if request.user.subscription_type in 'studio,platinum,enterprise' %}✓ Included{% else %}Studio+ only{% endif %}
+            </span>
+          </div>
         </div>
       </div>
     </div>
 
-    {% if not stripe_available %}
-    <div style="background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:10px; padding:1rem; margin-bottom:1.5rem; color:#f59e0b; font-size:0.85rem;">
-      ⚠️ To'lov tizimi sozlanmagan. Stripe kalitlarini kiriting.
-    </div>
-    {% else %}
-    <form method="post">
-      {% csrf_token %}
-      <button type="submit" style="width:100%; padding:1rem; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:white; border:none; border-radius:12px; font-size:1rem; font-weight:700; cursor:pointer; transition:0.2s;">
-        🔒 Obunani Faollashtirish
-      </button>
-    </form>
-    <p style="text-align:center; font-size:0.75rem; color:var(--text3); margin-top:0.75rem;">🔒 Stripe orqali xavfsiz to'lov</p>
-    {% endif %}
+    <!-- RIGHT: Billing + Quick Actions -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
 
-    <div style="text-align:center; margin-top:1.5rem;">
-      <a href="{% url 'home' %}" style="color:var(--text3); font-size:0.85rem;">← Ortga qaytish</a>
+      <!-- Billing Info -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title"><span class="panel-title-icon">💳</span> Billing Details</span>
+        </div>
+        <div class="panel-body-sm">
+          <div class="billing-row">
+            <span class="billing-key">Plan</span>
+            <span class="billing-val">{{ request.user.get_subscription_type_display|default:'Free' }}</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-key">Amount</span>
+            <span class="billing-val">
+              {% if request.user.subscription_type == 'free' %}$0.00 / mo
+              {% elif request.user.subscription_type in 'pro,gold' %}$9.00 / mo
+              {% elif request.user.subscription_type in 'studio,platinum' %}$25.00 / mo
+              {% else %}Custom{% endif %}
+            </span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-key">Billing Cycle</span>
+            <span class="billing-val">Monthly</span>
+          </div>
+          <div class="billing-row">
+            <span class="billing-key">Payment Method</span>
+            <span class="billing-val">
+              {% if request.user.stripe_customer_id %}•••• Card{% else %}—{% endif %}
+            </span>
+          </div>
+          {% if current_sub and current_sub.current_period_end %}
+          <div class="billing-row">
+            <span class="billing-key">Next Billing Date</span>
+            <span class="billing-val">{{ current_sub.current_period_end|date:"M d, Y" }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <span class="panel-title"><span class="panel-title-icon">⚡</span> Quick Actions</span>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px;">
+          {% if request.user.subscription_type == 'free' %}
+          <a href="{% url 'payments:subscribe' 'pro' %}" class="sub-btn sub-btn-primary" style="justify-content:center;">⭐ Upgrade to Pro — $9/mo</a>
+          <a href="{% url 'payments:subscribe' 'studio' %}" class="sub-btn sub-btn-ghost" style="justify-content:center;">🎬 View Studio Plan — $25/mo</a>
+          {% elif request.user.subscription_type in 'pro,gold' %}
+          <a href="{% url 'payments:subscribe' 'studio' %}" class="sub-btn sub-btn-primary" style="justify-content:center;">🎬 Upgrade to Studio — $25/mo</a>
+          {% endif %}
+          <a href="{% url 'payments:deposit' %}" class="sub-btn sub-btn-ghost" style="justify-content:center;">💰 Top Up Wallet</a>
+          <a href="{% url 'payments:plans' %}" class="sub-btn sub-btn-ghost" style="justify-content:center;">📋 Compare All Plans</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INVOICES ── -->
+  <div class="panel-card" style="margin-bottom:20px;">
+    <div class="panel-header">
+      <span class="panel-title"><span class="panel-title-icon">🧾</span> Invoice History</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if invoices %}
+            {% for inv in invoices %}
+            <tr>
+              <td>{{ inv.created_at|date:"M d, Y" }}</td>
+              <td>{{ inv.description }}</td>
+              <td>${{ inv.amount }}</td>
+              <td>
+                <span class="invoice-status inv-paid">✓ Paid</span>
+              </td>
+              <td><a href="#" style="color:var(--accent2);font-size:0.82rem;">Download PDF</a></td>
+            </tr>
+            {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted);">
+              {% if request.user.subscription_type == 'free' %}
+              No invoices yet. <a href="{% url 'payments:subscribe' 'pro' %}" style="color:var(--accent2);">Upgrade to Pro</a> to see billing history.
+              {% else %}
+              No invoices found. Your first invoice will appear here after your next billing date.
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── DANGER ZONE ── -->
+  {% if request.user.subscription_type != 'free' %}
+  <div class="panel-card" style="border-color:rgba(239,68,68,0.2);">
+    <div class="panel-header" style="border-color:rgba(239,68,68,0.15);">
+      <span class="panel-title" style="color:#f87171;"><span class="panel-title-icon">⚠️</span> Danger Zone</span>
+    </div>
+    <div class="panel-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">Cancel Subscription</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);">You'll keep access until the end of the current billing period. No refunds for partial months.</div>
+        </div>
+        <button class="sub-btn sub-btn-danger" onclick="document.getElementById('cancel-modal').classList.add('show')">Cancel Plan</button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- /sub-shell -->
+
+<!-- ══ CANCEL CONFIRMATION MODAL ══ -->
+<div class="modal-overlay" id="cancel-modal">
+  <div class="modal-box">
+    <div class="modal-icon">😢</div>
+    <div class="modal-title">Cancel your subscription?</div>
+    <p class="modal-sub">
+      You'll lose access to all Pro/Studio features at the end of your billing period.
+      Your projects and files will still be accessible but read-only.
+      <br><br>
+      <strong>Are you sure you want to downgrade to Free?</strong>
+    </p>
+    <div class="modal-actions">
+      <button class="sub-btn sub-btn-ghost" onclick="document.getElementById('cancel-modal').classList.remove('show')">Keep My Plan</button>
+      <form method="post" action="{% url 'payments:plans' %}" style="display:inline;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <button type="submit" class="sub-btn sub-btn-danger">Yes, Cancel</button>
+      </form>
     </div>
   </div>
 </div>
+
+<!-- Close modal on backdrop click -->
+<script>
+document.getElementById('cancel-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+</script>
+
+{% endwith %}{% endwith %}{% endwith %}{% endwith %}
 {% endblock %}

@@ -1,218 +1,1359 @@
-{% extends "base.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevForge — The All-in-One Creative Platform for Developers & Artists</title>
+<meta name="description" content="Game engines, 3D Studio, Image Editor, Audio DAW, Video Lab, Marketplace, and Community — all in one powerful platform. Build. Create. Publish.">
 
-{% block title %}DevForge — Build the Future of Gaming{% endblock %}
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-{% block extra_css %}
 <style>
-    .hero {
-        padding: 8rem 0 6rem;
-        text-align: center;
-        position: relative;
-    }
+/* ═══════════════════════════════════════════
+   DEVFORGE LANDING PAGE — PREMIUM 2025
+═══════════════════════════════════════════ */
+:root {
+  --black:    #020204;
+  --bg:       #08090d;
+  --surface:  #0e1117;
+  --surface2: #141720;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #f0f1f5;
+  --text2:    #9ba0b3;
+  --text3:    #545868;
+  --accent:   #6366f1;
+  --accent2:  #818cf8;
+  --purple:   #9333ea;
+  --orange:   #f97316;
+  --green:    #10b981;
+  --cyan:     #06b6d4;
+  --pink:     #ec4899;
 
-    .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid var(--border);
-        padding: 6px 16px;
-        border-radius: 50px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--accent);
-        margin-bottom: 2rem;
-    }
+  --glow-indigo: 0 0 60px rgba(99,102,241,0.3);
+  --glow-purple: 0 0 60px rgba(147,51,234,0.25);
+  --glow-cyan:   0 0 40px rgba(6,182,212,0.2);
 
-    .hero-title {
-        font-family: var(--font-display);
-        font-size: clamp(3rem, 10vw, 5.5rem);
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: -2px;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(to bottom, #fff 40%, rgba(255,255,255,0.6) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
+  --font:     'Inter', -apple-system, sans-serif;
+  --display:  'Plus Jakarta Sans', sans-serif;
+  --radius:   12px;
+  --radius-lg: 20px;
+}
 
-    .hero-sub {
-        font-size: 1.25rem;
-        color: var(--text-secondary);
-        max-width: 650px;
-        margin: 0 auto 3rem;
-    }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .hero-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-    }
+html { scroll-behavior: smooth; }
 
-    .section-label {
-        font-family: var(--font-display);
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: var(--accent);
-        margin-bottom: 0.5rem;
-        display: block;
-    }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 
-    .section-title {
-        font-family: var(--font-display);
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 3rem;
-    }
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
 
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 4rem;
-    }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #2a2e3d; border-radius: 4px; }
 
-    .feature-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(0, 245, 255, 0.1);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 1.5rem;
-        color: var(--accent);
-    }
+/* ── REUSABLE UTILITIES ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.container-sm { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
 
-    .item-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-    }
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  font-family: var(--font);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.35);
+}
+.btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 8px 32px rgba(99,102,241,0.45); }
 
-    .thumb {
-        aspect-ratio: 16/10;
-        background: #1e293b;
-        border-radius: var(--radius-md);
-        margin-bottom: 1rem;
-        overflow: hidden;
-        position: relative;
-    }
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: var(--border2); }
 
-    .thumb img {
-        width: 100%; height: 100%;
-        object-fit: cover;
-        transition: var(--transition);
-    }
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { background: rgba(255,255,255,0.06); }
 
-    .card:hover .thumb img {
-        transform: scale(1.05);
-    }
+.btn-lg { padding: 14px 30px; font-size: 0.95rem; border-radius: 12px; }
+.btn-xl { padding: 16px 36px; font-size: 1.05rem; border-radius: 14px; }
 
-    @media (max-width: 768px) {
-        .hero { padding: 4rem 0 3rem; }
-        .hero-actions { flex-direction: column; }
-    }
+/* ── GRADIENT TEXTS ── */
+.grad-indigo {
+  background: linear-gradient(135deg, var(--accent2), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.grad-orange {
+  background: linear-gradient(135deg, var(--orange), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.grad-cyan {
+  background: linear-gradient(135deg, var(--cyan), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.grad-full {
+  background: linear-gradient(135deg, var(--accent2), var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── BADGE ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.badge-indigo {
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.25);
+  color: var(--accent2);
+}
+.badge-green {
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.25);
+  color: #34d399;
+}
+.badge-orange {
+  background: rgba(249,115,22,0.12);
+  border: 1px solid rgba(249,115,22,0.25);
+  color: #fb923c;
+}
+
+/* ── NAV ── */
+#nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  z-index: 100;
+  transition: background 0.3s, border 0.3s;
+  border-bottom: 1px solid transparent;
+}
+#nav.scrolled {
+  background: rgba(8, 9, 13, 0.92);
+  border-bottom-color: var(--border);
+  backdrop-filter: blur(20px);
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text);
+}
+.nav-logo-icon {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto;
+}
+.nav-link {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+
+/* ── SECTION LABELS ── */
+.section-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent2);
+  margin-bottom: 14px;
+  display: block;
+}
+.section-title {
+  font-family: var(--display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+.section-sub {
+  font-size: 1.05rem;
+  color: var(--text2);
+  max-width: 600px;
+  line-height: 1.7;
+}
+
+/* ═══ HERO SECTION ═══ */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  padding: 100px 24px 80px;
+}
+
+/* Animated grid background */
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* Glow orbs */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+.orb1 { width: 500px; height: 500px; background: rgba(99,102,241,0.18); top: 10%; left: 10%; animation-delay: 0s; }
+.orb2 { width: 400px; height: 400px; background: rgba(147,51,234,0.15); top: 20%; right: 5%; animation-delay: -3s; }
+.orb3 { width: 350px; height: 350px; background: rgba(249,115,22,0.08); bottom: 20%; left: 20%; animation-delay: -6s; }
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-40px) scale(1.05); }
+}
+
+.hero-content { position: relative; z-index: 2; max-width: 900px; }
+
+.hero-announce {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 32px;
+  cursor: default;
+  transition: border-color 0.2s;
+}
+.hero-announce:hover { border-color: var(--border2); }
+.hero-announce .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+.hero-title {
+  font-family: var(--display);
+  font-size: clamp(3.5rem, 9vw, 7rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -4px;
+  margin-bottom: 28px;
+}
+
+.hero-sub {
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  color: var(--text2);
+  max-width: 580px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 72px;
+}
+
+/* Stats strip */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  border-top: 1px solid var(--border);
+  padding-top: 40px;
+  flex-wrap: wrap;
+}
+.stat-item { text-align: center; }
+.stat-number {
+  font-family: var(--display);
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text3);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* ═══ TOOLS SHOWCASE ═══ */
+#tools {
+  padding: 120px 0;
+  position: relative;
+}
+
+.tools-header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) { .tools-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .tools-grid { grid-template-columns: 1fr; } }
+
+.tool-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+.tool-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+.tool-card:hover {
+  border-color: var(--border2);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.tool-card.featured {
+  grid-column: span 2;
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(99,102,241,0.06) 100%);
+  border-color: rgba(99,102,241,0.25);
+}
+.tool-card.featured:hover { box-shadow: var(--glow-indigo), 0 20px 60px rgba(0,0,0,0.4); }
+
+.tool-icon {
+  font-size: 2.4rem;
+  margin-bottom: 16px;
+  display: block;
+}
+.tool-name {
+  font-family: var(--display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.tool-desc {
+  font-size: 0.85rem;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.tool-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text3);
+}
+.tool-link {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text3);
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.tool-card:hover .tool-link { background: var(--accent); color: #fff; }
+
+/* ═══ FEATURE HIGHLIGHTS (Alternating) ═══ */
+#features {
+  padding: 100px 0;
+  background: linear-gradient(180deg, transparent, rgba(99,102,241,0.02), transparent);
+}
+
+.feature-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  margin-bottom: 120px;
+}
+.feature-block:last-child { margin-bottom: 0; }
+.feature-block.reverse { direction: rtl; }
+.feature-block.reverse > * { direction: ltr; }
+
+.feature-visual {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 6rem;
+  position: relative;
+  overflow: hidden;
+}
+.feature-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(99,102,241,0.1), transparent 70%);
+}
+
+.feature-text {}
+.feature-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feature-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text2);
+}
+.feature-check {
+  width: 20px;
+  height: 20px;
+  background: rgba(99,102,241,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--accent2);
+}
+
+@media (max-width: 900px) {
+  .feature-block, .feature-block.reverse { grid-template-columns: 1fr; direction: ltr; gap: 40px; }
+}
+
+/* ═══ SOCIAL PROOF ═══ */
+#social {
+  padding: 100px 0;
+}
+
+.testimonials-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+@media (max-width: 900px) { .testimonials-grid { grid-template-columns: 1fr; } }
+@media (min-width: 901px) and (max-width: 1100px) { .testimonials-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.testimonial-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  position: relative;
+}
+.testimonial-quote {
+  font-size: 0.95rem;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 24px;
+  font-style: italic;
+}
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.testimonial-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+.testimonial-name { font-size: 0.875rem; font-weight: 700; }
+.testimonial-role { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+.stars { color: #fbbf24; font-size: 12px; margin-bottom: 16px; letter-spacing: 2px; }
+
+/* ═══ PRICING PREVIEW ═══ */
+#pricing {
+  padding: 100px 0;
+  background: linear-gradient(180deg, transparent, rgba(147,51,234,0.02), transparent);
+}
+
+.pricing-header { text-align: center; margin-bottom: 64px; }
+
+.pricing-toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.pricing-toggle span { font-size: 0.85rem; font-weight: 600; color: var(--text2); }
+.toggle-pill {
+  width: 44px;
+  height: 24px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle-pill.active { background: var(--accent); }
+.toggle-pill::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle-pill.active::after { transform: translateX(20px); }
+.save-tag {
+  background: rgba(16,185,129,0.15);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #34d399;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 1024px) { .pricing-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+
+.price-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  position: relative;
+  transition: all 0.25s;
+}
+.price-card.popular {
+  border-color: var(--accent);
+  box-shadow: var(--glow-indigo);
+  transform: scale(1.03);
+}
+.price-card.popular:hover { transform: scale(1.03) translateY(-4px); }
+.price-card:hover:not(.popular) { border-color: var(--border2); transform: translateY(-4px); }
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.price-plan { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+.price-amount-big {
+  font-family: var(--display);
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+.price-period { font-size: 0.85rem; color: var(--text2); margin-bottom: 24px; }
+.price-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.price-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text2);
+}
+.pf-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.pf-yes { background: rgba(16,185,129,0.2); color: #34d399; }
+.pf-no { background: rgba(255,255,255,0.05); color: var(--text3); }
+
+.price-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-family: var(--font);
+}
+.pcta-primary { background: linear-gradient(135deg, var(--accent), var(--purple)); color: #fff; }
+.pcta-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.pcta-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+.pcta-ghost:hover { background: rgba(255,255,255,0.1); }
+.pcta-enterprise { background: linear-gradient(135deg, var(--cyan), var(--accent)); color: #fff; }
+
+/* ═══ FAQ ═══ */
+#faq {
+  padding: 100px 0;
+}
+.faq-header { text-align: center; margin-bottom: 56px; }
+.faq-list { display: flex; flex-direction: column; gap: 2px; }
+.faq-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+  user-select: none;
+}
+.faq-q:hover { background: rgba(255,255,255,0.03); }
+.faq-arrow {
+  width: 24px;
+  height: 24px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: transform 0.2s, background 0.2s;
+}
+.faq-item.open .faq-arrow { transform: rotate(180deg); background: var(--accent); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.faq-item.open .faq-a { max-height: 200px; }
+.faq-a-inner { padding: 0 24px 20px; font-size: 0.9rem; color: var(--text2); line-height: 1.7; }
+
+/* ═══ FINAL CTA ═══ */
+#cta {
+  padding: 140px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+#cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(99,102,241,0.1), transparent);
+}
+.cta-content { position: relative; z-index: 2; }
+.cta-title {
+  font-family: var(--display);
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -3px;
+  line-height: 1;
+  margin-bottom: 20px;
+}
+.cta-sub { font-size: 1.1rem; color: var(--text2); margin-bottom: 40px; }
+.cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.cta-note { font-size: 0.8rem; color: var(--text3); margin-top: 18px; }
+
+/* ═══ FOOTER ═══ */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 60px 0 40px;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+@media (max-width: 900px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+@media (max-width: 540px) { .footer-grid { grid-template-columns: 1fr; } }
+
+.footer-brand-desc { font-size: 0.875rem; color: var(--text3); margin-top: 12px; line-height: 1.7; }
+.footer-col-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 16px; }
+.footer-links { display: flex; flex-direction: column; gap: 10px; }
+.footer-link { font-size: 0.875rem; color: var(--text3); transition: color 0.15s; }
+.footer-link:hover { color: var(--text); }
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-copy { font-size: 0.8rem; color: var(--text3); }
+.footer-socials { display: flex; gap: 10px; }
+.footer-social {
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.footer-social:hover { background: var(--accent); color: #fff; }
+
+/* ── RESPONSIVE HERO ── */
+@media (max-width: 768px) {
+  #hero { padding: 120px 24px 60px; }
+  .hero-stats { gap: 28px; }
+  .stat-number { font-size: 1.6rem; }
+  .nav-links { display: none; }
+}
+
+/* ── SCROLL ANIMATIONS ── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.fade-up.visible { opacity: 1; transform: translateY(0); }
 </style>
-{% endblock %}
+</head>
+<body>
 
-{% block content %}
-<section class="hero animate-fade">
-    <div class="hero-badge">
-        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent);"></span>
-        Professional Game Dev Ecosystem
+<!-- ═══ NAVBAR ═══ -->
+<nav id="nav">
+  <div class="container flex items-center justify-between">
+    <a href="/" class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      DevForge
+    </a>
+    <div class="nav-links">
+      <a href="#tools" class="nav-link">Tools</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#pricing" class="nav-link">Pricing</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="{% url 'project_list' %}" class="nav-link">Community</a>
     </div>
-    <h1 class="hero-title">Forge Your<br>Masterpiece.</h1>
+    <div class="nav-right">
+      <a href="{% url 'login' %}" class="btn btn-ghost" style="padding:8px 18px;font-size:0.85rem;">Log in</a>
+      <a href="{% url 'register' %}" class="btn btn-primary" style="padding:8px 20px;font-size:0.85rem;">Get Started Free</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-orb orb1"></div>
+  <div class="hero-orb orb2"></div>
+  <div class="hero-orb orb3"></div>
+
+  <div class="hero-content">
+    <div class="hero-announce">
+      <span class="dot"></span>
+      Now in Public Beta — Join thousands of creators
+    </div>
+
+    <h1 class="hero-title">
+      Build<span class="grad-indigo">.</span> Create<span class="grad-orange">.</span><br>
+      <span class="grad-full">Publish.</span>
+    </h1>
+
     <p class="hero-sub">
-        The all-in-one platform for game developers to collaborate, 
-        trade assets, and master the craft.
+      The all-in-one creative platform with 3D Studio, Game Engine, Image Editor, Audio DAW, and more.
+      Build the next great game — without leaving your browser.
     </p>
+
     <div class="hero-actions">
-        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">Get Started for Free</a>
-        <a href="{% url 'project_list' %}" class="btn btn-secondary btn-lg">Explore Projects</a>
+      <a href="{% url 'register' %}" class="btn btn-primary btn-xl">
+        ⚡ Start for Free — No Card Required
+      </a>
+      <a href="{% url 'project_list' %}" class="btn btn-ghost btn-xl">
+        🎮 Browse Projects →
+      </a>
     </div>
 
-    <!-- Stats Row -->
-    <div style="display: flex; justify-content: center; gap: 4rem; margin-top: 5rem; border-top: 1px solid var(--border); padding-top: 3rem;">
-        <div>
-            <div style="font-size: 2rem; font-weight: 800; font-family: var(--font-display);">{{ stats.users|default:"2.4k" }}+</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Creators</div>
-        </div>
-        <div>
-            <div style="font-size: 2rem; font-weight: 800; font-family: var(--font-display);">{{ stats.projects|default:"150" }}+</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">Projects</div>
-        </div>
-        <div>
-            <div style="font-size: 2rem; font-weight: 800; font-family: var(--font-display);">{{ stats.assets|default:"800" }}+</div>
-            <div style="font-size: 0.85rem; color: var(--text-muted);">3D Assets</div>
-        </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-number grad-indigo">{{ stats.users|default:"2,800" }}+</div>
+        <div class="stat-label">Active Creators</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number grad-orange">{{ stats.projects|default:"1,200" }}+</div>
+        <div class="stat-label">Projects Published</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number grad-cyan">{{ stats.assets|default:"5,400" }}+</div>
+        <div class="stat-label">3D Assets Available</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" style="color:#34d399;">14+</div>
+        <div class="stat-label">Creative Tools</div>
+      </div>
     </div>
+  </div>
 </section>
 
-<section style="margin-top: 6rem;">
-    <span class="section-label">Core Capabilities</span>
-    <h2 class="section-title">Built for the Modern Studio</h2>
-    
-    <div class="features-grid">
-        <div class="card">
-            <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            </div>
-            <h3 style="margin-bottom: 0.75rem; font-family: var(--font-display);">Studio Dashboard</h3>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">Manage your projects, assets, and team with a high-performance management interface.</p>
-        </div>
-        <div class="card">
-            <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            </div>
-            <h3 style="margin-bottom: 0.75rem; font-family: var(--font-display);">Asset Marketplace</h3>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">The premier destination for GLB, GLTF, and high-fidelity 3D assets for game engines.</p>
-        </div>
-        <div class="card">
-            <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            </div>
-            <h3 style="margin-bottom: 0.75rem; font-family: var(--font-display);">Global Collaboration</h3>
-            <p style="color: var(--text-secondary); font-size: 0.9rem;">Find collaborators across every discipline: code, art, sound, and level design.</p>
-        </div>
+<!-- ═══ TOOLS SHOWCASE ═══ -->
+<section id="tools">
+  <div class="container">
+    <div class="tools-header fade-up">
+      <span class="section-eyebrow">Everything You Need</span>
+      <h2 class="section-title">A Full Creative Suite,<br>Right in Your Browser</h2>
+      <p class="section-sub" style="margin:0 auto;">No downloads. No plugins. Just open a tab and start creating. Every tool is fully integrated and works seamlessly together.</p>
     </div>
+
+    <div class="tools-grid">
+      <!-- Featured: 3D Studio -->
+      <div class="tool-card featured fade-up">
+        <span class="tool-icon">🧊</span>
+        <div class="tool-name">3D Studio Pro</div>
+        <p class="tool-desc">A professional-grade 3D environment powered by Three.js. Create, sculpt, and animate 3D models with Blender-inspired tools. Export as GLTF, OBJ, or render high-res images directly from the browser.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <span class="tool-tag">Three.js r128</span>
+          <span class="tool-tag">PBR Materials</span>
+          <span class="tool-tag">GLTF Export</span>
+          <span class="tool-tag">Animation</span>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-primary" style="font-size:0.85rem;padding:10px 20px;">Open 3D Studio →</a>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- Game Engine -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🎮</span>
+        <div class="tool-name">Game Engine</div>
+        <p class="tool-desc">Build 2D and 3D games with a drag-and-drop scene editor, physics engine, scripting, and one-click export to Web, Android, and iOS.</p>
+        <span class="tool-tag">WebGL</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- Image Editor -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🖼️</span>
+        <div class="tool-name">Image Editor</div>
+        <p class="tool-desc">Photoshop-like layer-based image editor. Brushes, masks, filters, blend modes, text tools, and non-destructive editing.</p>
+        <span class="tool-tag">Layers</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- Audio Lab -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🎵</span>
+        <div class="tool-name">Audio Lab (DAW)</div>
+        <p class="tool-desc">Multi-track audio sequencer with virtual instruments, beat machine, and waveform editor. Compose soundtracks without any software.</p>
+        <span class="tool-tag">Web Audio API</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- Video Lab -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🎬</span>
+        <div class="tool-name">Video Lab</div>
+        <p class="tool-desc">Timeline-based video editor. Trim, splice, add audio, transitions, and effects. Export up to 4K — all in browser.</p>
+        <span class="tool-tag">FFmpeg.wasm</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- World Builder -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🌍</span>
+        <div class="tool-name">World Builder</div>
+        <p class="tool-desc">Craft immersive 3D game worlds with terrain tools, foliage painting, light placement, and atmospheric effects.</p>
+        <span class="tool-tag">Procedural Gen</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- Marketplace -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🏪</span>
+        <div class="tool-name">Asset Marketplace</div>
+        <p class="tool-desc">Buy and sell high-quality 3D models, textures, audio packs, and scripts. Monetize your creations from day one.</p>
+        <span class="tool-tag">Stripe Payments</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+
+      <!-- Game Jams -->
+      <div class="tool-card fade-up">
+        <span class="tool-icon">🏆</span>
+        <div class="tool-name">Game Jams & Challenges</div>
+        <p class="tool-desc">Host or join competitive Game Jams with prize pools, real-time leaderboards, and community voting.</p>
+        <span class="tool-tag">Live Events</span>
+        <a href="{% url 'register' %}" class="tool-link">→</a>
+      </div>
+    </div>
+  </div>
 </section>
 
-{% if latest_projects %}
-<section style="margin-top: 8rem;">
-    <div class="flex justify-between items-center mb-4">
-        <div>
-            <span class="section-label">Showcase</span>
-            <h2 class="section-title" style="margin-bottom: 0;">Featured Projects</h2>
+<!-- ═══ FEATURE HIGHLIGHTS ═══ -->
+<section id="features">
+  <div class="container">
+    <!-- Feature 1 -->
+    <div class="feature-block fade-up">
+      <div class="feature-visual">🧊<span style="position:absolute;inset:0;background:radial-gradient(circle at 40% 40%,rgba(99,102,241,0.15),transparent);"></span></div>
+      <div class="feature-text">
+        <span class="section-eyebrow">3D Studio</span>
+        <h2 class="section-title">Professional 3D<br>in the Browser</h2>
+        <p class="section-sub">No more $4,000 software licenses. DevForge brings Blender-level 3D creation to any device with a browser.</p>
+        <div class="feature-list">
+          <div class="feature-list-item"><span class="feature-check">✓</span> PBR Materials with Metallic, Roughness, and Emissive channels</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Import GLB, GLTF, OBJ models from your computer</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Real-time Ambient, Sun, and Spot lighting</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Export 4K renders and GLTF models</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Auto-saves every 45 seconds to the cloud</div>
         </div>
-        <a href="{% url 'project_list' %}" class="btn btn-secondary">View All</a>
+        <a href="{% url 'register' %}" class="btn btn-primary" style="margin-top:28px;">Try 3D Studio Free →</a>
+      </div>
     </div>
-    
-    <div class="item-grid">
-        {% for project in latest_projects %}
-        <div class="card">
-            <div class="thumb">
-                {% if project.thumbnail %}
-                    <img src="{{ project.thumbnail.url }}" alt="{{ project.title }}">
-                {% else %}
-                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">🎮</div>
-                {% endif %}
-            </div>
-            <div class="badge badge-accent mb-4">{{ project.get_genre_display }}</div>
-            <h3 style="margin-bottom: 0.5rem; font-family: var(--font-display);">{{ project.title }}</h3>
-            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 1.5rem;">
-                {{ project.description|truncatechars:100 }}
-            </p>
-            <div class="flex items-center justify-between">
-                <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">@{{ project.creator.username }}</span>
-                <a href="{% url 'project_detail' pk=project.pk %}" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Details</a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
 
-{% endblock %}
+    <!-- Feature 2 -->
+    <div class="feature-block reverse fade-up">
+      <div class="feature-visual">🏪</div>
+      <div class="feature-text">
+        <span class="section-eyebrow">Marketplace</span>
+        <h2 class="section-title">Sell Your Assets.<br>Earn Real Money.</h2>
+        <p class="section-sub">Publish your 3D models, textures, music packs, and scripts. Reach thousands of game developers who need exactly what you create.</p>
+        <div class="feature-list">
+          <div class="feature-list-item"><span class="feature-check">✓</span> Instant payouts via Stripe Connect</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Set your own prices and licensing terms</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Revenue analytics and download tracking</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> 90% revenue share (we take only 10%)</div>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-primary" style="margin-top:28px;">Start Selling →</a>
+      </div>
+    </div>
+
+    <!-- Feature 3 -->
+    <div class="feature-block fade-up">
+      <div class="feature-visual">👥</div>
+      <div class="feature-text">
+        <span class="section-eyebrow">Community</span>
+        <h2 class="section-title">Connect With<br>5,000+ Creators</h2>
+        <p class="section-sub">DevForge is more than tools — it's a thriving community of game developers, 3D artists, composers, and designers who collaborate and grow together.</p>
+        <div class="feature-list">
+          <div class="feature-list-item"><span class="feature-check">✓</span> Developer feed — share work, get feedback</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Real-time messaging with collaborators</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Job board for game dev positions</div>
+          <div class="feature-list-item"><span class="feature-check">✓</span> Monthly Game Jams with prize pools</div>
+        </div>
+        <a href="{% url 'register' %}" class="btn btn-primary" style="margin-top:28px;">Join the Community →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SOCIAL PROOF ═══ -->
+<section id="social">
+  <div class="container">
+    <div class="testimonials-header fade-up">
+      <span class="section-eyebrow">Testimonials</span>
+      <h2 class="section-title">Loved by Creators</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">"DevForge replaced my entire creative stack. 3D Studio alone is worth it — I built my entire game's assets here without touching Blender."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#6366f1,#9333ea);">A</div>
+          <div>
+            <div class="testimonial-name">Amir K.</div>
+            <div class="testimonial-role">Indie Game Developer</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">"Sold my first 3D model pack in my first week. The marketplace reach is incredible and the payout was instant. This is the future."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#f97316,#ec4899);">S</div>
+          <div>
+            <div class="testimonial-name">Sarah M.</div>
+            <div class="testimonial-role">3D Artist & Creator</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-quote">"Finally a platform that has everything in one place. The Game Engine + Audio Lab integration saved me weeks of work on my last project."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#06b6d4,#6366f1);">D</div>
+          <div>
+            <div class="testimonial-name">Daniel R.</div>
+            <div class="testimonial-role">Game Studio Founder</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING SECTION ═══ -->
+<section id="pricing">
+  <div class="container">
+    <div class="pricing-header fade-up">
+      <span class="section-eyebrow">Simple Pricing</span>
+      <h2 class="section-title">Start Free.<br>Scale When Ready.</h2>
+      <p class="section-sub" style="margin:0 auto;">No lock-ins, no surprise charges. Upgrade or downgrade anytime.</p>
+      <div class="pricing-toggle" style="margin-top:24px;">
+        <span>Monthly</span>
+        <div class="toggle-pill" id="billing-toggle" onclick="this.classList.toggle('active')"></div>
+        <span>Yearly <span class="save-tag">Save 30%</span></span>
+      </div>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- FREE -->
+      <div class="price-card fade-up">
+        <div class="price-plan">Free</div>
+        <div class="price-amount-big">$0</div>
+        <div class="price-period">/ month, forever</div>
+        <ul class="price-features">
+          <li><span class="pf-check pf-yes">✓</span> Profile & Portfolio</li>
+          <li><span class="pf-check pf-yes">✓</span> Social Feed & Community</li>
+          <li><span class="pf-check pf-yes">✓</span> Game Jams Participation</li>
+          <li><span class="pf-check pf-yes">✓</span> Marketplace (Buy Only)</li>
+          <li><span class="pf-check pf-no">✕</span> 3D Studio & Editors</li>
+          <li><span class="pf-check pf-no">✕</span> File Uploads</li>
+        </ul>
+        <a href="{% url 'register' %}" class="price-cta pcta-ghost">Get Started Free</a>
+      </div>
+
+      <!-- PRO -->
+      <div class="price-card popular fade-up">
+        <div class="popular-badge">⭐ Most Popular</div>
+        <div class="price-plan">Pro</div>
+        <div class="price-amount-big grad-indigo">$9</div>
+        <div class="price-period">/ month</div>
+        <ul class="price-features">
+          <li><span class="pf-check pf-yes">✓</span> Everything in Free</li>
+          <li><span class="pf-check pf-yes">✓</span> 3D Studio + All Editors</li>
+          <li><span class="pf-check pf-yes">✓</span> 10 File Uploads / month</li>
+          <li><span class="pf-check pf-yes">✓</span> Private Workspace</li>
+          <li><span class="pf-check pf-yes">✓</span> Marketplace Selling</li>
+          <li><span class="pf-check pf-no">✕</span> Tournament Hosting</li>
+        </ul>
+        <a href="{% url 'payments:subscribe' 'pro' %}" class="price-cta pcta-primary">Start Pro Plan →</a>
+      </div>
+
+      <!-- STUDIO -->
+      <div class="price-card fade-up">
+        <div class="price-plan">Studio</div>
+        <div class="price-amount-big" style="background:linear-gradient(135deg,#9333ea,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$25</div>
+        <div class="price-period">/ month</div>
+        <ul class="price-features">
+          <li><span class="pf-check pf-yes">✓</span> Everything in Pro</li>
+          <li><span class="pf-check pf-yes">✓</span> 50 File Uploads / month</li>
+          <li><span class="pf-check pf-yes">✓</span> Tournament Hosting</li>
+          <li><span class="pf-check pf-yes">✓</span> Team Workspace (5 users)</li>
+          <li><span class="pf-check pf-yes">✓</span> Advanced Analytics</li>
+          <li><span class="pf-check pf-yes">✓</span> Priority Support</li>
+        </ul>
+        <a href="{% url 'payments:subscribe' 'studio' %}" class="price-cta pcta-primary" style="background:linear-gradient(135deg,#9333ea,#ec4899);">Start Studio Plan →</a>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="price-card fade-up">
+        <div class="price-plan">Enterprise</div>
+        <div class="price-amount-big" style="font-size:2rem;letter-spacing:-1px;color:var(--cyan);">Custom</div>
+        <div class="price-period">contact us for pricing</div>
+        <ul class="price-features">
+          <li><span class="pf-check pf-yes">✓</span> Everything in Studio</li>
+          <li><span class="pf-check pf-yes">✓</span> Unlimited Uploads</li>
+          <li><span class="pf-check pf-yes">✓</span> Dedicated Account Manager</li>
+          <li><span class="pf-check pf-yes">✓</span> Custom Integrations</li>
+          <li><span class="pf-check pf-yes">✓</span> SLA Guarantee</li>
+          <li><span class="pf-check pf-yes">✓</span> White-label Option</li>
+        </ul>
+        <a href="mailto:enterprise@devforge.io" class="price-cta pcta-enterprise">Contact Sales →</a>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:32px;">
+      <a href="{% url 'payments:plans' %}" class="btn btn-ghost" style="font-size:0.875rem;">Compare all features in detail →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ═══ -->
+<section id="faq">
+  <div class="container-sm">
+    <div class="faq-header fade-up">
+      <span class="section-eyebrow">FAQ</span>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-list" id="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Is DevForge really free to start?
+          <span class="faq-arrow">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Yes — completely free, no credit card required. You get access to the community, social feed, game jam participation, and marketplace browsing forever at no cost.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          What's included in the 3D Studio?
+          <span class="faq-arrow">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">The 3D Studio includes a full Three.js-powered viewport with PBR materials, lighting controls, object modifiers, animation timeline, GLTF/OBJ import and export, high-resolution renders, and auto-cloud save. It's available on Pro and Studio plans.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          How does the Marketplace payment work?
+          <span class="faq-arrow">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">DevForge uses Stripe Connect to handle all payments. When someone buys your asset, 90% goes directly to your Stripe account. Payouts are typically available within 2 business days. Selling requires a Pro or Studio subscription.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Can I cancel my subscription anytime?
+          <span class="faq-arrow">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">Absolutely. You can cancel anytime from your account settings and you'll keep your Pro/Studio access until the end of the current billing period. No cancellation fees, ever.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Do I need to install anything?
+          <span class="faq-arrow">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">No installation required. DevForge runs 100% in your browser — Chrome, Firefox, Edge, and Safari are all supported. Your projects are automatically saved to the cloud.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINAL CTA ═══ -->
+<section id="cta">
+  <div class="container">
+    <div class="cta-content fade-up">
+      <h2 class="cta-title">Ready to<br><span class="grad-full">Build Anything?</span></h2>
+      <p class="cta-sub">Join 2,800+ creators who are already building games, assets, and worlds on DevForge.</p>
+      <div class="cta-actions">
+        <a href="{% url 'register' %}" class="btn btn-primary btn-xl">⚡ Create Free Account</a>
+        <a href="{% url 'payments:plans' %}" class="btn btn-ghost btn-xl">View Pricing Plans</a>
+      </div>
+      <div class="cta-note">Free forever · No credit card needed · Cancel anytime</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="nav-logo">
+          <div class="nav-logo-icon">⚡</div>
+          DevForge
+        </div>
+        <p class="footer-brand-desc">The all-in-one creative platform for game developers, 3D artists, composers, and designers. Build, create, and publish — all in your browser.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Product</div>
+        <div class="footer-links">
+          <a href="#tools" class="footer-link">3D Studio</a>
+          <a href="#tools" class="footer-link">Game Engine</a>
+          <a href="#tools" class="footer-link">Image Editor</a>
+          <a href="#tools" class="footer-link">Audio Lab</a>
+          <a href="#tools" class="footer-link">Marketplace</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Company</div>
+        <div class="footer-links">
+          <a href="#" class="footer-link">About</a>
+          <a href="#" class="footer-link">Blog</a>
+          <a href="#" class="footer-link">Careers</a>
+          <a href="mailto:hello@devforge.io" class="footer-link">Contact</a>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <div class="footer-links">
+          <a href="#" class="footer-link">Terms of Service</a>
+          <a href="#" class="footer-link">Privacy Policy</a>
+          <a href="#" class="footer-link">Cookie Policy</a>
+          <a href="{% url 'payments:plans' %}" class="footer-link">Pricing</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 DevForge. All rights reserved. Built with ❤️ for creators.</div>
+      <div class="footer-socials">
+        <a href="#" class="footer-social">𝕏</a>
+        <a href="#" class="footer-social">in</a>
+        <a href="#" class="footer-social">gh</a>
+        <a href="#" class="footer-social">📧</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Navbar scroll effect
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 20);
+});
+
+// FAQ Toggle
+function toggleFaq(el) {
+  const item = el.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// Smooth scroll for nav links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+});
+</script>
+</body>
+</html>

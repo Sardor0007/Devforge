@@ -15,6 +15,7 @@ urlpatterns = [
     path('subscribe/<str:plan>/',   views.subscription_checkout_view,   name='subscribe'),
     path('subscription-success/',   views.subscription_success_view,    name='subscription_success'),
     path('subscription-cancel/',    views.subscription_cancel_view,     name='subscription_cancel'),
+    path('manage/',                 views.subscription_manage_view,     name='manage_subscription'),
 
     # Eski URLs (backward compat)
     path('subscription/<str:plan>/', views.subscription_checkout_view,  name='subscription'),

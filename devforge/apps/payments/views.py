@@ -255,6 +255,28 @@ def subscription_success_view(request):
     })
 
 
+@login_required
+def subscription_manage_view(request):
+    """Obuna boshqaruv paneli — hozirgi reja, foydalanish statistikasi, hisob-faktura tarixi."""
+    from apps.accounts.models import Subscription
+    try:
+        current_sub = request.user.subscription
+    except Exception:
+        current_sub = None
+
+    # Hisob-fakturalar (Transaction modeldan)
+    from apps.accounts.models import Transaction
+    invoices = Transaction.objects.filter(
+        user=request.user,
+        transaction_type__in=['subscription', 'deposit']
+    ).order_by('-created_at')[:12]
+
+    return render(request, 'payments/subscription.html', {
+        'current_sub': current_sub,
+        'current_plan': request.user.subscription_type,
+        'invoices': invoices,
+        'plans': PLAN_PRICES,
+    })
 
 
 @login_required
