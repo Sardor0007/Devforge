@@ -48,8 +48,7 @@
   --green:          #10b981;
   --orange:         #f59e0b;
   --red:            #ef4444;
-  --purple:         #8b5cf6;
-  --blue:           #3b82f6;
+  --gold:           #fbbf24;
 
   --hover:          rgba(255, 255, 255, 0.06);
   --selected:       rgba(0, 245, 255, 0.12);
@@ -180,8 +179,8 @@ html, body {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  min-width: 190px;
-  background: var(--surface);
+  min-width: 200px;
+  background: #0d1117;
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   box-shadow: 0 16px 36px var(--shadow);
@@ -365,6 +364,70 @@ html, body {
   color: var(--accent);
   border-color: var(--border-bright);
   background: var(--surface3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   BLENDER-LIKE FLOATING ADD MENU (Shift+A)
+══════════════════════════════════════════════════════════════════════════════ */
+#floating-add-menu {
+  display: none;
+  position: absolute;
+  min-width: 210px;
+  background: rgba(13, 17, 23, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 245, 255, 0.2);
+  padding: 6px;
+  z-index: 4000;
+  animation: popupScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#floating-add-menu.show { display: block; }
+@keyframes popupScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fam-header {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--accent);
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fam-group-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  padding: 4px 8px 2px;
+  letter-spacing: 0.5px;
+}
+.fam-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.fam-item:hover {
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--accent);
+}
+.fam-item span.icon {
+  font-size: 13px;
+  width: 18px;
+  text-align: center;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -846,7 +909,7 @@ html, body {
 .outliner-btn:hover { color: var(--text); }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   BOTTOM TIMELINE (Animation & Sequencer)
+   BOTTOM TIMELINE (Animation & Keyframe Ruler)
 ══════════════════════════════════════════════════════════════════════════════ */
 #timeline {
   height: 120px;
@@ -886,7 +949,6 @@ html, body {
 }
 .tl-btn:hover { background: var(--surface3); color: var(--accent); }
 .tl-btn.active { background: var(--accent); color: #05070a; border-color: var(--accent); }
-.tl-btn svg { width: 12px; height: 12px; fill: currentColor; }
 
 .frame-info {
   display: flex;
@@ -911,25 +973,27 @@ html, body {
 .timeline-track-wrap {
   flex: 1;
   position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
-  background: var(--header);
+  overflow: hidden;
+  background: #080a0f;
 }
 #timeline-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   display: block;
-  cursor: crosshair;
+  cursor: ew-resize;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   MODALS & TOASTS
+   MODALS (RENDER, VIDEO, SHORTCUTS)
 ══════════════════════════════════════════════════════════════════════════════ */
 .modal-overlay {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
   z-index: 5000;
   align-items: center;
@@ -948,7 +1012,7 @@ html, body {
 }
 @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .modal-title { font-family: var(--font-display); font-size: 16px; font-weight: 800; margin-bottom: 14px; }
-.render-preview-img {
+.render-preview-img, .render-preview-video {
   width: 100%;
   height: 280px;
   object-fit: contain;
@@ -962,6 +1026,23 @@ html, body {
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* Progress bar for video render */
+.render-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  display: none;
+}
+.render-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--accent-grad);
+  transition: width 0.1s ease;
 }
 
 /* Toast Notifications */
@@ -1023,6 +1104,7 @@ html, body {
             <div class="dd-item" onclick="studio.exportOBJ()"><span>Export Wavefront (.obj)</span></div>
             <div class="dd-sep"></div>
             <div class="dd-item" onclick="studio.openRenderModal()"><span>Render Rasm olish</span><span class="dd-shortcut">F12</span></div>
+            <div class="dd-item" onclick="studio.openVideoRenderModal()"><span>Render Video olish</span></div>
           </div>
         </div>
 
@@ -1041,24 +1123,8 @@ html, body {
         </div>
 
         <!-- Add -->
-        <div class="top-menu-item" onclick="studio.toggleMenu(this)">
-          Qo'shish (Add)
-          <div class="dropdown">
-            <div class="dd-label">Mesh (Primitivlar)</div>
-            <div class="dd-item" onclick="studio.addObject('box')">Cube (Kub)</div>
-            <div class="dd-item" onclick="studio.addObject('sphere')">UV Sphere (Shar)</div>
-            <div class="dd-item" onclick="studio.addObject('cylinder')">Cylinder (Silindr)</div>
-            <div class="dd-item" onclick="studio.addObject('cone')">Cone (Konus)</div>
-            <div class="dd-item" onclick="studio.addObject('torus')">Torus (Halqa)</div>
-            <div class="dd-item" onclick="studio.addObject('plane')">Plane (Tekislik)</div>
-            <div class="dd-item" onclick="studio.addObject('capsule')">Capsule (Kapsula)</div>
-            <div class="dd-item" onclick="studio.addObject('suzanne')">Suzanne (Monkey Head)</div>
-            <div class="dd-sep"></div>
-            <div class="dd-label">Yorug'lik (Lights)</div>
-            <div class="dd-item" onclick="studio.addObject('light_point')">Point Light (Nuqtaviy)</div>
-            <div class="dd-item" onclick="studio.addObject('light_sun')">Sun Light (Quyosh)</div>
-            <div class="dd-item" onclick="studio.addObject('light_spot')">Spot Light (Proyektor)</div>
-          </div>
+        <div class="top-menu-item" onclick="studio.openFloatingAddMenu(event)">
+          Qo'shish (Add) <span class="dd-shortcut" style="margin-left:4px;">Shift+A</span>
         </div>
 
         <!-- View -->
@@ -1072,6 +1138,15 @@ html, body {
             <div class="dd-sep"></div>
             <div class="dd-item" onclick="studio.focusSelected()"><span>Ob'ektga yaqinlashish</span><span class="dd-shortcut">.</span></div>
             <div class="dd-item" onclick="studio.toggleGrid()"><span>Setka (Grid)</span></div>
+          </div>
+        </div>
+
+        <!-- Render -->
+        <div class="top-menu-item" onclick="studio.toggleMenu(this)">
+          Render
+          <div class="dropdown">
+            <div class="dd-item" onclick="studio.openRenderModal()"><span>📸 Rasm Renderlash</span><span class="dd-shortcut">F12</span></div>
+            <div class="dd-item" onclick="studio.openVideoRenderModal()"><span>🎬 Animatsiya Video Renderlash</span></div>
           </div>
         </div>
       </nav>
@@ -1144,6 +1219,11 @@ html, body {
 
       <div class="tool-sep"></div>
 
+      <button class="tool-btn" id="tool-add" onclick="studio.openFloatingAddMenu(event)">
+        <span style="font-size:18px;font-weight:700;">+</span>
+        <div class="tool-tooltip">Ob'ekt Qo'shish <kbd>Shift+A</kbd></div>
+      </button>
+
       <button class="tool-btn" id="tool-snap" onclick="studio.toggleSnapping()">
         <svg viewBox="0 0 24 24"><path d="M12 2L4 5V11C4 16.5 7.4 21.6 12 23C16.6 21.6 20 16.5 20 11V5L12 2ZM12 11.99H18C17.5 15.6 15.1 18.8 12 19.9V12H6V6.3L12 4.1V11.99Z"/></svg>
         <div class="tool-tooltip">Magnit setka (Snapping) <kbd>Shift+Tab</kbd></div>
@@ -1167,10 +1247,10 @@ html, body {
       </div>
 
       <div class="vp-overlay-tr">
-        <button class="shading-btn" id="shading-wire" onclick="studio.setShading('wireframe')" title="Wireframe">🕸️</button>
+        <button class="shading-btn" id="shading-wire" onclick="studio.setShading('wireframe')" title="Wireframe (Setka)">🕸️</button>
         <button class="shading-btn active" id="shading-solid" onclick="studio.setShading('solid')" title="Solid">🧊</button>
-        <button class="shading-btn" id="shading-mat" onclick="studio.setShading('material')" title="Material Preview">🎨</button>
-        <button class="shading-btn" id="shading-render" onclick="studio.setShading('rendered')" title="Rendered">✨</button>
+        <button class="shading-btn" id="shading-mat" onclick="studio.setShading('material')" title="Material Preview (PBR)">🎨</button>
+        <button class="shading-btn" id="shading-render" onclick="studio.setShading('rendered')" title="Rendered (High-End)">✨</button>
       </div>
 
       <!-- Mini Axes Orientation Gizmo -->
@@ -1214,7 +1294,7 @@ html, body {
         <div class="prop-panel active" id="panel-outliner">
           <div class="panel-header-title">
             <span>Sahnadagi Ob'ektlar</span>
-            <button class="action-btn" style="width:auto;padding:3px 8px;font-size:10px;" onclick="studio.addObject('box')">+ Yangi</button>
+            <button class="action-btn" style="width:auto;padding:3px 8px;font-size:10px;" onclick="studio.openFloatingAddMenu(event)">+ Qo'shish</button>
           </div>
           <input type="text" class="outliner-search" id="outliner-search" placeholder="Qidirish..." oninput="studio.filterOutliner(this.value)">
           <div class="outliner-list" id="outliner-list"></div>
@@ -1273,8 +1353,8 @@ html, body {
             <div class="prop-row">
               <span class="prop-label">Rang</span>
               <div class="color-picker-wrap">
-                <input type="color" id="mat-color" class="color-swatch" value="#ffffff" oninput="studio.updateMaterialFromUI()">
-                <input type="text" id="mat-hex" class="color-hex" value="#ffffff" onchange="studio.updateMaterialHex(this.value)">
+                <input type="color" id="mat-color" class="color-swatch" value="#00f5ff" oninput="studio.updateMaterialFromUI()">
+                <input type="text" id="mat-hex" class="color-hex" value="#00f5ff" onchange="studio.updateMaterialHex(this.value)">
               </div>
             </div>
           </div>
@@ -1285,14 +1365,14 @@ html, body {
               <span class="prop-label">Metallik (Metalness)</span>
               <div class="prop-slider-wrap">
                 <input type="range" min="0" max="1" step="0.05" id="mat-metal" class="prop-slider" oninput="studio.updateMaterialFromUI()">
-                <span class="prop-slider-val" id="mat-metal-val">0.0</span>
+                <span class="prop-slider-val" id="mat-metal-val">0.2</span>
               </div>
             </div>
             <div class="prop-row">
               <span class="prop-label">G'adir-budurlik (Roughness)</span>
               <div class="prop-slider-wrap">
                 <input type="range" min="0" max="1" step="0.05" id="mat-rough" class="prop-slider" oninput="studio.updateMaterialFromUI()">
-                <span class="prop-slider-val" id="mat-rough-val">0.5</span>
+                <span class="prop-slider-val" id="mat-rough-val">0.4</span>
               </div>
             </div>
             <div class="prop-row">
@@ -1324,7 +1404,7 @@ html, body {
           </div>
 
           <div class="prop-section">
-            <div class="prop-section-title">Tayyor Presetlar</div>
+            <div class="prop-section-title">Tayyor PBR Presetlar</div>
             <div class="preset-grid">
               <div class="preset-btn" onclick="studio.applyPreset('metal')">Xrom (Metal)</div>
               <div class="preset-btn" onclick="studio.applyPreset('gold')">Oltin (Gold)</div>
@@ -1386,7 +1466,7 @@ html, body {
         <div class="prop-panel" id="panel-render">
           <div class="panel-header-title">Render & Eksport</div>
           <div class="prop-section">
-            <div class="prop-section-title">Yuqori Sifatli Render</div>
+            <div class="prop-section-title">📸 Yuqori Sifatli Rasm Render</div>
             <div class="prop-row">
               <span class="prop-label">O'lchami</span>
               <select id="render-res" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;">
@@ -1395,7 +1475,16 @@ html, body {
                 <option value="3840x2160">4K Ultra HD</option>
               </select>
             </div>
-            <button class="action-btn action-btn-primary" style="margin-top:8px;" onclick="studio.openRenderModal()">📸 Render Olish (F12)</button>
+            <button class="action-btn action-btn-primary" style="margin-top:8px;" onclick="studio.openRenderModal()">📸 Rasm Olish (F12)</button>
+          </div>
+
+          <div class="prop-section">
+            <div class="prop-section-title">🎬 Animatsiya Video Render</div>
+            <div class="prop-row">
+              <span class="prop-label">Freymlar soni</span>
+              <span class="prop-slider-val" id="video-frames-count">250 freym</span>
+            </div>
+            <button class="action-btn action-btn-primary" style="margin-top:8px;background:linear-gradient(135deg,#9333ea,#ec4899);" onclick="studio.openVideoRenderModal()">🎬 Video Renderlash</button>
           </div>
 
           <div class="prop-section">
@@ -1418,7 +1507,7 @@ html, body {
       <div class="timeline-controls">
         <button class="tl-btn" onclick="studio.timelineRewind()" title="Boshiga qaytish">⏮</button>
         <button class="tl-btn" id="btn-play" onclick="studio.togglePlay()" title="O'ynatish / To'xtatish (Space)">▶</button>
-        <button class="tl-btn" onclick="studio.insertKeyframe()" title="Keyframe qo'yish (I)"><span style="font-size:10px;color:var(--accent);">◆</span></button>
+        <button class="tl-btn" onclick="studio.insertKeyframe()" title="Keyframe qo'yish (I)"><span style="font-size:10px;color:var(--gold);">◆</span></button>
       </div>
 
       <div class="frame-info">
@@ -1434,6 +1523,28 @@ html, body {
 
 </div>
 
+<!-- ═══ FLOATING ADD MENU (Shift+A) ═══ -->
+<div id="floating-add-menu">
+  <div class="fam-header">
+    <span>✨ Ob'ekt Qo'shish (Add)</span>
+    <span style="font-size:9px;color:var(--text3);font-family:var(--font-mono);">Shift+A</span>
+  </div>
+  <div class="fam-group-title">Mesh (Primitivlar)</div>
+  <div class="fam-item" onclick="studio.addObject('box')"><span class="icon">🧊</span> Cube (Kub)</div>
+  <div class="fam-item" onclick="studio.addObject('sphere')"><span class="icon">🌐</span> UV Sphere (Shar)</div>
+  <div class="fam-item" onclick="studio.addObject('cylinder')"><span class="icon">🥫</span> Cylinder (Silindr)</div>
+  <div class="fam-item" onclick="studio.addObject('cone')"><span class="icon">🍦</span> Cone (Konus)</div>
+  <div class="fam-item" onclick="studio.addObject('torus')"><span class="icon">🍩</span> Torus (Halqa)</div>
+  <div class="fam-item" onclick="studio.addObject('plane')"><span class="icon">📄</span> Plane (Tekislik)</div>
+  <div class="fam-item" onclick="studio.addObject('capsule')"><span class="icon">💊</span> Capsule (Kapsula)</div>
+  <div class="fam-item" onclick="studio.addObject('suzanne')"><span class="icon">🐵</span> Suzanne (Monkey)</div>
+  
+  <div class="fam-group-title" style="margin-top:4px;">Yorug'lik (Lights)</div>
+  <div class="fam-item" onclick="studio.addObject('light_point')"><span class="icon">💡</span> Point Light</div>
+  <div class="fam-item" onclick="studio.addObject('light_sun')"><span class="icon">☀️</span> Sun Light</div>
+  <div class="fam-item" onclick="studio.addObject('light_spot')"><span class="icon">🔦</span> Spot Light</div>
+</div>
+
 <!-- ═══ MODAL: HIGH-RES RENDER ═══ -->
 <div class="modal-overlay" id="render-modal">
   <div class="modal-box">
@@ -1446,23 +1557,42 @@ html, body {
   </div>
 </div>
 
+<!-- ═══ MODAL: VIDEO ANIMATION RENDER ═══ -->
+<div class="modal-overlay" id="video-render-modal">
+  <div class="modal-box">
+    <div class="modal-title">🎬 Animatsiya Video Renderlash</div>
+    <div class="render-progress-bar" id="video-progress-bar">
+      <div class="render-progress-fill" id="video-progress-fill"></div>
+    </div>
+    <div id="video-render-status" style="font-size:12px;color:var(--text2);margin-bottom:12px;">Videoni yozib olishga tayyor (0 - 250 freymlar).</div>
+    
+    <video id="video-preview" class="render-preview-video" controls style="display:none;"></video>
+
+    <div class="modal-actions">
+      <button class="action-btn" style="width:auto;" onclick="document.getElementById('video-render-modal').classList.remove('show')">Yopish</button>
+      <button id="btn-start-record" class="action-btn action-btn-primary" style="width:auto;" onclick="studio.startVideoRecording()">🎬 Renderlashni Boshlash</button>
+      <a id="btn-download-video" class="action-btn action-btn-primary" style="width:auto;text-decoration:none;display:none;" download="devforge-animation.webm">📥 Video Yuklab Olish</a>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MODAL: KEYBOARD SHORTCUTS ═══ -->
 <div class="modal-overlay" id="shortcuts-modal">
   <div class="modal-box" style="max-width:500px;">
     <div class="modal-title">⌨️ Tezkor Tugmalar (Shortcuts)</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;color:var(--text2);margin-bottom:16px;">
+      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Shift+A</kbd> — Ob'ekt qo'shish oynasi</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Q</kbd> — Tanlash (Select)</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">G</kbd> — Siljitish (Move)</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">R</kbd> — Aylantirish (Rotate)</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">S</kbd> — Masshtab (Scale)</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Shift+A</kbd> — Ob'ekt qo'shish</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Shift+D</kbd> — Nusxa olish</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">X / Del</kbd> — O'chirish</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Ctrl+S</kbd> — Saqlash</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Ctrl+Z</kbd> — Bekor qilish</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">F12</kbd> — Render olish</div>
+      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">F12</kbd> — Rasm render olish</div>
       <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Space</kbd> — Animatsiya</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Num 1/3/7</kbd> — Ko'rinishlar</div>
+      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">I</kbd> — Keyframe qo'yish</div>
     </div>
     <div class="modal-actions">
       <button class="action-btn action-btn-primary" style="width:auto;" onclick="document.getElementById('shortcuts-modal').classList.remove('show')">Tushundim</button>
@@ -1490,7 +1620,7 @@ window.DJ = {
 
 <!-- ══════════════════════════════════════════════════════════════════════════════
    DEVFORGE 3D STUDIO PRO ENGINE (JavaScript Core)
-══════════════════════════════════════════════════════════════════════════════ -->
+══════════════════════════════════════════════════════════════════════════════ */
 <script>
 class DevForgeStudio {
   constructor() {
@@ -1503,22 +1633,25 @@ class DevForgeStudio {
     this.gizmoScene = null;
     this.gizmoCamera = null;
 
-    this.objects = []; // Managed meshes
+    this.objects = []; // Managed meshes & lights
     this.selected = null;
     this.isDirty = false;
-    this.history = [];
-    this.historyIdx = -1;
 
     this.currentTool = 'select';
     this.currentShading = 'solid';
     this.isSnapping = false;
 
-    // Timeline
+    // Timeline & Animation
     this.isPlaying = false;
     this.currentFrame = 0;
     this.totalFrames = 250;
     this.fps = 30;
-    this.keyframes = {}; // objId -> { frame: { pos, rot, scl } }
+    this.keyframes = {}; // objUUID -> { frameNumber: { pos: Vector3, rot: Euler, scl: Vector3 } }
+
+    // Video Recording
+    this.mediaRecorder = null;
+    this.recordedChunks = [];
+    this.isRecording = false;
 
     this.init();
   }
@@ -1535,12 +1668,13 @@ class DevForgeStudio {
     this.camera = new THREE.PerspectiveCamera(60, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
     this.camera.position.set(7, 5, 8);
 
-    // 3. Renderer setup
+    // 3. Renderer setup with proper color management
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
     this.renderer.setSize(wrap.clientWidth, wrap.clientHeight, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
 
     // 4. OrbitControls
     this.orbit = new THREE.OrbitControls(this.camera, canvas);
@@ -1566,27 +1700,37 @@ class DevForgeStudio {
       }
     });
 
-    // 6. Grid & Helpers
+    // 6. Grid & Environment Lighting
     this.grid = new THREE.GridHelper(30, 30, 0x00f5ff, 0x161b22);
     this.grid.position.y = -0.01;
     this.scene.add(this.grid);
 
-    // 7. Lighting
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
     this.scene.add(this.ambientLight);
 
-    this.sunLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    this.sunLight = new THREE.DirectionalLight(0xffffff, 1.3);
     this.sunLight.position.set(10, 15, 10);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
     this.sunLight.shadow.mapSize.height = 2048;
     this.scene.add(this.sunLight);
 
-    // 8. Orientation Gizmo setup
+    // Add fill light for high quality PBR material preview reflections
+    this.fillLight = new THREE.DirectionalLight(0x00f5ff, 0.4);
+    this.fillLight.position.set(-10, 10, -10);
+    this.scene.add(this.fillLight);
+
+    // 7. Orientation Gizmo setup
     this.initOrientationGizmo();
 
+    // 8. Timeline Canvas setup
+    this.initTimeline();
+
     // 9. Resize Observer
-    const ro = new ResizeObserver(() => this.onResize());
+    const ro = new ResizeObserver(() => {
+      this.onResize();
+      this.drawTimeline();
+    });
     ro.observe(wrap);
 
     // 10. Raycaster Selection
@@ -1670,6 +1814,7 @@ class DevForgeStudio {
       this.transform.detach();
     }
     this.updateOutlinerUI();
+    this.drawTimeline();
   }
 
   setTool(tool) {
@@ -1701,7 +1846,30 @@ class DevForgeStudio {
     }
   }
 
+  openFloatingAddMenu(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const fam = document.getElementById('floating-add-menu');
+    if (!fam) return;
+
+    let x = window.innerWidth / 2 - 100;
+    let y = window.innerHeight / 2 - 120;
+
+    if (e && e.clientX && e.clientY) {
+      x = Math.min(e.clientX + 5, window.innerWidth - 230);
+      y = Math.min(e.clientY + 5, window.innerHeight - 380);
+    }
+
+    fam.style.left = `${x}px`;
+    fam.style.top = `${y}px`;
+    fam.classList.add('show');
+  }
+
+  closeFloatingAddMenu() {
+    document.getElementById('floating-add-menu')?.classList.remove('show');
+  }
+
   addObject(type) {
+    this.closeFloatingAddMenu();
     let geo, mat, mesh, name;
     mat = new THREE.MeshStandardMaterial({
       color: 0x00f5ff,
@@ -1748,22 +1916,36 @@ class DevForgeStudio {
         const helper = new THREE.PointLightHelper(light, 0.5);
         light.add(helper);
         light.name = `PointLight_${this.objects.length + 1}`;
+        light.isLight = true;
         this.scene.add(light);
         this.objects.push(light);
         this.selectObject(light);
         this.markDirty();
-        this.showToast(`✨ ${light.name} qo'shildi`);
+        this.showToast(`💡 ${light.name} qo'shildi`);
         return;
       case 'light_sun':
         const sun = new THREE.DirectionalLight(0xffffff, 1.5);
         sun.position.set(5, 10, 5);
         sun.castShadow = true;
         sun.name = `SunLight_${this.objects.length + 1}`;
+        sun.isLight = true;
         this.scene.add(sun);
         this.objects.push(sun);
         this.selectObject(sun);
         this.markDirty();
         this.showToast(`☀️ ${sun.name} qo'shildi`);
+        return;
+      case 'light_spot':
+        const spot = new THREE.SpotLight(0x8b5cf6, 3, 30, Math.PI / 4);
+        spot.position.set(0, 8, 0);
+        spot.castShadow = true;
+        spot.name = `SpotLight_${this.objects.length + 1}`;
+        spot.isLight = true;
+        this.scene.add(spot);
+        this.objects.push(spot);
+        this.selectObject(spot);
+        this.markDirty();
+        this.showToast(`🔦 ${spot.name} qo'shildi`);
         return;
       default:
         geo = new THREE.BoxGeometry(2, 2, 2);
@@ -1805,6 +1987,7 @@ class DevForgeStudio {
     if (idx !== -1) this.objects.splice(idx, 1);
     this.markDirty();
     this.updateOutlinerUI();
+    this.drawTimeline();
     this.showToast('🗑️ Ob\'ekt o\'chirildi');
   }
 
@@ -1820,6 +2003,7 @@ class DevForgeStudio {
     if (confirm('Yangi sahna yaratmoqchimisiz? Saqlanmagan o\'zgarishlar o\'chadi.')) {
       this.objects.forEach(o => this.scene.remove(o));
       this.objects = [];
+      this.keyframes = {};
       this.selectObject(null);
       this.addObject('box');
       this.markDirty();
@@ -1850,8 +2034,7 @@ class DevForgeStudio {
   }
 
   toggleOrtho() {
-    // Toggle between perspectives
-    this.showToast('📐 Kamera rejimi yangilandi');
+    this.showToast('📐 Kamera ko\'rinishi yangilandi');
   }
 
   toggleGrid() {
@@ -1864,13 +2047,21 @@ class DevForgeStudio {
     document.getElementById(`shading-${mode === 'wireframe' ? 'wire' : mode === 'solid' ? 'solid' : mode === 'material' ? 'mat' : 'render'}`)?.classList.add('active');
 
     this.objects.forEach(obj => {
-      if (obj.material) {
-        if (mode === 'wireframe') obj.material.wireframe = true;
-        else {
-          obj.material.wireframe = false;
+      obj.traverse(child => {
+        if (child.isMesh && child.material) {
+          if (mode === 'wireframe') {
+            child.material.wireframe = true;
+          } else if (mode === 'solid') {
+            child.material.wireframe = false;
+            child.material.roughness = 0.6;
+          } else if (mode === 'material' || mode === 'rendered') {
+            child.material.wireframe = false;
+            child.material.needsUpdate = true;
+          }
         }
-      }
+      });
     });
+    this.showToast(`🎨 Shading rejimi: ${mode}`);
   }
 
   switchPanel(panelId) {
@@ -1940,43 +2131,65 @@ class DevForgeStudio {
   }
 
   syncMaterialToUI() {
-    if (!this.selected || !this.selected.material) return;
-    const m = this.selected.material;
+    if (!this.selected) return;
+    let m = this.selected.material;
+    if (!m && this.selected.children) {
+      this.selected.traverse(c => { if (c.isMesh && c.material) m = c.material; });
+    }
+    if (!m) return;
+
     const hex = '#' + (m.color ? m.color.getHexString() : 'ffffff');
     document.getElementById('mat-color').value = hex;
     document.getElementById('mat-hex').value = hex;
 
-    document.getElementById('mat-metal').value = m.metalness || 0;
+    document.getElementById('mat-metal').value = m.metalness !== undefined ? m.metalness : 0;
     document.getElementById('mat-metal-val').textContent = (m.metalness || 0).toFixed(2);
 
-    document.getElementById('mat-rough').value = m.roughness || 0.5;
+    document.getElementById('mat-rough').value = m.roughness !== undefined ? m.roughness : 0.5;
     document.getElementById('mat-rough-val').textContent = (m.roughness || 0.5).toFixed(2);
 
-    document.getElementById('mat-opacity').value = m.opacity || 1.0;
+    document.getElementById('mat-opacity').value = m.opacity !== undefined ? m.opacity : 1.0;
     document.getElementById('mat-opacity-val').textContent = (m.opacity || 1.0).toFixed(2);
 
     document.getElementById('mat-wire').checked = !!m.wireframe;
   }
 
   updateMaterialFromUI() {
-    if (!this.selected || !this.selected.material) return;
-    const m = this.selected.material;
+    if (!this.selected) return;
     const hex = document.getElementById('mat-color').value;
-    m.color.set(hex);
     document.getElementById('mat-hex').value = hex;
 
-    m.metalness = parseFloat(document.getElementById('mat-metal').value);
-    document.getElementById('mat-metal-val').textContent = m.metalness.toFixed(2);
+    const metalness = parseFloat(document.getElementById('mat-metal').value);
+    document.getElementById('mat-metal-val').textContent = metalness.toFixed(2);
 
-    m.roughness = parseFloat(document.getElementById('mat-rough').value);
-    document.getElementById('mat-rough-val').textContent = m.roughness.toFixed(2);
+    const roughness = parseFloat(document.getElementById('mat-rough').value);
+    document.getElementById('mat-rough-val').textContent = roughness.toFixed(2);
 
-    m.opacity = parseFloat(document.getElementById('mat-opacity').value);
-    m.transparent = m.opacity < 1.0;
-    document.getElementById('mat-opacity-val').textContent = m.opacity.toFixed(2);
+    const opacity = parseFloat(document.getElementById('mat-opacity').value);
+    document.getElementById('mat-opacity-val').textContent = opacity.toFixed(2);
 
-    m.wireframe = document.getElementById('mat-wire').checked;
-    m.needsUpdate = true;
+    const wireframe = document.getElementById('mat-wire').checked;
+
+    const emissiveHex = document.getElementById('mat-emissive').value;
+    const emissiveInt = parseFloat(document.getElementById('mat-emissive-int').value);
+    document.getElementById('mat-emissive-int-val').textContent = emissiveInt.toFixed(1);
+
+    this.selected.traverse(child => {
+      if (child.isMesh && child.material) {
+        child.material.color.set(hex);
+        child.material.metalness = metalness;
+        child.material.roughness = roughness;
+        child.material.opacity = opacity;
+        child.material.transparent = opacity < 1.0;
+        child.material.wireframe = wireframe;
+        if (child.material.emissive) {
+          child.material.emissive.set(emissiveHex);
+          child.material.emissiveIntensity = emissiveInt;
+        }
+        child.material.needsUpdate = true;
+      }
+    });
+
     this.markDirty();
   }
 
@@ -1988,31 +2201,39 @@ class DevForgeStudio {
   }
 
   applyPreset(preset) {
-    if (!this.selected || !this.selected.material) return;
-    const m = this.selected.material;
+    if (!this.selected) return;
+    let color = '#ffffff', metal = 0.2, rough = 0.4, opac = 1.0, emissive = '#000000', emissiveInt = 0;
+
     switch(preset) {
       case 'metal':
-        m.color.set('#e2e8f0'); m.metalness = 0.95; m.roughness = 0.15; break;
+        color = '#e2e8f0'; metal = 0.95; rough = 0.15; break;
       case 'gold':
-        m.color.set('#fbbf24'); m.metalness = 0.9; m.roughness = 0.2; break;
+        color = '#fbbf24'; metal = 0.92; rough = 0.2; break;
       case 'glass':
-        m.color.set('#a5f3fc'); m.metalness = 0.1; m.roughness = 0.05; m.opacity = 0.4; m.transparent = true; break;
+        color = '#a5f3fc'; metal = 0.05; rough = 0.05; opac = 0.35; break;
       case 'neon':
-        m.color.set('#00f5ff'); m.emissive.set('#00f5ff'); m.emissiveIntensity = 2; m.metalness = 0.1; m.roughness = 0.3; break;
+        color = '#00f5ff'; metal = 0.1; rough = 0.2; emissive = '#00f5ff'; emissiveInt = 2.0; break;
       case 'ruby':
-        m.color.set('#ef4444'); m.metalness = 0.3; m.roughness = 0.1; break;
+        color = '#ef4444'; metal = 0.3; rough = 0.1; break;
       case 'velvet':
-        m.color.set('#7c3aed'); m.metalness = 0.0; m.roughness = 0.9; break;
+        color = '#8b5cf6'; metal = 0.0; rough = 0.92; break;
       case 'titanium':
-        m.color.set('#64748b'); m.metalness = 0.85; m.roughness = 0.35; break;
+        color = '#64748b'; metal = 0.88; rough = 0.3; break;
       case 'clay':
-        m.color.set('#d97706'); m.metalness = 0.0; m.roughness = 0.95; break;
+        color = '#d97706'; metal = 0.0; rough = 0.95; break;
       case 'mirror':
-        m.color.set('#ffffff'); m.metalness = 1.0; m.roughness = 0.0; break;
+        color = '#ffffff'; metal = 1.0; rough = 0.0; break;
     }
-    m.needsUpdate = true;
-    this.syncMaterialToUI();
-    this.markDirty();
+
+    document.getElementById('mat-color').value = color;
+    document.getElementById('mat-hex').value = color;
+    document.getElementById('mat-metal').value = metal;
+    document.getElementById('mat-rough').value = rough;
+    document.getElementById('mat-opacity').value = opac;
+    document.getElementById('mat-emissive').value = emissive;
+    document.getElementById('mat-emissive-int').value = emissiveInt;
+
+    this.updateMaterialFromUI();
     this.showToast(`🎨 Preset qo'llanildi: ${preset}`);
   }
 
@@ -2051,27 +2272,27 @@ class DevForgeStudio {
       case 'space':
         this.scene.background.set('#030508');
         this.ambientLight.color.set('#60a5fa');
-        this.ambientLight.intensity = 0.3;
+        this.ambientLight.intensity = 0.35;
         break;
       case 'cyber':
         this.scene.background.set('#0a0614');
         this.ambientLight.color.set('#c084fc');
-        this.ambientLight.intensity = 0.6;
+        this.ambientLight.intensity = 0.65;
         break;
       case 'studio':
         this.scene.background.set('#1e2430');
         this.ambientLight.color.set('#ffffff');
-        this.ambientLight.intensity = 0.7;
+        this.ambientLight.intensity = 0.8;
         break;
       case 'sunset':
         this.scene.background.set('#1c0f1d');
         this.ambientLight.color.set('#fb923c');
-        this.ambientLight.intensity = 0.5;
+        this.ambientLight.intensity = 0.55;
         break;
       case 'forest':
         this.scene.background.set('#06140f');
         this.ambientLight.color.set('#34d399');
-        this.ambientLight.intensity = 0.4;
+        this.ambientLight.intensity = 0.45;
         break;
       case 'grid':
         this.scene.background.set('#05070a');
@@ -2100,9 +2321,12 @@ class DevForgeStudio {
 
     let totalVerts = 0;
     this.objects.forEach((obj, idx) => {
-      if (obj.geometry && obj.geometry.attributes.position) {
-        totalVerts += obj.geometry.attributes.position.count;
-      }
+      obj.traverse(c => {
+        if (c.geometry && c.geometry.attributes.position) {
+          totalVerts += c.geometry.attributes.position.count;
+        }
+      });
+
       const item = document.createElement('div');
       item.className = `outliner-item ${this.selected === obj ? 'selected' : ''}`;
       item.onclick = () => this.selectObject(obj);
@@ -2147,11 +2371,113 @@ class DevForgeStudio {
       this.scene.remove(obj);
       this.objects.splice(idx, 1);
       this.updateOutlinerUI();
+      this.drawTimeline();
       this.markDirty();
     }
   }
 
-  // ── Timeline & Animation ──
+  // ══════════════════════════════════════════════════════════════════════════════
+  // TIMELINE & KEYFRAME SCRUBBING ENGINE
+  // ══════════════════════════════════════════════════════════════════════════════
+  initTimeline() {
+    const canvas = document.getElementById('timeline-canvas');
+    if (!canvas) return;
+
+    const handleScrub = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const frame = Math.round((x / rect.width) * this.totalFrames);
+      this.setFrame(frame);
+    };
+
+    let isDragging = false;
+    canvas.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      handleScrub(e);
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (isDragging) handleScrub(e);
+    });
+    window.addEventListener('pointerup', () => { isDragging = false; });
+
+    this.drawTimeline();
+  }
+
+  drawTimeline() {
+    const wrap = document.getElementById('timeline-wrap');
+    const canvas = document.getElementById('timeline-canvas');
+    if (!wrap || !canvas) return;
+
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Background
+    ctx.fillStyle = '#080a0f';
+    ctx.fillRect(0, 0, w, h);
+
+    // Frame markings (every 10 frames)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.font = '10px JetBrains Mono, monospace';
+
+    for (let f = 0; f <= this.totalFrames; f += 10) {
+      const x = (f / this.totalFrames) * w;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, f % 50 === 0 ? 18 : 10);
+      ctx.stroke();
+
+      if (f % 50 === 0 || f === 0) {
+        ctx.fillText(f.toString(), x + 3, 14);
+      }
+    }
+
+    // Draw Keyframes (Yellow/Gold diamonds ◆) for selected object
+    if (this.selected && this.keyframes[this.selected.uuid]) {
+      const kfs = this.keyframes[this.selected.uuid];
+      ctx.fillStyle = '#fbbf24';
+      ctx.strokeStyle = '#f59e0b';
+
+      Object.keys(kfs).forEach(frameStr => {
+        const frame = parseInt(frameStr);
+        const kx = (frame / this.totalFrames) * w;
+        const ky = h / 2 + 6;
+        const size = 6;
+
+        ctx.beginPath();
+        ctx.moveTo(kx, ky - size);
+        ctx.lineTo(kx + size, ky);
+        ctx.lineTo(kx, ky + size);
+        ctx.lineTo(kx - size, ky);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      });
+    }
+
+    // Draw Red Playhead line
+    const playX = (this.currentFrame / this.totalFrames) * w;
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(playX, 0);
+    ctx.lineTo(playX, h);
+    ctx.stroke();
+
+    // Playhead top triangle
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.moveTo(playX - 6, 0);
+    ctx.lineTo(playX + 6, 0);
+    ctx.lineTo(playX, 10);
+    ctx.closePath();
+    ctx.fill();
+  }
+
   togglePlay() {
     this.isPlaying = !this.isPlaying;
     const btn = document.getElementById('btn-play');
@@ -2169,11 +2495,12 @@ class DevForgeStudio {
     this.currentFrame = Math.max(0, Math.min(frame, this.totalFrames));
     document.getElementById('current-frame').value = this.currentFrame;
     this.applyKeyframesAtFrame(this.currentFrame);
+    this.drawTimeline();
   }
 
   insertKeyframe() {
     if (!this.selected) {
-      this.showToast('Avval ob\'ektni tanlang!');
+      this.showToast('⚠️ Avval sahnadan ob\'ektni tanlang!');
       return;
     }
     const id = this.selected.uuid;
@@ -2183,6 +2510,7 @@ class DevForgeStudio {
       rot: this.selected.rotation.clone(),
       scl: this.selected.scale.clone(),
     };
+    this.drawTimeline();
     this.showToast(`◆ Keyframe qo'yildi: Freym ${this.currentFrame}`);
   }
 
@@ -2190,16 +2518,42 @@ class DevForgeStudio {
     if (!this.selected) return;
     const id = this.selected.uuid;
     const kfs = this.keyframes[id];
-    if (kfs && kfs[frame]) {
-      const data = kfs[frame];
-      this.selected.position.copy(data.pos);
-      this.selected.rotation.copy(data.rot);
-      this.selected.scale.copy(data.scl);
+    if (!kfs) return;
+
+    const frames = Object.keys(kfs).map(Number).sort((a, b) => a - b);
+    if (frames.length === 0) return;
+
+    // Exact keyframe
+    if (kfs[frame]) {
+      this.selected.position.copy(kfs[frame].pos);
+      this.selected.rotation.copy(kfs[frame].rot);
+      this.selected.scale.copy(kfs[frame].scl);
+      this.syncTransformToUI();
+      return;
+    }
+
+    // Interpolate between surrounding keyframes
+    let prev = null, next = null;
+    for (let f of frames) {
+      if (f <= frame) prev = f;
+      if (f >= frame && next === null) next = f;
+    }
+
+    if (prev !== null && next !== null && prev !== next) {
+      const alpha = (frame - prev) / (next - prev);
+      this.selected.position.lerpVectors(kfs[prev].pos, kfs[next].pos, alpha);
+      this.selected.scale.lerpVectors(kfs[prev].scl, kfs[next].scl, alpha);
+      this.syncTransformToUI();
+    } else if (prev !== null) {
+      this.selected.position.copy(kfs[prev].pos);
+      this.selected.scale.copy(kfs[prev].scl);
       this.syncTransformToUI();
     }
   }
 
-  // ── Modals & Actions ──
+  // ══════════════════════════════════════════════════════════════════════════════
+  // RENDER (HIGH-RES IMAGE + VIDEO ANIMATION)
+  // ══════════════════════════════════════════════════════════════════════════════
   openRenderModal() {
     this.transform.detach();
     this.grid.visible = false;
@@ -2212,6 +2566,78 @@ class DevForgeStudio {
 
     this.grid.visible = true;
     if (this.selected) this.transform.attach(this.selected);
+  }
+
+  openVideoRenderModal() {
+    document.getElementById('video-render-modal').classList.add('show');
+    document.getElementById('video-progress-bar').style.display = 'none';
+    document.getElementById('video-preview').style.display = 'none';
+    document.getElementById('btn-start-record').style.display = 'inline-flex';
+    document.getElementById('btn-download-video').style.display = 'none';
+    document.getElementById('video-render-status').textContent = 'Videoni yozib olishga tayyor (0 - 250 freymlar).';
+  }
+
+  startVideoRecording() {
+    const canvas = this.renderer.domElement;
+    const stream = canvas.captureStream(30);
+    this.recordedChunks = [];
+
+    let options = { mimeType: 'video/webm;codecs=vp9' };
+    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+      options = { mimeType: 'video/webm' };
+    }
+
+    try {
+      this.mediaRecorder = new MediaRecorder(stream, options);
+    } catch (e) {
+      this.showToast('❌ Brauzeringiz video yozishni qo\'llab-quvvatlamadi');
+      return;
+    }
+
+    this.mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) this.recordedChunks.push(e.data);
+    };
+
+    this.mediaRecorder.onstop = () => {
+      const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+      const videoUrl = URL.createObjectURL(blob);
+      const videoEl = document.getElementById('video-preview');
+      videoEl.src = videoUrl;
+      videoEl.style.display = 'block';
+
+      const downloadBtn = document.getElementById('btn-download-video');
+      downloadBtn.href = videoUrl;
+      downloadBtn.style.display = 'inline-flex';
+
+      document.getElementById('btn-start-record').style.display = 'none';
+      document.getElementById('video-render-status').textContent = '✅ Video tayyor! Yuklab olishingiz mumkin.';
+      this.showToast('🎬 Animatsiya videosi muvaffaqiyatli renderlandi!');
+    };
+
+    document.getElementById('video-progress-bar').style.display = 'block';
+    document.getElementById('btn-start-record').style.display = 'none';
+    document.getElementById('video-render-status').textContent = 'Renderlanmoqda...';
+
+    this.mediaRecorder.start();
+    this.isRecording = true;
+    this.setFrame(0);
+
+    // Record sequential frames
+    const total = 180; // Render 6 seconds at 30 fps
+    let frame = 0;
+    const interval = setInterval(() => {
+      if (frame >= total) {
+        clearInterval(interval);
+        this.mediaRecorder.stop();
+        this.isRecording = false;
+        return;
+      }
+      this.setFrame(frame);
+      frame++;
+      const pct = Math.round((frame / total) * 100);
+      document.getElementById('video-progress-fill').style.width = `${pct}%`;
+      document.getElementById('video-render-status').textContent = `Renderlanmoqda: ${frame} / ${total} freym (${pct}%)`;
+    }, 33);
   }
 
   openShortcutsModal() {
@@ -2273,12 +2699,17 @@ class DevForgeStudio {
 
   importTexture(e) {
     const file = e.target.files[0];
-    if (!file || !this.selected || !this.selected.material) return;
+    if (!file || !this.selected) return;
     const url = URL.createObjectURL(file);
     const loader = new THREE.TextureLoader();
     loader.load(url, (tex) => {
-      this.selected.material.map = tex;
-      this.selected.material.needsUpdate = true;
+      tex.encoding = THREE.sRGBEncoding;
+      this.selected.traverse(c => {
+        if (c.isMesh && c.material) {
+          c.material.map = tex;
+          c.material.needsUpdate = true;
+        }
+      });
       this.markDirty();
       this.showToast('🖼️ Tekstura muvaffaqiyatli qo\'yildi');
     });
@@ -2309,21 +2740,33 @@ class DevForgeStudio {
     if (dot) dot.className = 'save-dot saving';
     if (txt) txt.textContent = isAuto ? 'Avto-saqlanmoqda...' : 'Saqlanmoqda...';
 
-    const serialized = this.objects.map(obj => ({
-      name: obj.name,
-      object_type: obj.isLight ? 'light' : 'primitive',
-      transform_data: {
-        position: [obj.position.x, obj.position.y, obj.position.z],
-        rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-        scale: [obj.scale.x, obj.scale.y, obj.scale.z],
-      },
-      properties_data: {
-        color: obj.material && obj.material.color ? '#' + obj.material.color.getHexString() : '#ffffff',
-        metalness: obj.material ? obj.material.metalness || 0 : 0,
-        roughness: obj.material ? obj.material.roughness || 0.5 : 0.5,
-        wireframe: obj.material ? !!obj.material.wireframe : false,
-      }
-    }));
+    const serialized = this.objects.map(obj => {
+      let color = '#00f5ff', metal = 0.2, rough = 0.4, wire = false;
+      obj.traverse(c => {
+        if (c.isMesh && c.material) {
+          if (c.material.color) color = '#' + c.material.color.getHexString();
+          metal = c.material.metalness || 0;
+          rough = c.material.roughness || 0.5;
+          wire = !!c.material.wireframe;
+        }
+      });
+
+      return {
+        name: obj.name,
+        object_type: obj.isLight ? 'light' : 'primitive',
+        transform_data: {
+          position: [obj.position.x, obj.position.y, obj.position.z],
+          rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+          scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+        },
+        properties_data: {
+          color: color,
+          metalness: metal,
+          roughness: rough,
+          wireframe: wire,
+        }
+      };
+    });
 
     const payload = {
       title: document.getElementById('project-title').value,
@@ -2375,8 +2818,8 @@ class DevForgeStudio {
 
           const mat = new THREE.MeshStandardMaterial({
             color: pd.color || 0x00f5ff,
-            metalness: pd.metalness || 0.2,
-            roughness: pd.roughness || 0.4,
+            metalness: pd.metalness !== undefined ? pd.metalness : 0.2,
+            roughness: pd.roughness !== undefined ? pd.roughness : 0.4,
             wireframe: !!pd.wireframe
           });
 
@@ -2416,7 +2859,11 @@ class DevForgeStudio {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     const k = e.key.toLowerCase();
 
-    if (e.ctrlKey && k === 's') { e.preventDefault(); this.saveProject(); }
+    if (e.shiftKey && k === 'a') {
+      e.preventDefault();
+      this.openFloatingAddMenu(e);
+    }
+    else if (e.ctrlKey && k === 's') { e.preventDefault(); this.saveProject(); }
     else if (e.ctrlKey && k === 'z') { e.preventDefault(); this.undo(); }
     else if (e.ctrlKey && k === 'y') { e.preventDefault(); this.redo(); }
     else if (k === 'q') this.setTool('select');
@@ -2424,7 +2871,6 @@ class DevForgeStudio {
     else if (k === 'r') this.setTool('rotate');
     else if (k === 's' && !e.ctrlKey) this.setTool('scale');
     else if (k === 'x' || k === 'delete') this.deleteSelected();
-    else if (k === 'a' && e.shiftKey) this.addObject('box');
     else if (k === 'd' && e.shiftKey) this.duplicateSelected();
     else if (k === ' ') { e.preventDefault(); this.togglePlay(); }
     else if (k === '.') this.focusSelected();
@@ -2438,7 +2884,6 @@ class DevForgeStudio {
 
   animate() {
     requestAnimationFrame(() => this.animate());
-    const delta = this.clock.getDelta();
 
     // Orbit update
     this.orbit.update();
@@ -2451,10 +2896,11 @@ class DevForgeStudio {
     });
 
     // Timeline playback
-    if (this.isPlaying) {
+    if (this.isPlaying && !this.isRecording) {
       this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
       document.getElementById('current-frame').value = this.currentFrame;
       this.applyKeyframesAtFrame(this.currentFrame);
+      this.drawTimeline();
     }
 
     // Render main scene
@@ -2480,6 +2926,9 @@ function toggleStudioLang(e) {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.top-menu-item')) {
     window.studio?.hideMenus();
+  }
+  if (!e.target.closest('#floating-add-menu') && !e.target.closest('#tool-add')) {
+    window.studio?.closeFloatingAddMenu();
   }
   const m = document.getElementById('studioLangMenu');
   if (m && !e.target.closest('#studioLangSwitcher')) {
