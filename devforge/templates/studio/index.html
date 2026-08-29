@@ -12,14 +12,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-<!-- Three.js r128 UMD Global Bundle (Production Safe) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
+<!-- Three.js r128 — unpkg (most reliable CDN for r128 global builds) -->
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -1660,17 +1660,25 @@ class DevForgeStudio {
     const wrap = document.getElementById('viewport-wrap');
     const canvas = document.getElementById('canvas3d');
 
+    if (!wrap || !canvas) {
+      console.error('[DevForgeStudio] viewport-wrap or canvas3d not found in DOM!');
+      return;
+    }
+
     // 1. Scene setup
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#080a0f');
 
-    // 2. Camera setup
-    this.camera = new THREE.PerspectiveCamera(60, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
+    // 2. Camera — use window size as fallback when flex layout not yet computed
+    const initW = wrap.clientWidth  || window.innerWidth  - 300;
+    const initH = wrap.clientHeight || window.innerHeight - 120;
+    this.camera = new THREE.PerspectiveCamera(60, initW / initH, 0.1, 2000);
     this.camera.position.set(7, 5, 8);
+    this.camera.lookAt(0, 0, 0);
 
-    // 3. Renderer setup with proper color management
+    // 3. Renderer — must match canvas element (do NOT let Three.js auto-create one)
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setSize(wrap.clientWidth, wrap.clientHeight, false);
+    this.renderer.setSize(initW, initH, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1680,6 +1688,8 @@ class DevForgeStudio {
     this.orbit = new THREE.OrbitControls(this.camera, canvas);
     this.orbit.enableDamping = true;
     this.orbit.dampingFactor = 0.05;
+    this.orbit.target.set(0, 0, 0);
+    this.orbit.update();
 
     // 5. TransformControls
     this.transform = new THREE.TransformControls(this.camera, canvas);
@@ -1715,7 +1725,6 @@ class DevForgeStudio {
     this.sunLight.shadow.mapSize.height = 2048;
     this.scene.add(this.sunLight);
 
-    // Add fill light for high quality PBR material preview reflections
     this.fillLight = new THREE.DirectionalLight(0x00f5ff, 0.4);
     this.fillLight.position.set(-10, 10, -10);
     this.scene.add(this.fillLight);
@@ -1726,12 +1735,17 @@ class DevForgeStudio {
     // 8. Timeline Canvas setup
     this.initTimeline();
 
-    // 9. Resize Observer
+    // 9. Resize Observer — also force resize after first paint
     const ro = new ResizeObserver(() => {
       this.onResize();
       this.drawTimeline();
     });
     ro.observe(wrap);
+
+    // Force correct sizing after layout is computed (fixes flex 0-size bug)
+    requestAnimationFrame(() => {
+      this.onResize();
+    });
 
     // 10. Raycaster Selection
     this.raycaster = new THREE.Raycaster();
@@ -1752,6 +1766,8 @@ class DevForgeStudio {
     // 14. Start animate loop
     this.clock = new THREE.Clock();
     this.animate();
+
+    console.log('[DevForgeStudio] Initialized. Viewport:', initW, 'x', initH);
   }
 
   initOrientationGizmo() {
@@ -1770,13 +1786,17 @@ class DevForgeStudio {
 
   onResize() {
     const wrap = document.getElementById('viewport-wrap');
-    if (!wrap) return;
-    const w = wrap.clientWidth;
-    const h = wrap.clientHeight;
-    if (w === 0 || h === 0) return;
+    if (!wrap || !this.renderer || !this.camera) return;
+    const w = wrap.clientWidth  || window.innerWidth  - 300;
+    const h = wrap.clientHeight || window.innerHeight - 120;
+    if (w < 10 || h < 10) return; // still not laid out
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h, false);
+    // Renderer canvas style must stretch to fill the wrapper
+    const c = this.renderer.domElement;
+    c.style.width  = '100%';
+    c.style.height = '100%';
   }
 
   onPointerDown(e) {
@@ -2939,9 +2959,22 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// App initialization
+// App initialization — wait for DOMContentLoaded, then one more rAF so flex
+// layout is fully computed before Three.js reads clientWidth/clientHeight.
 window.addEventListener('DOMContentLoaded', () => {
-  window.studio = new DevForgeStudio();
+  // Guard: ensure THREE and controls are loaded
+  if (typeof THREE === 'undefined') {
+    console.error('[DevForge] THREE.js failed to load — check CDN.');
+    const vp = document.getElementById('viewport-wrap');
+    if (vp) vp.innerHTML = '<div style="color:#ef4444;padding:24px;font-family:monospace;">⚠ THREE.js failed to load. Check your internet connection and try again.</div>';
+    return;
+  }
+  if (typeof THREE.OrbitControls === 'undefined') {
+    console.error('[DevForge] OrbitControls not found on THREE global.');
+  }
+  requestAnimationFrame(() => {
+    window.studio = new DevForgeStudio();
+  });
 });
 </script>
 
