@@ -529,12 +529,12 @@ html, body {
 }
 
 #canvas3d {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
 }
 
 /* Orientation Navigation Gizmo */
@@ -1665,21 +1665,30 @@ class DevForgeStudio {
       return;
     }
 
+    // Ensure canvas fills its parent before querying size
+    canvas.style.width  = '100%';
+    canvas.style.height = '100%';
+
     // 1. Scene setup
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#080a0f');
 
-    // 2. Camera — use window size as fallback when flex layout not yet computed
-    const initW = wrap.clientWidth  || window.innerWidth  - 300;
-    const initH = wrap.clientHeight || window.innerHeight - 120;
-    this.camera = new THREE.PerspectiveCamera(60, initW / initH, 0.1, 2000);
+    // 2. Camera — read actual size; flex may not be computed yet, use window fallback
+    const getSize = () => ({
+      w: wrap.offsetWidth  || window.innerWidth  - 300,
+      h: wrap.offsetHeight || window.innerHeight - 120
+    });
+    const { w: initW, h: initH } = getSize();
+    console.log('[DevForgeStudio] init size:', initW, 'x', initH);
+
+    this.camera = new THREE.PerspectiveCamera(60, initW / initH || 1.78, 0.1, 2000);
     this.camera.position.set(7, 5, 8);
     this.camera.lookAt(0, 0, 0);
 
-    // 3. Renderer — must match canvas element (do NOT let Three.js auto-create one)
+    // 3. Renderer — updateStyle=true so Three.js also sets canvas.style.width/height
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setSize(initW, initH, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setSize(initW, initH);  // true by default: also sets style
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -1742,10 +1751,14 @@ class DevForgeStudio {
     });
     ro.observe(wrap);
 
-    // Force correct sizing after layout is computed (fixes flex 0-size bug)
-    requestAnimationFrame(() => {
+    // Double-rAF: first frame queues layout, second frame has real dimensions
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       this.onResize();
-    });
+    }));
+
+    // Hard fallback: resize after 500ms in case rAF fires before layout
+    setTimeout(() => this.onResize(), 500);
+    setTimeout(() => this.onResize(), 1500);
 
     // 10. Raycaster Selection
     this.raycaster = new THREE.Raycaster();
@@ -1787,16 +1800,13 @@ class DevForgeStudio {
   onResize() {
     const wrap = document.getElementById('viewport-wrap');
     if (!wrap || !this.renderer || !this.camera) return;
-    const w = wrap.clientWidth  || window.innerWidth  - 300;
-    const h = wrap.clientHeight || window.innerHeight - 120;
-    if (w < 10 || h < 10) return; // still not laid out
+    const w = wrap.offsetWidth  || window.innerWidth  - 300;
+    const h = wrap.offsetHeight || window.innerHeight - 120;
+    if (w < 10 || h < 10) return;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h, false);
-    // Renderer canvas style must stretch to fill the wrapper
-    const c = this.renderer.domElement;
-    c.style.width  = '100%';
-    c.style.height = '100%';
+    this.renderer.setSize(w, h);  // updateStyle=true: fixes canvas display size too
+    console.log('[DevForgeStudio] resized to', w, 'x', h);
   }
 
   onPointerDown(e) {
@@ -2959,10 +2969,8 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// App initialization — wait for DOMContentLoaded, then one more rAF so flex
-// layout is fully computed before Three.js reads clientWidth/clientHeight.
+// App initialization — double rAF ensures browser has completed layout before init
 window.addEventListener('DOMContentLoaded', () => {
-  // Guard: ensure THREE and controls are loaded
   if (typeof THREE === 'undefined') {
     console.error('[DevForge] THREE.js failed to load — check CDN.');
     const vp = document.getElementById('viewport-wrap');
@@ -2970,11 +2978,12 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
   if (typeof THREE.OrbitControls === 'undefined') {
-    console.error('[DevForge] OrbitControls not found on THREE global.');
+    console.warn('[DevForge] OrbitControls not attached to THREE global — check CDN order.');
   }
-  requestAnimationFrame(() => {
+  // Double rAF: guarantees browser has performed layout before querying dimensions
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     window.studio = new DevForgeStudio();
-  });
+  }));
 });
 </script>
 
