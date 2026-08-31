@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'apps.video_lab',
     'apps.world_builder',
     'apps.game_engine',
+    'apps.api',              # REST API app
     'rest_framework',
     'rest_framework_simplejwt',
     'apps.integrations',
@@ -397,3 +398,45 @@ if not DEBUG:
         if origin.strip()
     ]
     CORS_ALLOW_CREDENTIALS = True
+
+# ── SIMPLE JWT SOZLAMALARI ───────────────────────────────────────────────────
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    # Token umrlari
+    'ACCESS_TOKEN_LIFETIME':  timedelta(hours=2),      # 2 soat
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),       # 30 kun (mobil ilova uchun)
+    'ROTATE_REFRESH_TOKENS':  True,                     # Har refreshda yangi refresh token
+    'BLACKLIST_AFTER_ROTATION': False,                  # Blacklist app siz
+
+    # Header
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+
+    # Token tarkibi
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    # Algorithm
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': 'devforge',
+
+    # Sliding tokens (ixtiyoriy)
+    'SLIDING_TOKEN_LIFETIME':         timedelta(hours=2),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=30),
+
+    # Serializer'lar
+    'TOKEN_OBTAIN_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenObtainPairSerializer',
+    'TOKEN_REFRESH_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenRefreshSerializer',
+    'TOKEN_VERIFY_SERIALIZER':  'rest_framework_simplejwt.serializers.TokenVerifySerializer',
+}
+
+# ── CSRF TRUSTED ORIGINS (Production) ────────────────────────────────────────
+# Render.com va mobil ilovalar uchun
+_render_domain = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')
+if _render_domain:
+    CSRF_TRUSTED_ORIGINS += [f'https://{_render_domain}']
