@@ -1,820 +1,1732 @@
-{% extends 'base.html' %}
-{% block title %}{{ scene.title }} — 3D Studio{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>{{ scene.title|default:"3D Studio Pro" }} — DevForge</title>
 
-{% block extra_css %}
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Three.js r128 UMD Global Bundle -->
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+
 <style>
-body { overflow:hidden; }
-main.container { max-width:100%!important; padding:0!important; margin:0!important; }
-
-/* Shell */
-.s3d-shell {
-    display:grid;
-    grid-template-columns: 52px 240px 1fr 280px;
-    height:100vh; background:#08090d; font-family:var(--font-mono);
+:root {
+  --bg: #05070a;
+  --header: #090c12;
+  --surface: #0d1117;
+  --surface2: #161b22;
+  --surface3: #1e2430;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-bright: rgba(0, 245, 255, 0.3);
+  --accent: #00f5ff;
+  --accent-glow: rgba(0, 245, 255, 0.35);
+  --accent-purple: #8b5cf6;
+  --text: #f8fafc;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --red: #ef4444;
+  --font-ui: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Outfit', sans-serif;
 }
 
-/* Top Toolbar */
-.s3d-topbar {
-    position:fixed; top:0; left:0; right:0; z-index:200;
-    height:44px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
-    display:flex; align-items:center; gap:.4rem; padding:0 .75rem;
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  user-select: none;
 }
-.s3d-brand { font-family:var(--font-display); font-weight:800; font-size:.9rem;
-    background:linear-gradient(135deg,#8b5cf6,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-right:.5rem; }
-.tb-btn { display:inline-flex; align-items:center; gap:4px; padding:.28rem .6rem; border-radius:5px; font-size:.75rem;
-    background:transparent; border:none; color:var(--text-secondary); cursor:pointer; transition:all .15s; white-space:nowrap; }
-.tb-btn:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
-.tb-btn.active { background:rgba(139,92,246,.15); color:#a78bfa; }
-.tb-btn.primary { background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; font-weight:700; border:none; }
-.tb-sep { width:1px; height:22px; background:rgba(255,255,255,.08); margin:0 .35rem; }
-.save-dot { width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block; }
-.save-dot.unsaved { background:#f59e0b; animation:blink 1.5s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* Left toolbar icons */
-.s3d-tools {
-    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
-    display:flex; flex-direction:column; align-items:center; padding:.5rem 0; gap:2px;
-    margin-top:44px; overflow-y:auto;
+/* App Root Grid */
+#app {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
-.s3d-tool { width:44px; height:38px; display:flex; align-items:center; justify-content:center;
-    border-radius:7px; cursor:pointer; font-size:.9rem; transition:all .15s;
-    background:none; border:none; color:var(--text-muted); }
-.s3d-tool:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
-.s3d-tool.active { background:rgba(139,92,246,.2); color:#a78bfa; box-shadow:0 0 0 1px rgba(139,92,246,.4); }
-.s3d-tool-sep { width:28px; height:1px; background:rgba(255,255,255,.06); margin:3px 0; }
 
-/* Left Scene Tree */
-.s3d-outliner {
-    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
-    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+/* Topbar */
+#topbar {
+  height: 48px;
+  background: var(--header);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 100;
+  flex-shrink: 0;
 }
-.outliner-header { padding:.5rem .75rem; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between; }
-.outliner-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; }
-.outliner-body { flex:1; overflow-y:auto; }
-.outliner-body::-webkit-scrollbar { width:4px; }
-.outliner-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
-.scene-item { display:flex; align-items:center; gap:5px; padding:.35rem .75rem; cursor:pointer; transition:all .1s; border-bottom:1px solid rgba(255,255,255,.02); }
-.scene-item:hover { background:rgba(255,255,255,.04); }
-.scene-item.selected { background:rgba(139,92,246,.1); }
-.scene-item-icon { font-size:.85rem; flex-shrink:0; }
-.scene-item-name { flex:1; font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.scene-item-vis { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.7rem; }
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-decoration: none;
+}
+.badge-3d {
+  background: rgba(0, 245, 255, 0.12);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  color: var(--accent);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.title-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#scene-title-input {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-align: center;
+  transition: all 0.2s;
+  max-width: 260px;
+}
+#scene-title-input:hover, #scene-title-input:focus {
+  background: var(--surface);
+  border-color: var(--border-bright);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.btn-top:hover {
+  border-color: var(--border-bright);
+  color: var(--accent);
+}
+.btn-save {
+  background: linear-gradient(135deg, #00f5ff 0%, #0284c7 100%);
+  color: #05070a;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(0, 245, 255, 0.3);
+}
+.btn-save:hover {
+  filter: brightness(1.15);
+  color: #000;
+}
+
+.save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text3);
+  margin-right: 6px;
+}
+.save-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+.save-dot.dirty {
+  background: var(--orange);
+  box-shadow: 0 0 6px var(--orange);
+}
+
+/* Workspace (Tools + Canvas + Sidebar) */
+#workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  min-height: 0;
+}
+
+/* Left Tools Shelf */
+#toolshelf {
+  width: 50px;
+  background: var(--header);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  gap: 6px;
+  z-index: 20;
+  flex-shrink: 0;
+}
+
+.t-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  position: relative;
+}
+.t-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.t-btn.active {
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--accent);
+  border-color: rgba(0, 245, 255, 0.35);
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
+}
+.t-sep {
+  width: 24px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
 
 /* Center Viewport */
-.s3d-viewport {
-    margin-top:44px; position:relative; overflow:hidden; background:#050608;
+#viewport-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #080a0f;
+  min-width: 0;
+  min-height: 0;
 }
-#threeCanvas { display:block; width:100%; height:100%; }
-.viewport-overlay { position:absolute; inset:0; pointer-events:none; }
-.viewport-info { position:absolute; bottom:8px; left:8px; font-size:.62rem; color:rgba(255,255,255,.25); font-family:var(--font-mono); }
-.viewport-gizmo { position:absolute; top:8px; right:8px; width:64px; height:64px; }
-.camera-btns { position:absolute; top:8px; left:8px; display:flex; flex-direction:column; gap:3px; }
-.cam-btn { background:rgba(10,11,16,.8); border:1px solid rgba(255,255,255,.1); border-radius:4px; color:var(--text-muted);
-    padding:3px 6px; font-size:.62rem; cursor:pointer; transition:all .1s; }
-.cam-btn:hover { color:#a78bfa; border-color:#8b5cf6; }
-
-/* Right Properties */
-.s3d-props {
-    background:#0a0b10; border-left:1px solid rgba(255,255,255,.06);
-    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+#three-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  position: absolute;
+  top: 0; left: 0;
 }
-.props-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.06); }
-.pt { flex:1; padding:.4rem; text-align:center; font-size:.58rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
-    color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
-.pt.active { color:#a78bfa; border-bottom-color:#8b5cf6; background:rgba(139,92,246,.05); }
-.props-body { flex:1; overflow-y:auto; padding:.75rem; }
-.props-body::-webkit-scrollbar { width:4px; }
-.props-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
-.p-sec { margin-bottom:1.25rem; }
-.p-sec-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:.5rem; }
-.p-row { display:flex; align-items:center; gap:5px; margin-bottom:5px; }
-.p-label { font-size:.68rem; color:var(--text-muted); min-width:65px; flex-shrink:0; }
-.p-input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
-    padding:2px 5px; color:var(--text-primary); font-size:.72rem; outline:none; font-family:var(--font-mono); }
-.p-input:focus { border-color:#8b5cf6; }
-.p-range { flex:1; accent-color:#8b5cf6; cursor:pointer; }
-.p-val { font-size:.66rem; color:#a78bfa; min-width:30px; text-align:right; }
-.p-color { width:28px; height:20px; border:1px solid rgba(255,255,255,.1); border-radius:3px; cursor:pointer; padding:0; }
-.p-select { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
-    padding:2px 5px; color:var(--text-primary); font-size:.72rem; outline:none; }
-.p-select option { background:#0d1117; }
-.p-xyz { display:flex; gap:3px; flex:1; }
-.p-xyz input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:3px;
-    padding:2px 4px; color:var(--text-primary); font-size:.68rem; outline:none; text-align:center; font-family:var(--font-mono); }
-.p-xyz input:focus { border-color:#8b5cf6; }
-.xyz-label { font-size:.55rem; display:block; text-align:center; margin-top:1px; color:var(--text-muted); }
 
-/* Add object buttons */
-.add-obj-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
-.add-obj-btn { padding:.5rem .25rem; border-radius:6px; border:1px solid rgba(255,255,255,.06);
-    background:rgba(255,255,255,.03); cursor:pointer; text-align:center; transition:all .15s; }
-.add-obj-btn:hover { background:rgba(139,92,246,.1); border-color:rgba(139,92,246,.3); }
-.add-obj-btn-icon { font-size:1.1rem; display:block; margin-bottom:2px; }
-.add-obj-btn-label { font-size:.6rem; color:var(--text-muted); }
+/* Viewport Overlays */
+.vp-overlay-tl {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+.vp-chip {
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--text2);
+  font-family: var(--font-mono);
+}
+.vp-chip strong { color: var(--accent); }
+
+.vp-overlay-tr {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  z-index: 10;
+}
+.shading-btn {
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.shading-btn:hover, .shading-btn.active {
+  color: var(--accent);
+  border-color: rgba(0, 245, 255, 0.4);
+  background: rgba(0, 245, 255, 0.1);
+}
+
+.drag-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 245, 255, 0.08);
+  border: 2px dashed var(--accent);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+.drag-overlay.active { display: flex; }
+
+/* Right Sidebar (Tabs) */
+#sidebar {
+  width: 320px;
+  background: var(--header);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.sidebar-tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text2);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(0, 245, 255, 0.04);
+}
+
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: none;
+}
+.tab-content.active { display: block; }
+.tab-content::-webkit-scrollbar { width: 4px; }
+.tab-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+
+/* Outliner tree */
+.outliner-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.12s;
+  font-size: 12px;
+}
+.outliner-item:hover {
+  background: var(--surface2);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.outliner-item.selected {
+  background: rgba(0, 245, 255, 0.1);
+  border-color: rgba(0, 245, 255, 0.4);
+  color: var(--accent);
+}
+.outliner-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.outliner-icon { font-size: 13px; opacity: 0.8; }
+.outliner-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+.outliner-actions {
+  display: flex;
+  gap: 4px;
+}
+.outliner-act-btn {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px;
+  border-radius: 3px;
+}
+.outliner-act-btn:hover { color: var(--text); }
+
+/* Property panels */
+.prop-section {
+  margin-bottom: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.prop-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.prop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+}
+.prop-label { color: var(--text2); }
+.vector3-inputs {
+  display: flex;
+  gap: 4px;
+  width: 170px;
+}
+.v-input-group {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  padding-left: 5px;
+}
+.v-input-group label {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--accent);
+  width: 10px;
+}
+.v-input-group.rot label { color: var(--orange); }
+.v-input-group.scl label { color: var(--green); }
+.v-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 2px;
+  outline: none;
+  text-align: right;
+}
+
+.prop-color-input {
+  width: 32px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+.prop-slider {
+  width: 110px;
+  accent-color: var(--accent);
+}
+
+/* Material Presets */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.preset-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 5px 2px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+}
+.preset-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Asset Item in Editor */
+.editor-asset-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all 0.15s;
+}
+.editor-asset-card:hover {
+  border-color: rgba(0, 245, 255, 0.3);
+}
+.editor-asset-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f8fafc;
+  word-break: break-all;
+}
+.editor-asset-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.btn-insert-asset {
+  background: rgba(0, 245, 255, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.btn-insert-asset:hover {
+  background: var(--accent);
+  color: #05070a;
+}
+
+/* Add Menu Floating Popup */
+#add-menu-popup {
+  display: none;
+  position: absolute;
+  background: rgba(13, 17, 23, 0.96);
+  border: 1px solid var(--border-bright);
+  backdrop-filter: blur(16px);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 245, 255, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+}
+#add-menu-popup.show { display: block; }
+.add-menu-cat {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3px;
+}
+.add-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.add-menu-item:hover {
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--accent);
+}
+
+/* Toast */
+#toast-box {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid var(--border-bright);
+  color: #f8fafc;
+  padding: 8px 18px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+}
+#toast-box.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-6px);
+}
 </style>
-{% endblock %}
+</head>
+<body>
 
-{% block content %}
-<!-- Load Three.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<!-- Top Toolbar -->
-<div class="s3d-topbar">
-    <a href="{% url 'studio_3d:dashboard' %}" class="tb-btn">◀</a>
-    <span class="s3d-brand">🎲</span>
-    <input type="text" id="sceneTitle" value="{{ scene.title }}"
-        style="background:none;border:none;color:var(--text-primary);font-size:.85rem;font-weight:600;outline:none;width:160px;"
-        onchange="markUnsaved()">
-    <div class="tb-sep"></div>
-    <!-- Transform modes -->
-    <button class="tb-btn active" id="mode-translate" onclick="setTransformMode('translate')" title="Move (G)">✥ Move</button>
-    <button class="tb-btn" id="mode-rotate" onclick="setTransformMode('rotate')" title="Rotate (R)">↻ Rotate</button>
-    <button class="tb-btn" id="mode-scale" onclick="setTransformMode('scale')" title="Scale (S)">⤡ Scale</button>
-    <div class="tb-sep"></div>
-    <!-- View modes -->
-    <button class="tb-btn" onclick="setViewMode('solid')">⬛ Solid</button>
-    <button class="tb-btn" onclick="setViewMode('wireframe')">🔲 Wire</button>
-    <button class="tb-btn" onclick="setViewMode('rendered')">✨ Render</button>
-    <div class="tb-sep"></div>
-    <!-- Camera -->
-    <button class="tb-btn" onclick="setCamera('perspective')">📷 Persp</button>
-    <button class="tb-btn" onclick="setCamera('orthographic')">📐 Ortho</button>
-    <div class="tb-sep"></div>
-    <!-- Actions -->
-    <button class="tb-btn" onclick="focusSelected()" title="F">🎯 Focus</button>
-    <button class="tb-btn" onclick="duplicateSelected()" title="Ctrl+D">⧉ Dupe</button>
-    <button class="tb-btn" onclick="deleteSelected()" style="color:#fca5a5;" title="Del">🗑 Delete</button>
-    <div class="tb-sep"></div>
-    <button class="tb-btn" onclick="exportGLTF()">⬇ GLTF</button>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-        <span style="font-size:.68rem;color:var(--text-muted);"><span class="save-dot" id="saveDot"></span><span id="saveLabel">Saqlangan</span></span>
-        <button class="tb-btn primary" onclick="saveScene()">💾 Save</button>
+<div id="app">
+  <!-- Top Bar -->
+  <header id="topbar">
+    <div class="brand-section">
+      <a href="{% url 'studio_3d:dashboard' %}" class="brand-title">DevForge</a>
+      <span class="badge-3d">3D STUDIO PRO</span>
     </div>
+
+    <div class="title-center">
+      <input type="text" id="scene-title-input" value="{{ scene.title|default:'Untitled Scene' }}" title="Sahna nomini tahrirlash">
+    </div>
+
+    <div class="topbar-actions">
+      <div class="save-indicator">
+        <span class="save-dot" id="save-dot"></span>
+        <span id="save-status-text">Saqlangan</span>
+      </div>
+
+      <button class="btn-top" onclick="triggerImportGLB()" title="Kompyuterdan .glb/.gltf yuklash">
+        <span>📥</span> Import GLB
+      </button>
+
+      <button class="btn-top" onclick="exportSceneGLTF()" title="Butun sahnani .glb qilib eksport qilish">
+        <span>📤</span> Export GLTF
+      </button>
+
+      <button class="btn-top btn-save" onclick="saveScene()" id="btn-save-scene">
+        <span>💾</span> Saqlash
+      </button>
+
+      <a href="{% url 'studio_3d:dashboard' %}" class="btn-top" title="Dashboardga qaytish">
+        ✕ Chiqish
+      </a>
+    </div>
+  </header>
+
+  <!-- Workspace -->
+  <div id="workspace">
+    <!-- Left Toolbar -->
+    <aside id="toolshelf">
+      <button class="t-btn active" id="tool-select" onclick="setGizmoMode('select')" title="Tanlash (Q)">⤹</button>
+      <button class="t-btn" id="tool-translate" onclick="setGizmoMode('translate')" title="Ko'chirish / Move (G)">✥</button>
+      <button class="t-btn" id="tool-rotate" onclick="setGizmoMode('rotate')" title="Aylantirish / Rotate (R)">↻</button>
+      <button class="t-btn" id="tool-scale" onclick="setGizmoMode('scale')" title="Masshtab / Scale (S)">⤢</button>
+
+      <div class="t-sep"></div>
+
+      <button class="t-btn" onclick="openAddMenu(event)" title="Ob'ekt qo'shish (Shift+A)">➕</button>
+
+      <div class="t-sep"></div>
+
+      <button class="t-btn" onclick="focusSelected()" title="Fokuslash (.)">🎯</button>
+      <button class="t-btn" onclick="deleteSelected()" title="O'chirish (Del / X)" style="color: var(--red);">🗑️</button>
+    </aside>
+
+    <!-- Center Viewport -->
+    <main id="viewport-container">
+      <canvas id="three-canvas"></canvas>
+
+      <!-- Viewport Overlays -->
+      <div class="vp-overlay-tl">
+        <div class="vp-chip">FPS: <strong id="fps-display">60</strong></div>
+        <div class="vp-chip">Ob'ektlar: <strong id="obj-count-display">0</strong></div>
+      </div>
+
+      <div class="vp-overlay-tr">
+        <button class="shading-btn" onclick="setShading('wireframe')">🕸️ Wire</button>
+        <button class="shading-btn active" onclick="setShading('solid')">🧊 Solid</button>
+        <button class="shading-btn" onclick="setShading('material')">🎨 Mat</button>
+      </div>
+
+      <!-- Drag & drop overlay -->
+      <div class="drag-overlay" id="drag-overlay">
+        <span style="font-size: 3rem;">📦</span>
+        <span>.GLB yoki .GLTF faylni tashlang</span>
+      </div>
+    </main>
+
+    <!-- Right Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" onclick="switchTab('outliner', this)">Outliner</button>
+        <button class="tab-btn" onclick="switchTab('properties', this)">Xossalar</button>
+        <button class="tab-btn" onclick="switchTab('library', this)">Assetlarim</button>
+      </div>
+
+      <!-- Tab 1: Outliner -->
+      <div class="tab-content active" id="tab-outliner">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase;">Sahna Daraxti</span>
+          <button class="btn-top" style="padding: 2px 6px; font-size: 11px;" onclick="openAddMenu(event)">+ Qo'shish</button>
+        </div>
+        <div id="outliner-list"></div>
+      </div>
+
+      <!-- Tab 2: Properties -->
+      <div class="tab-content" id="tab-properties">
+        <div id="no-selection-msg" style="text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 12px;">
+          Tahrirlash uchun ob'ektni tanlang (yoki sahnadagi shaklni bosing)
+        </div>
+
+        <div id="selection-properties" style="display: none;">
+          <!-- Transform -->
+          <div class="prop-section">
+            <div class="prop-title">
+              <span>Transform (O'lchamlar)</span>
+              <button class="outliner-act-btn" onclick="resetTransform()" title="Transformni nolga tushirish">↺</button>
+            </div>
+
+            <!-- Position -->
+            <div class="prop-row">
+              <span class="prop-label">Joylashuv</span>
+              <div class="vector3-inputs">
+                <div class="v-input-group"><label>X</label><input type="number" step="0.1" class="v-input" id="pos-x" oninput="onTransformInput()"></div>
+                <div class="v-input-group"><label>Y</label><input type="number" step="0.1" class="v-input" id="pos-y" oninput="onTransformInput()"></div>
+                <div class="v-input-group"><label>Z</label><input type="number" step="0.1" class="v-input" id="pos-z" oninput="onTransformInput()"></div>
+              </div>
+            </div>
+
+            <!-- Rotation -->
+            <div class="prop-row">
+              <span class="prop-label">Aylanish (°)</span>
+              <div class="vector3-inputs">
+                <div class="v-input-group rot"><label>X</label><input type="number" step="5" class="v-input" id="rot-x" oninput="onTransformInput()"></div>
+                <div class="v-input-group rot"><label>Y</label><input type="number" step="5" class="v-input" id="rot-y" oninput="onTransformInput()"></div>
+                <div class="v-input-group rot"><label>Z</label><input type="number" step="5" class="v-input" id="rot-z" oninput="onTransformInput()"></div>
+              </div>
+            </div>
+
+            <!-- Scale -->
+            <div class="prop-row">
+              <span class="prop-label">Masshtab</span>
+              <div class="vector3-inputs">
+                <div class="v-input-group scl"><label>X</label><input type="number" step="0.1" class="v-input" id="scl-x" oninput="onTransformInput()"></div>
+                <div class="v-input-group scl"><label>Y</label><input type="number" step="0.1" class="v-input" id="scl-y" oninput="onTransformInput()"></div>
+                <div class="v-input-group scl"><label>Z</label><input type="number" step="0.1" class="v-input" id="scl-z" oninput="onTransformInput()"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Material -->
+          <div class="prop-section" id="section-material">
+            <div class="prop-title">Material (PBR)</div>
+
+            <div class="prop-row">
+              <span class="prop-label">Rang (Color)</span>
+              <input type="color" class="prop-color-input" id="mat-color" onchange="onMaterialChange()">
+            </div>
+
+            <div class="prop-row">
+              <span class="prop-label">Roughness</span>
+              <input type="range" min="0" max="1" step="0.05" class="prop-slider" id="mat-roughness" oninput="onMaterialChange()">
+            </div>
+
+            <div class="prop-row">
+              <span class="prop-label">Metalness</span>
+              <input type="range" min="0" max="1" step="0.05" class="prop-slider" id="mat-metalness" oninput="onMaterialChange()">
+            </div>
+
+            <div class="prop-row">
+              <span class="prop-label">Wireframe</span>
+              <input type="checkbox" id="mat-wireframe" onchange="onMaterialChange()">
+            </div>
+
+            <div style="font-size: 10px; color: var(--text3); margin-top: 8px; font-weight: 600;">PRESETLAR:</div>
+            <div class="preset-grid">
+              <button class="preset-btn" onclick="applyMatPreset('default')">Oddiy</button>
+              <button class="preset-btn" onclick="applyMatPreset('metal')">Metall</button>
+              <button class="preset-btn" onclick="applyMatPreset('gold')">Oltin</button>
+              <button class="preset-btn" onclick="applyMatPreset('glass')">Shisha</button>
+              <button class="preset-btn" onclick="applyMatPreset('neon')">Neon</button>
+              <button class="preset-btn" onclick="applyMatPreset('clay')">Gilmoya</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Asset Library -->
+      <div class="tab-content" id="tab-library">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase;">Yuklangan 3D Modellar</span>
+          <button class="btn-top" style="padding: 3px 8px; font-size: 11px;" onclick="triggerImportGLB()">+ Yuklash</button>
+        </div>
+
+        {% if user_assets %}
+          {% for ast in user_assets %}
+          <div class="editor-asset-card">
+            <div style="min-width: 0;">
+              <div class="editor-asset-name">{{ ast.title }}</div>
+              <span class="editor-asset-badge">{{ ast.format }}</span>
+              <span style="font-size: 10px; color: var(--text3);">({{ ast.file_size_mb }} MB)</span>
+            </div>
+            <button class="btn-insert-asset" onclick="loadRemoteGLTF('{{ ast.file.url }}', '{{ ast.title|escapejs }}')">
+              + Sahna
+            </button>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align: center; padding: 2rem 0.5rem; color: var(--text3); font-size: 12px;">
+            Hozircha saqlangan modellar yo'q.<br>
+            Blender .glb fayllarini import qiling.
+          </div>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
 </div>
 
-<div class="s3d-shell">
-    <!-- ── TOOL ICONS ── -->
-    <div class="s3d-tools">
-        <button class="s3d-tool active" id="tool-select3d" onclick="set3dTool('select')" title="Select (Q)">⊹</button>
-        <button class="s3d-tool" id="tool-move" onclick="set3dTool('move')" title="Move (G)">✥</button>
-        <button class="s3d-tool" id="tool-rotate" onclick="set3dTool('rotate')" title="Rotate (R)">↻</button>
-        <button class="s3d-tool" id="tool-scale" onclick="set3dTool('scale')" title="Scale (S)">⤡</button>
-        <div class="s3d-tool-sep"></div>
-        <button class="s3d-tool" onclick="addMesh('box')" title="Box">⬜</button>
-        <button class="s3d-tool" onclick="addMesh('sphere')" title="Sphere">⬤</button>
-        <button class="s3d-tool" onclick="addMesh('cylinder')" title="Cylinder">🔵</button>
-        <button class="s3d-tool" onclick="addMesh('plane')" title="Plane">▬</button>
-        <div class="s3d-tool-sep"></div>
-        <button class="s3d-tool" onclick="addLight('point')" title="Point Light">💡</button>
-        <button class="s3d-tool" onclick="addLight('directional')" title="Sun">☀️</button>
-        <button class="s3d-tool" onclick="addLight('spot')" title="Spot">🔦</button>
-        <div class="s3d-tool-sep"></div>
-        <button class="s3d-tool" onclick="addCamera()" title="Camera">📷</button>
-    </div>
+<!-- Floating Add Menu (Shift+A) -->
+<div id="add-menu-popup">
+  <div class="add-menu-cat">3D Shakllar (Mesh)</div>
+  <div class="add-menu-item" onclick="addPrimitive('box')"><span>🧊</span> Kub (Box)</div>
+  <div class="add-menu-item" onclick="addPrimitive('sphere')"><span>⚽</span> Sfera (Sphere)</div>
+  <div class="add-menu-item" onclick="addPrimitive('cylinder')"><span>🥫</span> Silindr (Cylinder)</div>
+  <div class="add-menu-item" onclick="addPrimitive('cone')"><span>🍦</span> Konus (Cone)</div>
+  <div class="add-menu-item" onclick="addPrimitive('plane')"><span>📄</span> Tekislik (Plane)</div>
+  <div class="add-menu-item" onclick="addPrimitive('torus')"><span>🍩</span> Torus (Donut)</div>
 
-    <!-- ── OUTLINER ── -->
-    <div class="s3d-outliner">
-        <div class="outliner-header">
-            <span class="outliner-title">📋 Scene Objects</span>
-            <button onclick="addMesh('box')" style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.2);border-radius:4px;color:#a78bfa;cursor:pointer;font-size:.7rem;padding:2px 6px;">+ Add</button>
-        </div>
-        <div class="outliner-body" id="outlinerBody">
-            <!-- Rendered by JS -->
-        </div>
-    </div>
+  <div class="add-menu-cat" style="margin-top: 6px;">Chiroqlar (Lighting)</div>
+  <div class="add-menu-item" onclick="addSceneLight('point')"><span>💡</span> Point Light</div>
+  <div class="add-menu-item" onclick="addSceneLight('directional')"><span>☀️</span> Directional Light</div>
+  <div class="add-menu-item" onclick="addSceneLight('spot')"><span>🔦</span> Spot Light</div>
 
-    <!-- ── VIEWPORT ── -->
-    <div class="s3d-viewport">
-        <canvas id="threeCanvas"></canvas>
-        <div class="viewport-overlay">
-            <div class="camera-btns">
-                <button class="cam-btn" onclick="setCameraView('top')">Top</button>
-                <button class="cam-btn" onclick="setCameraView('front')">Front</button>
-                <button class="cam-btn" onclick="setCameraView('right')">Right</button>
-                <button class="cam-btn" onclick="setCameraView('persp')">Persp</button>
-            </div>
-            <div class="viewport-info" id="viewportInfo">Objects: 0 | Tris: 0 | FPS: 0</div>
-        </div>
-    </div>
-
-    <!-- ── RIGHT PANEL ── -->
-    <div class="s3d-props">
-        <div class="props-tabs">
-            <div class="pt active" id="ptObject" onclick="switchPropTab('object')">Object</div>
-            <div class="pt" id="ptMaterial" onclick="switchPropTab('material')">Material</div>
-            <div class="pt" id="ptLight" onclick="switchPropTab('light')">Light</div>
-            <div class="pt" id="ptScene" onclick="switchPropTab('scene')">World</div>
-        </div>
-
-        <!-- Object tab -->
-        <div class="props-body" id="panelObject">
-            <div class="p-sec">
-                <div class="p-sec-title">📐 Transform</div>
-                <div class="p-row">
-                    <span class="p-label">Location</span>
-                    <div class="p-xyz">
-                        <div><input type="number" class="p-xyz" id="posX" step="0.1" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#ef4444">X</span></div>
-                        <div><input type="number" class="p-xyz" id="posY" step="0.1" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#10b981">Y</span></div>
-                        <div><input type="number" class="p-xyz" id="posZ" step="0.1" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#3b82f6">Z</span></div>
-                    </div>
-                </div>
-                <div class="p-row">
-                    <span class="p-label">Rotation</span>
-                    <div class="p-xyz">
-                        <div><input type="number" class="p-xyz" id="rotX" step="5" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#ef4444">X°</span></div>
-                        <div><input type="number" class="p-xyz" id="rotY" step="5" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#10b981">Y°</span></div>
-                        <div><input type="number" class="p-xyz" id="rotZ" step="5" value="0" onchange="applyTransform()"><span class="xyz-label" style="color:#3b82f6">Z°</span></div>
-                    </div>
-                </div>
-                <div class="p-row">
-                    <span class="p-label">Scale</span>
-                    <div class="p-xyz">
-                        <div><input type="number" class="p-xyz" id="scaX" step="0.1" value="1" min="0.01" onchange="applyTransform()"><span class="xyz-label" style="color:#ef4444">X</span></div>
-                        <div><input type="number" class="p-xyz" id="scaY" step="0.1" value="1" min="0.01" onchange="applyTransform()"><span class="xyz-label" style="color:#10b981">Y</span></div>
-                        <div><input type="number" class="p-xyz" id="scaZ" step="0.1" value="1" min="0.01" onchange="applyTransform()"><span class="xyz-label" style="color:#3b82f6">Z</span></div>
-                    </div>
-                </div>
-            </div>
-            <div class="p-sec">
-                <div class="p-sec-title">➕ Add Object</div>
-                <div class="add-obj-grid">
-                    <div class="add-obj-btn" onclick="addMesh('box')"><span class="add-obj-btn-icon">⬜</span><span class="add-obj-btn-label">Box</span></div>
-                    <div class="add-obj-btn" onclick="addMesh('sphere')"><span class="add-obj-btn-icon">⬤</span><span class="add-obj-btn-label">Sphere</span></div>
-                    <div class="add-obj-btn" onclick="addMesh('cylinder')"><span class="add-obj-btn-icon">🔵</span><span class="add-obj-btn-label">Cylinder</span></div>
-                    <div class="add-obj-btn" onclick="addMesh('cone')"><span class="add-obj-btn-icon">🔺</span><span class="add-obj-btn-label">Cone</span></div>
-                    <div class="add-obj-btn" onclick="addMesh('torus')"><span class="add-obj-btn-icon">🍩</span><span class="add-obj-btn-label">Torus</span></div>
-                    <div class="add-obj-btn" onclick="addMesh('plane')"><span class="add-obj-btn-icon">▬</span><span class="add-obj-btn-label">Plane</span></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Material tab -->
-        <div class="props-body" id="panelMaterial" style="display:none;">
-            <div class="p-sec">
-                <div class="p-sec-title">🎨 Material</div>
-                <div class="p-row"><span class="p-label">Type</span>
-                    <select class="p-select" id="matType" onchange="applyMaterial()">
-                        <option value="standard">Standard (PBR)</option>
-                        <option value="phong">Phong</option>
-                        <option value="lambert">Lambert</option>
-                        <option value="basic">Basic</option>
-                        <option value="wireframe">Wireframe</option>
-                        <option value="toon">Toon (Cel)</option>
-                    </select>
-                </div>
-                <div class="p-row"><span class="p-label">Color</span><input type="color" class="p-color" id="matColor" value="#8b5cf6" onchange="applyMaterial()"></div>
-                <div class="p-row"><span class="p-label">Emissive</span><input type="color" class="p-color" id="matEmissive" value="#000000" onchange="applyMaterial()"></div>
-                <div class="p-row"><span class="p-label">Metalness</span><input type="range" class="p-range" id="matMetal" min="0" max="1" step="0.01" value="0" oninput="applyMaterial();document.getElementById('matMetalVal').textContent=Math.round(this.value*100)+'%'"><span class="p-val" id="matMetalVal">0%</span></div>
-                <div class="p-row"><span class="p-label">Roughness</span><input type="range" class="p-range" id="matRough" min="0" max="1" step="0.01" value="0.5" oninput="applyMaterial();document.getElementById('matRoughVal').textContent=Math.round(this.value*100)+'%'"><span class="p-val" id="matRoughVal">50%</span></div>
-                <div class="p-row"><span class="p-label">Opacity</span><input type="range" class="p-range" id="matOpacity" min="0" max="1" step="0.01" value="1" oninput="applyMaterial();document.getElementById('matOpacityVal').textContent=Math.round(this.value*100)+'%'"><span class="p-val" id="matOpacityVal">100%</span></div>
-            </div>
-        </div>
-
-        <!-- Light tab -->
-        <div class="props-body" id="panelLight" style="display:none;">
-            <div class="p-sec">
-                <div class="p-sec-title">💡 Active Light</div>
-                <div id="lightProps" style="font-size:.75rem;color:var(--text-muted);">Yorug'lik tanlang</div>
-            </div>
-            <div class="p-sec">
-                <div class="p-sec-title">🌍 Scene Lighting</div>
-                <div class="p-row"><span class="p-label">Ambient</span><input type="color" class="p-color" id="ambientColor" value="#111827" onchange="updateAmbient()"></div>
-                <div class="p-row"><span class="p-label">Intensity</span><input type="range" class="p-range" id="ambientInt" min="0" max="3" step="0.05" value="0.4" oninput="updateAmbient()"><span class="p-val" id="ambientIntVal">0.4</span></div>
-                <div class="p-row"><span class="p-label">+ Lights</span>
-                    <button onclick="addLight('point')" style="flex:1;padding:.25rem;border-radius:4px;font-size:.68rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-muted);cursor:pointer;">💡 Point</button>
-                    <button onclick="addLight('directional')" style="flex:1;padding:.25rem;border-radius:4px;font-size:.68rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-muted);cursor:pointer;">☀️ Sun</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- World tab -->
-        <div class="props-body" id="panelScene" style="display:none;">
-            <div class="p-sec">
-                <div class="p-sec-title">🌌 Background</div>
-                <div class="p-row"><span class="p-label">Color</span><input type="color" class="p-color" id="bgColor" value="#0d0d1a" onchange="updateBackground()"></div>
-                <div class="p-row"><span class="p-label">Fog</span><input type="checkbox" id="fogEnabled" onchange="updateFog()" style="accent-color:#8b5cf6;cursor:pointer;"></div>
-                <div class="p-row"><span class="p-label">Fog Color</span><input type="color" class="p-color" id="fogColor" value="#0d0d1a" onchange="updateFog()"></div>
-                <div class="p-row"><span class="p-label">Fog Near</span><input type="range" class="p-range" id="fogNear" min="1" max="100" value="10" oninput="updateFog()"><span class="p-val" id="fogNearVal">10</span></div>
-                <div class="p-row"><span class="p-label">Fog Far</span><input type="range" class="p-range" id="fogFar" min="10" max="1000" value="200" oninput="updateFog()"><span class="p-val" id="fogFarVal">200</span></div>
-            </div>
-            <div class="p-sec">
-                <div class="p-sec-title">🎬 Render</div>
-                <div class="p-row"><span class="p-label">Shadows</span><input type="checkbox" id="shadowsOn" checked onchange="toggleShadows()" style="accent-color:#8b5cf6;cursor:pointer;"></div>
-                <div class="p-row"><span class="p-label">Tone Map</span>
-                    <select class="p-select" id="toneMap" onchange="updateToneMap()">
-                        <option value="0">Linear</option>
-                        <option value="1" selected>Reinhard</option>
-                        <option value="3">ACES</option>
-                    </select>
-                </div>
-                <div class="p-row"><span class="p-label">Exposure</span><input type="range" class="p-range" id="exposure" min="0.1" max="3" step="0.1" value="1" oninput="updateToneMap()"><span class="p-val" id="exposureVal">1</span></div>
-            </div>
-        </div>
-    </div>
+  <div class="add-menu-cat" style="margin-top: 6px;">Fayl</div>
+  <div class="add-menu-item" onclick="triggerImportGLB()"><span>📁</span> .GLB Model Import</div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Hidden File Input for GLB import -->
+<input type="file" id="glb-file-input" accept=".glb,.gltf" style="display: none;" onchange="handleGLBFileChosen(this)">
+
+<!-- Toast -->
+<div id="toast-box"></div>
+
+<!-- Initial Scene Data Bridge -->
+<script id="init-scene-data" type="application/json">
+{{ scene_data_json|safe|default:"{}" }}
+</script>
+
 <script>
-// ═══════════════════════════════════════════════════════════
-//  THREE.JS SETUP
-// ═══════════════════════════════════════════════════════════
-const PROJECT_ID = {{ scene.pk }};
-let unsaved = false;
-let sceneObjects = [];
-let selectedObj = null;
-let transformMode = 'translate';
-let viewMode = 'solid';
-let frameCount = 0, lastFPSTime = performance.now();
+/* ══════════════════════════════════════════════════════════════════════════════
+   DEVFORGE 3D STUDIO PRO ENGINE (Three.js WebGL)
+══════════════════════════════════════════════════════════════════════════════ */
 
-// Renderer
-const canvas = document.getElementById('threeCanvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 1;
+let scene, camera, renderer, orbit, transform;
+let managedObjects = []; // Array of { id, name, type, mesh, assetUrl }
+let selectedObject = null;
+let isDirty = false;
+let currentShading = 'solid';
+let currentTool = 'select';
 
-// Scene
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0d0d1a);
+const SAVE_URL = "{{ save_url }}";
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content || "";
 
-// Camera
-let camera = new THREE.PerspectiveCamera(60, 1, 0.01, 10000);
-camera.position.set(5, 5, 5); camera.lookAt(0, 0, 0);
+// Initialize Three.js after double rAF to avoid 0-size flex layout bug
+window.addEventListener('DOMContentLoaded', () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      initThreeEngine();
+    });
+  });
+});
 
-// Orbit Controls (manual)
-let orbiting = false, orbitStart = {x:0,y:0}, orbitState = {theta:Math.PI/4, phi:Math.PI/4, radius:10, target: new THREE.Vector3()};
-let panning = false, panStart = {x:0,y:0};
+function initThreeEngine() {
+  const container = document.getElementById('viewport-container');
+  const canvas = document.getElementById('three-canvas');
+  if (!container || !canvas) return;
 
-// Lights
-const ambientLight = new THREE.AmbientLight(0x111827, 0.4);
-scene.add(ambientLight);
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
-sunLight.position.set(5, 10, 7); sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
-scene.add(sunLight);
+  // 1. Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color('#080a0f');
 
-// Grid Helper
-const gridHelper = new THREE.GridHelper(20, 20, 0x222244, 0x1a1a33);
-scene.add(gridHelper);
+  // 2. Camera
+  const w = container.offsetWidth || window.innerWidth - 370;
+  const h = container.offsetHeight || window.innerHeight - 48;
+  camera = new THREE.PerspectiveCamera(60, w / h, 0.1, 2000);
+  camera.position.set(7, 6, 9);
+  camera.lookAt(0, 0, 0);
 
-// ═══════════════════════════════════════════════════════════
-//  RAYCASTING (click selection)
-// ═══════════════════════════════════════════════════════════
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+  // 3. Renderer
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(w, h);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
 
-canvas.addEventListener('click', e => {
+  // 4. Orbit Controls
+  orbit = new THREE.OrbitControls(camera, canvas);
+  orbit.enableDamping = true;
+  orbit.dampingFactor = 0.05;
+  orbit.target.set(0, 0, 0);
+  orbit.update();
+
+  // 5. Transform Controls (Gizmo)
+  transform = new THREE.TransformControls(camera, canvas);
+  transform.size = 0.75;
+  scene.add(transform);
+
+  transform.addEventListener('dragging-changed', (e) => {
+    orbit.enabled = !e.value;
+    if (!e.value) {
+      syncTransformInputs();
+      markDirty();
+    }
+  });
+
+  transform.addEventListener('change', () => {
+    if (transform.object) {
+      syncTransformInputs();
+    }
+  });
+
+  // 6. Lights & Grid
+  const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+  scene.add(ambient);
+
+  const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+  sun.position.set(10, 15, 10);
+  sun.castShadow = true;
+  sun.shadow.mapSize.width = 2048;
+  sun.shadow.mapSize.height = 2048;
+  scene.add(sun);
+
+  const fill = new THREE.DirectionalLight(0x00f5ff, 0.35);
+  fill.position.set(-10, 8, -10);
+  scene.add(fill);
+
+  const grid = new THREE.GridHelper(30, 30, 0x00f5ff, 0x161b22);
+  grid.position.y = -0.01;
+  scene.add(grid);
+
+  // 7. Click Raycasting
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return; // only left click
     const rect = canvas.getBoundingClientRect();
     mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
     raycaster.setFromCamera(mouse, camera);
-    const meshes = sceneObjects.filter(o => o.mesh).map(o => o.mesh);
+    const meshes = managedObjects.map(o => o.mesh);
     const hits = raycaster.intersectObjects(meshes, true);
+
     if (hits.length > 0) {
-        const hit = hits[0].object;
-        const obj = sceneObjects.find(o => o.mesh === hit || (o.mesh && o.mesh.children.includes(hit)));
-        if (obj) { selectObject(obj.id); }
-    } else { deselectAll(); }
-});
-
-// ═══════════════════════════════════════════════════════════
-//  ORBIT CONTROLS
-// ═══════════════════════════════════════════════════════════
-canvas.addEventListener('mousedown', e => {
-    if (e.button === 0 && e.altKey) { orbiting = true; orbitStart = {x:e.clientX, y:e.clientY}; e.preventDefault(); }
-    if (e.button === 1 || (e.button === 0 && e.shiftKey)) { panning = true; panStart = {x:e.clientX, y:e.clientY}; e.preventDefault(); }
-});
-document.addEventListener('mousemove', e => {
-    if (orbiting) {
-        const dx = (e.clientX - orbitStart.x) * 0.01;
-        const dy = (e.clientY - orbitStart.y) * 0.01;
-        orbitState.theta -= dx; orbitState.phi = Math.max(0.05, Math.min(Math.PI-0.05, orbitState.phi - dy));
-        orbitStart = {x:e.clientX, y:e.clientY};
-        updateCameraOrbit();
+      let root = hits[0].object;
+      while (root.parent && root.parent !== scene) {
+        root = root.parent;
+      }
+      selectObject(root);
+    } else if (!transform.dragging) {
+      selectObject(null);
     }
-    if (panning) {
-        const dx = (e.clientX - panStart.x) * 0.01;
-        const dy = (e.clientY - panStart.y) * 0.01;
-        const right = new THREE.Vector3(); const up = new THREE.Vector3();
-        camera.getWorldDirection(right); right.cross(camera.up).normalize();
-        up.copy(camera.up);
-        orbitState.target.addScaledVector(right, -dx * orbitState.radius * 0.1);
-        orbitState.target.addScaledVector(up, dy * orbitState.radius * 0.1);
-        panStart = {x:e.clientX, y:e.clientY};
-        updateCameraOrbit();
+  });
+
+  // 8. Window / Container Resize
+  const ro = new ResizeObserver(() => onResize());
+  ro.observe(container);
+
+  // 9. Keyboard Shortcuts
+  window.addEventListener('keydown', handleKeyDown);
+
+  // 10. Drag and drop file loading into viewport
+  initDragAndDrop(container);
+
+  // 11. Load Initial Scene Data
+  loadInitialScene();
+
+  // 12. Auto-save every 30s
+  setInterval(() => {
+    if (isDirty) saveScene(true);
+  }, 30000);
+
+  // 13. Render Loop
+  let frameCount = 0;
+  let lastTime = performance.now();
+  const fpsEl = document.getElementById('fps-display');
+
+  function animate() {
+    requestAnimationFrame(animate);
+    orbit.update();
+    renderer.render(scene, camera);
+
+    frameCount++;
+    const now = performance.now();
+    if (now - lastTime >= 1000) {
+      if (fpsEl) fpsEl.textContent = frameCount;
+      frameCount = 0;
+      lastTime = now;
     }
-});
-document.addEventListener('mouseup', () => { orbiting = false; panning = false; });
-canvas.addEventListener('wheel', e => {
-    e.preventDefault();
-    orbitState.radius = Math.max(0.5, orbitState.radius * (e.deltaY > 0 ? 1.1 : 0.9));
-    updateCameraOrbit();
-}, {passive:false});
-
-function updateCameraOrbit() {
-    const {theta, phi, radius, target} = orbitState;
-    camera.position.set(
-        target.x + radius * Math.sin(phi) * Math.sin(theta),
-        target.y + radius * Math.cos(phi),
-        target.z + radius * Math.sin(phi) * Math.cos(theta)
-    );
-    camera.lookAt(target);
+  }
+  animate();
 }
 
-// ═══════════════════════════════════════════════════════════
-//  OBJECTS
-// ═══════════════════════════════════════════════════════════
-let objCounter = 0;
-const MESH_GEOMETRIES = {
-    box: () => new THREE.BoxGeometry(1,1,1),
-    sphere: () => new THREE.SphereGeometry(0.5, 32, 32),
-    cylinder: () => new THREE.CylinderGeometry(0.5, 0.5, 1, 32),
-    cone: () => new THREE.ConeGeometry(0.5, 1, 32),
-    torus: () => new THREE.TorusGeometry(0.5, 0.2, 16, 100),
-    plane: () => new THREE.PlaneGeometry(2, 2),
-};
-
-function addMesh(type) {
-    const geom = MESH_GEOMETRIES[type] ? MESH_GEOMETRIES[type]() : new THREE.BoxGeometry();
-    const mat  = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.5, metalness: 0 });
-    const mesh = new THREE.Mesh(geom, mat);
-    mesh.castShadow = true; mesh.receiveShadow = true;
-    mesh.position.set((Math.random()-0.5)*2, 0.5, (Math.random()-0.5)*2);
-    const id = 'obj_' + (++objCounter);
-    const objData = { id, name: type.charAt(0).toUpperCase()+type.slice(1)+' '+objCounter, type, mesh, visible: true };
-    sceneObjects.push(objData);
-    scene.add(mesh);
-    renderOutliner();
-    selectObject(id);
-    markUnsaved();
+function onResize() {
+  const container = document.getElementById('viewport-container');
+  if (!container || !renderer || !camera) return;
+  const w = container.offsetWidth || window.innerWidth - 370;
+  const h = container.offsetHeight || window.innerHeight - 48;
+  if (w < 10 || h < 10) return;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
 }
 
-function addLight(type) {
-    let light;
-    const id = 'obj_' + (++objCounter);
-    if (type === 'point') {
-        light = new THREE.PointLight(0xffffff, 1, 20);
-        light.position.set(0, 3, 0);
-        light.castShadow = true;
-    } else if (type === 'directional') {
-        light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(5, 10, 5);
-        light.castShadow = true;
-    } else if (type === 'spot') {
-        light = new THREE.SpotLight(0xffffff, 1, 20, Math.PI/6);
-        light.position.set(0, 5, 0);
-        light.castShadow = true;
-    }
-    const helper = type === 'point' ? new THREE.PointLightHelper(light, 0.5) : type === 'directional' ? new THREE.DirectionalLightHelper(light, 1) : new THREE.SpotLightHelper(light);
-    scene.add(light); scene.add(helper);
-    const objData = { id, name: type.charAt(0).toUpperCase()+type.slice(1)+' Light '+objCounter, type:'light_'+type, mesh: helper, light, visible: true };
-    sceneObjects.push(objData);
-    renderOutliner();
-    markUnsaved();
+/* ══════════════════════════════════════════════════════════════════════════════
+   OBJECT MANAGEMENT & PRIMITIVES
+══════════════════════════════════════════════════════════════════════════════ */
+
+let idCounter = 0;
+
+function addPrimitive(type) {
+  closeAddMenu();
+  let geom;
+  switch (type) {
+    case 'box': geom = new THREE.BoxGeometry(1.5, 1.5, 1.5); break;
+    case 'sphere': geom = new THREE.SphereGeometry(1, 32, 32); break;
+    case 'cylinder': geom = new THREE.CylinderGeometry(0.75, 0.75, 2, 32); break;
+    case 'cone': geom = new THREE.ConeGeometry(0.8, 2, 32); break;
+    case 'plane':
+      geom = new THREE.PlaneGeometry(3, 3);
+      geom.rotateX(-Math.PI / 2);
+      break;
+    case 'torus': geom = new THREE.TorusGeometry(1, 0.35, 16, 100); break;
+    default: geom = new THREE.BoxGeometry(1, 1, 1);
+  }
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x00f5ff,
+    roughness: 0.4,
+    metalness: 0.1
+  });
+  const mesh = new THREE.Mesh(geom, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  mesh.position.set((Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2);
+
+  const name = type.charAt(0).toUpperCase() + type.slice(1) + '.' + (++idCounter);
+  const objRecord = {
+    id: 'obj_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: name,
+    type: 'primitive',
+    primType: type,
+    mesh: mesh,
+  };
+
+  mesh.userData = objRecord;
+  scene.add(mesh);
+  managedObjects.push(objRecord);
+
+  selectObject(mesh);
+  updateOutlinerUI();
+  markDirty();
+  showToast(name + " qo'shildi");
 }
 
-function addCamera() {
-    const camHelper = new THREE.CameraHelper(camera);
-    scene.add(camHelper);
-    showToast('📷 Camera sahna kamerasidan ko\'chiriladi', 'success');
+function addSceneLight(type) {
+  closeAddMenu();
+  let light;
+  const name = type.toUpperCase() + ' Light';
+  if (type === 'point') {
+    light = new THREE.PointLight(0xffd700, 1.5, 25);
+    light.position.set(0, 5, 0);
+  } else if (type === 'spot') {
+    light = new THREE.SpotLight(0x00f5ff, 2.0);
+    light.position.set(0, 8, 4);
+  } else {
+    light = new THREE.DirectionalLight(0xffffff, 1.0);
+    light.position.set(5, 10, 5);
+  }
+
+  const objRecord = {
+    id: 'light_' + Date.now(),
+    name: name,
+    type: 'light',
+    mesh: light,
+  };
+  light.userData = objRecord;
+  scene.add(light);
+  managedObjects.push(objRecord);
+
+  selectObject(light);
+  updateOutlinerUI();
+  markDirty();
+  showToast(name + " qo'shildi");
 }
 
-// ═══════════════════════════════════════════════════════════
-//  SELECTION
-// ═══════════════════════════════════════════════════════════
-function selectObject(id) {
-    // Remove previous selection outline
-    sceneObjects.forEach(o => {
-        if (o.mesh && o.mesh.material) {
-            if (o.mesh.material.emissive) o.mesh.material.emissive.set(0x000000);
-        }
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLTF / GLB IMPORT (Blender Integration)
+══════════════════════════════════════════════════════════════════════════════ */
+
+function triggerImportGLB() {
+  closeAddMenu();
+  document.getElementById('glb-file-input').click();
+}
+
+function handleGLBFileChosen(input) {
+  if (input.files && input.files[0]) {
+    loadLocalGLTF(input.files[0]);
+  }
+}
+
+function loadLocalGLTF(file) {
+  showToast("Yuklanmoqda: " + file.name + "...");
+  const reader = new FileReader();
+  reader.readAsArrayBuffer(file);
+  reader.onload = function(e) {
+    const contents = e.target.result;
+    const loader = new THREE.GLTFLoader();
+    loader.parse(contents, '', (gltf) => {
+      const model = gltf.scene;
+      setupImportedModel(model, file.name.replace(/\.[^/.]+$/, ''));
+    }, (err) => {
+      console.error(err);
+      showToast("GLTF yuklashda xatolik yuz berdi", "error");
     });
-    selectedObj = sceneObjects.find(o => o.id === id);
-    if (selectedObj && selectedObj.mesh && selectedObj.mesh.material) {
-        if (selectedObj.mesh.material.emissive) selectedObj.mesh.material.emissive.set(0x221133);
+  };
+}
+
+function loadRemoteGLTF(url, title) {
+  showToast("Model yuklanmoqda: " + title + "...");
+  const loader = new THREE.GLTFLoader();
+  loader.load(url, (gltf) => {
+    const model = gltf.scene;
+    setupImportedModel(model, title, url);
+  }, undefined, (err) => {
+    console.error(err);
+    showToast("Modelni serverdan yuklab bo'lmadi", "error");
+  });
+}
+
+function setupImportedModel(model, name, assetUrl = '') {
+  // Normalize model scale & center
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  if (maxDim > 8) {
+    const scale = 5 / maxDim;
+    model.scale.set(scale, scale, scale);
+  }
+
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
     }
-    updateTransformPanel();
-    renderOutliner();
+  });
+
+  model.position.set(0, 0, 0);
+
+  const objRecord = {
+    id: 'gltf_' + Date.now(),
+    name: name,
+    type: 'gltf',
+    assetUrl: assetUrl,
+    mesh: model,
+  };
+  model.userData = objRecord;
+  scene.add(model);
+  managedObjects.push(objRecord);
+
+  selectObject(model);
+  updateOutlinerUI();
+  markDirty();
+  showToast(name + " sahnaga qo'shildi!");
 }
 
-function deselectAll() { selectedObj = null; renderOutliner(); }
+/* Drag and drop support */
+function initDragAndDrop(container) {
+  const overlay = document.getElementById('drag-overlay');
+  ['dragenter', 'dragover'].forEach(name => {
+    container.addEventListener(name, (e) => {
+      e.preventDefault();
+      overlay.classList.add('active');
+    }, false);
+  });
 
-function updateTransformPanel() {
-    if (!selectedObj || !selectedObj.mesh) return;
-    const m = selectedObj.mesh;
-    document.getElementById('posX').value = m.position.x.toFixed(2);
-    document.getElementById('posY').value = m.position.y.toFixed(2);
-    document.getElementById('posZ').value = m.position.z.toFixed(2);
-    document.getElementById('rotX').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.x));
-    document.getElementById('rotY').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.y));
-    document.getElementById('rotZ').value = Math.round(THREE.MathUtils.radToDeg(m.rotation.z));
-    document.getElementById('scaX').value = m.scale.x.toFixed(2);
-    document.getElementById('scaY').value = m.scale.y.toFixed(2);
-    document.getElementById('scaZ').value = m.scale.z.toFixed(2);
-    if (selectedObj.mesh.material && selectedObj.mesh.material.color) {
-        document.getElementById('matColor').value = '#' + selectedObj.mesh.material.color.getHexString();
+  ['dragleave', 'drop'].forEach(name => {
+    container.addEventListener(name, (e) => {
+      e.preventDefault();
+      overlay.classList.remove('active');
+    }, false);
+  });
+
+  container.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    if (dt.files && dt.files[0]) {
+      const file = dt.files[0];
+      if (file.name.match(/\.(glb|gltf)$/i)) {
+        loadLocalGLTF(file);
+      } else {
+        showToast("Faqat .glb yoki .gltf fayllar qo'llab-quvvatlanadi", "error");
+      }
     }
+  });
 }
 
-function applyTransform() {
-    if (!selectedObj || !selectedObj.mesh) return;
-    const m = selectedObj.mesh;
-    m.position.set(+document.getElementById('posX').value, +document.getElementById('posY').value, +document.getElementById('posZ').value);
-    m.rotation.set(
-        THREE.MathUtils.degToRad(+document.getElementById('rotX').value),
-        THREE.MathUtils.degToRad(+document.getElementById('rotY').value),
-        THREE.MathUtils.degToRad(+document.getElementById('rotZ').value)
-    );
-    m.scale.set(+document.getElementById('scaX').value, +document.getElementById('scaY').value, +document.getElementById('scaZ').value);
-    markUnsaved();
+/* ══════════════════════════════════════════════════════════════════════════════
+   SELECTION & TRANSFORM
+══════════════════════════════════════════════════════════════════════════════ */
+
+function selectObject(obj) {
+  selectedObject = obj;
+  if (obj) {
+    transform.attach(obj);
+    if (currentTool === 'select') {
+      transform.setMode('translate');
+    } else {
+      transform.setMode(currentTool);
+    }
+    document.getElementById('no-selection-msg').style.display = 'none';
+    document.getElementById('selection-properties').style.display = 'block';
+    syncTransformInputs();
+    syncMaterialInputs();
+  } else {
+    transform.detach();
+    document.getElementById('no-selection-msg').style.display = 'block';
+    document.getElementById('selection-properties').style.display = 'none';
+  }
+  updateOutlinerHighlight();
 }
 
-function applyMaterial() {
-    if (!selectedObj || !selectedObj.mesh || !selectedObj.mesh.material) return;
-    const type = document.getElementById('matType').value;
-    const color = new THREE.Color(document.getElementById('matColor').value);
-    const emissive = new THREE.Color(document.getElementById('matEmissive').value);
-    const metalness = +document.getElementById('matMetal').value;
-    const roughness = +document.getElementById('matRough').value;
-    const opacity = +document.getElementById('matOpacity').value;
+function setGizmoMode(mode) {
+  currentTool = mode;
+  document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('tool-' + mode);
+  if (btn) btn.classList.add('active');
 
-    let mat;
-    if (type === 'standard') mat = new THREE.MeshStandardMaterial({color, emissive, metalness, roughness, transparent: opacity < 1, opacity});
-    else if (type === 'phong') mat = new THREE.MeshPhongMaterial({color, emissive, shininess: (1-roughness)*100, transparent: opacity < 1, opacity});
-    else if (type === 'lambert') mat = new THREE.MeshLambertMaterial({color, emissive, transparent: opacity < 1, opacity});
-    else if (type === 'basic') mat = new THREE.MeshBasicMaterial({color, transparent: opacity < 1, opacity});
-    else if (type === 'wireframe') mat = new THREE.MeshBasicMaterial({color, wireframe: true});
-    else if (type === 'toon') mat = new THREE.MeshToonMaterial({color});
-    else mat = new THREE.MeshStandardMaterial({color, metalness, roughness});
-
-    selectedObj.mesh.material = mat;
-    markUnsaved();
-}
-
-// ═══════════════════════════════════════════════════════════
-//  OUTLINER
-// ═══════════════════════════════════════════════════════════
-const TYPE_ICONS = { box:'⬜', sphere:'⬤', cylinder:'🔵', cone:'🔺', torus:'🍩', plane:'▬', light_point:'💡', light_directional:'☀️', light_spot:'🔦' };
-function renderOutliner() {
-    const body = document.getElementById('outlinerBody');
-    body.innerHTML = sceneObjects.length ? sceneObjects.map(o => `
-        <div class="scene-item ${selectedObj && selectedObj.id===o.id?'selected':''}" onclick="selectObject('${o.id}')">
-            <span class="scene-item-icon">${TYPE_ICONS[o.type]||'⬜'}</span>
-            <span class="scene-item-name">${o.name}</span>
-            <button class="scene-item-vis" onclick="event.stopPropagation();toggleObjVis('${o.id}')">${o.visible?'👁':'🙈'}</button>
-        </div>
-    `).join('') : '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.75rem;">Sahna bo\'sh</div>';
-}
-
-function toggleObjVis(id) {
-    const obj = sceneObjects.find(o => o.id===id);
-    if (!obj) return;
-    obj.visible = !obj.visible;
-    if (obj.mesh) obj.mesh.visible = obj.visible;
-    renderOutliner();
-}
-
-function deleteSelected() {
-    if (!selectedObj) return;
-    scene.remove(selectedObj.mesh);
-    if (selectedObj.light) scene.remove(selectedObj.light);
-    sceneObjects = sceneObjects.filter(o => o.id !== selectedObj.id);
-    selectedObj = null;
-    renderOutliner(); markUnsaved();
-}
-
-function duplicateSelected() {
-    if (!selectedObj || !selectedObj.mesh) return;
-    const orig = selectedObj.mesh;
-    const newMesh = orig.clone();
-    newMesh.position.x += 1;
-    scene.add(newMesh);
-    const id = 'obj_' + (++objCounter);
-    const objData = { ...selectedObj, id, name: selectedObj.name + ' Copy', mesh: newMesh };
-    sceneObjects.push(objData);
-    renderOutliner(); selectObject(id); markUnsaved();
+  if (selectedObject) {
+    if (mode === 'select' || mode === 'translate') transform.setMode('translate');
+    else if (mode === 'rotate') transform.setMode('rotate');
+    else if (mode === 'scale') transform.setMode('scale');
+  }
 }
 
 function focusSelected() {
-    if (!selectedObj || !selectedObj.mesh) return;
-    orbitState.target.copy(selectedObj.mesh.position);
-    updateCameraOrbit();
+  if (!selectedObject) return;
+  const box = new THREE.Box3().setFromObject(selectedObject);
+  const center = box.getCenter(new THREE.Vector3());
+  orbit.target.copy(center);
+  camera.position.set(center.x + 5, center.y + 4, center.z + 5);
+  orbit.update();
+  showToast("Fokuslandi: " + (selectedObject.userData?.name || "Ob'ekt"));
 }
 
-// ═══════════════════════════════════════════════════════════
-//  WORLD SETTINGS
-// ═══════════════════════════════════════════════════════════
-function updateBackground() {
-    scene.background = new THREE.Color(document.getElementById('bgColor').value);
-}
-function updateAmbient() {
-    ambientLight.color.set(document.getElementById('ambientColor').value);
-    ambientLight.intensity = +document.getElementById('ambientInt').value;
-    document.getElementById('ambientIntVal').textContent = document.getElementById('ambientInt').value;
-}
-function updateFog() {
-    const on = document.getElementById('fogEnabled').checked;
-    const color = document.getElementById('fogColor').value;
-    const near = +document.getElementById('fogNear').value;
-    const far  = +document.getElementById('fogFar').value;
-    scene.fog = on ? new THREE.Fog(color, near, far) : null;
-    document.getElementById('fogNearVal').textContent = near;
-    document.getElementById('fogFarVal').textContent = far;
-}
-function toggleShadows() { renderer.shadowMap.enabled = document.getElementById('shadowsOn').checked; }
-function updateToneMap() {
-    renderer.toneMapping = +document.getElementById('toneMap').value;
-    renderer.toneMappingExposure = +document.getElementById('exposure').value;
-    document.getElementById('exposureVal').textContent = document.getElementById('exposure').value;
+function deleteSelected() {
+  if (!selectedObject) return;
+  const rec = selectedObject.userData;
+  scene.remove(selectedObject);
+  transform.detach();
+  managedObjects = managedObjects.filter(o => o.mesh !== selectedObject);
+  selectedObject = null;
+  selectObject(null);
+  updateOutlinerUI();
+  markDirty();
+  showToast("Ob'ekt o'chirildi");
 }
 
-// ═══════════════════════════════════════════════════════════
-//  VIEW MODES & CAMERAS
-// ═══════════════════════════════════════════════════════════
-function setViewMode(mode) {
-    viewMode = mode;
-    sceneObjects.forEach(o => {
-        if (!o.mesh || !o.mesh.material) return;
-        if (mode === 'wireframe') o.mesh.material.wireframe = true;
-        else { o.mesh.material.wireframe = false; }
-    });
+function resetTransform() {
+  if (!selectedObject) return;
+  selectedObject.position.set(0, 0, 0);
+  selectedObject.rotation.set(0, 0, 0);
+  selectedObject.scale.set(1, 1, 1);
+  syncTransformInputs();
+  markDirty();
 }
 
-function setCamera(type) {
-    if (type === 'orthographic') {
-        const aspect = canvas.clientWidth / canvas.clientHeight;
-        camera = new THREE.OrthographicCamera(-5*aspect, 5*aspect, 5, -5, 0.01, 10000);
-    } else {
-        camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.01, 10000);
-    }
-    updateCameraOrbit();
+/* ══════════════════════════════════════════════════════════════════════════════
+   PROPERTIES & MATERIAL BINDINGS
+══════════════════════════════════════════════════════════════════════════════ */
+
+function syncTransformInputs() {
+  if (!selectedObject) return;
+  document.getElementById('pos-x').value = selectedObject.position.x.toFixed(2);
+  document.getElementById('pos-y').value = selectedObject.position.y.toFixed(2);
+  document.getElementById('pos-z').value = selectedObject.position.z.toFixed(2);
+
+  document.getElementById('rot-x').value = (selectedObject.rotation.x * 180 / Math.PI).toFixed(1);
+  document.getElementById('rot-y').value = (selectedObject.rotation.y * 180 / Math.PI).toFixed(1);
+  document.getElementById('rot-z').value = (selectedObject.rotation.z * 180 / Math.PI).toFixed(1);
+
+  document.getElementById('scl-x').value = selectedObject.scale.x.toFixed(2);
+  document.getElementById('scl-y').value = selectedObject.scale.y.toFixed(2);
+  document.getElementById('scl-z').value = selectedObject.scale.z.toFixed(2);
 }
 
-function setCameraView(view) {
-    const r = orbitState.radius;
-    if (view==='top')   { orbitState.phi = 0.01; orbitState.theta = 0; }
-    if (view==='front') { orbitState.phi = Math.PI/2; orbitState.theta = 0; }
-    if (view==='right') { orbitState.phi = Math.PI/2; orbitState.theta = Math.PI/2; }
-    if (view==='persp') { orbitState.phi = Math.PI/4; orbitState.theta = Math.PI/4; }
-    updateCameraOrbit();
+function onTransformInput() {
+  if (!selectedObject) return;
+  selectedObject.position.x = parseFloat(document.getElementById('pos-x').value) || 0;
+  selectedObject.position.y = parseFloat(document.getElementById('pos-y').value) || 0;
+  selectedObject.position.z = parseFloat(document.getElementById('pos-z').value) || 0;
+
+  selectedObject.rotation.x = (parseFloat(document.getElementById('rot-x').value) || 0) * Math.PI / 180;
+  selectedObject.rotation.y = (parseFloat(document.getElementById('rot-y').value) || 0) * Math.PI / 180;
+  selectedObject.rotation.z = (parseFloat(document.getElementById('rot-z').value) || 0) * Math.PI / 180;
+
+  selectedObject.scale.x = parseFloat(document.getElementById('scl-x').value) || 1;
+  selectedObject.scale.y = parseFloat(document.getElementById('scl-y').value) || 1;
+  selectedObject.scale.z = parseFloat(document.getElementById('scl-z').value) || 1;
+
+  markDirty();
 }
 
-// ═══════════════════════════════════════════════════════════
-//  TRANSFORM MODES
-// ═══════════════════════════════════════════════════════════
-function setTransformMode(mode) {
-    transformMode = mode;
-    document.querySelectorAll('[id^="mode-"]').forEach(b => b.classList.remove('active'));
-    document.getElementById('mode-' + mode)?.classList.add('active');
-}
-function set3dTool(t) {
-    document.querySelectorAll('.s3d-tool').forEach(b => b.classList.remove('active'));
-    document.getElementById('tool-' + t + '3d')?.classList.add('active');
+function syncMaterialInputs() {
+  if (!selectedObject) return;
+  let mat = selectedObject.material;
+  if (!mat && selectedObject.isGroup) {
+    selectedObject.traverse(child => { if (child.isMesh && !mat) mat = child.material; });
+  }
+
+  const matSection = document.getElementById('section-material');
+  if (!mat) {
+    matSection.style.display = 'none';
+    return;
+  }
+  matSection.style.display = 'block';
+
+  if (mat.color) {
+    document.getElementById('mat-color').value = '#' + mat.color.getHexString();
+  }
+  if (mat.roughness !== undefined) {
+    document.getElementById('mat-roughness').value = mat.roughness;
+  }
+  if (mat.metalness !== undefined) {
+    document.getElementById('mat-metalness').value = mat.metalness;
+  }
+  document.getElementById('mat-wireframe').checked = !!mat.wireframe;
 }
 
-// ═══════════════════════════════════════════════════════════
-//  RESIZE
-// ═══════════════════════════════════════════════════════════
-function resizeRenderer() {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    if (canvas.width !== w || canvas.height !== h) {
-        renderer.setSize(w, h, false);
-        if (camera.isPerspectiveCamera) camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-    }
+function onMaterialChange() {
+  if (!selectedObject) return;
+  const col = document.getElementById('mat-color').value;
+  const rough = parseFloat(document.getElementById('mat-roughness').value);
+  const metal = parseFloat(document.getElementById('mat-metalness').value);
+  const wire = document.getElementById('mat-wireframe').checked;
+
+  const applyToMat = (m) => {
+    if (!m) return;
+    if (m.color) m.color.set(col);
+    if (m.roughness !== undefined) m.roughness = rough;
+    if (m.metalness !== undefined) m.metalness = metal;
+    m.wireframe = wire;
+    m.needsUpdate = true;
+  };
+
+  if (selectedObject.material) {
+    applyToMat(selectedObject.material);
+  } else {
+    selectedObject.traverse(child => { if (child.isMesh) applyToMat(child.material); });
+  }
+  markDirty();
 }
 
-// ═══════════════════════════════════════════════════════════
-//  RENDER LOOP
-// ═══════════════════════════════════════════════════════════
-function animate() {
-    requestAnimationFrame(animate);
-    resizeRenderer();
-    renderer.render(scene, camera);
-    frameCount++;
-    const now = performance.now();
-    if (now - lastFPSTime > 1000) {
-        const fps = Math.round(frameCount * 1000 / (now - lastFPSTime));
-        let tris = 0;
-        sceneObjects.forEach(o => { if (o.mesh && o.mesh.geometry) tris += (o.mesh.geometry.index ? o.mesh.geometry.index.count/3 : 0); });
-        document.getElementById('viewportInfo').textContent = `Objects: ${sceneObjects.length} | FPS: ${fps}`;
-        frameCount = 0; lastFPSTime = now;
-    }
+function applyMatPreset(type) {
+  if (!selectedObject) return;
+  const presets = {
+    default: { color: '#00f5ff', roughness: 0.5, metalness: 0.1 },
+    metal:   { color: '#cbd5e1', roughness: 0.15, metalness: 0.95 },
+    gold:    { color: '#fbbf24', roughness: 0.2, metalness: 0.9 },
+    glass:   { color: '#ffffff', roughness: 0.05, metalness: 0.1 },
+    neon:    { color: '#ec4899', roughness: 0.2, metalness: 0.5 },
+    clay:    { color: '#f97316', roughness: 0.85, metalness: 0.0 },
+  };
+  const p = presets[type] || presets.default;
+  document.getElementById('mat-color').value = p.color;
+  document.getElementById('mat-roughness').value = p.roughness;
+  document.getElementById('mat-metalness').value = p.metalness;
+  onMaterialChange();
+  showToast(type.toUpperCase() + " material qo'llandi");
 }
-animate();
 
-// ═══════════════════════════════════════════════════════════
-//  SAVE & EXPORT
-// ═══════════════════════════════════════════════════════════
-async function saveScene() {
-    const payload = {
-        title: document.getElementById('sceneTitle').value,
-        scene_data: {
-            objects: sceneObjects.map(o => ({
-                id: o.id, name: o.name, type: o.type, visible: o.visible,
-                position: o.mesh ? [o.mesh.position.x, o.mesh.position.y, o.mesh.position.z] : [0,0,0],
-                rotation: o.mesh ? [o.mesh.rotation.x, o.mesh.rotation.y, o.mesh.rotation.z] : [0,0,0],
-                scale: o.mesh ? [o.mesh.scale.x, o.mesh.scale.y, o.mesh.scale.z] : [1,1,1],
-                color: (o.mesh && o.mesh.material && o.mesh.material.color) ? '#' + o.mesh.material.color.getHexString() : '#8b5cf6',
-            })),
-            background: document.getElementById('bgColor').value,
-            ambientIntensity: +document.getElementById('ambientInt').value,
+/* ══════════════════════════════════════════════════════════════════════════════
+   SHADING MODES (Solid / Wire / Mat)
+══════════════════════════════════════════════════════════════════════════════ */
+
+function setShading(mode) {
+  currentShading = mode;
+  document.querySelectorAll('.shading-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  managedObjects.forEach(rec => {
+    rec.mesh.traverse(child => {
+      if (child.isMesh && child.material) {
+        if (mode === 'wireframe') {
+          child.material.wireframe = true;
+        } else {
+          child.material.wireframe = false;
         }
-    };
-    try {
-        const res = await fetch(`/studio/3d-studio/save/${PROJECT_ID}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) { markSaved(); showToast('💾 Saqlandi', 'success'); }
-    } catch(e) { showToast('Saqlashda xato', 'error'); }
-}
-
-function exportGLTF() {
-    // Take screenshot and download
-    renderer.render(scene, camera);
-    const url = renderer.domElement.toDataURL('image/png');
-    const a = document.createElement('a'); a.href = url; a.download = '{{ scene.title|escapejs }}_render.png'; a.click();
-    showToast('🖼️ Render rasm eksport qilindi', 'success');
-}
-
-function markUnsaved() { unsaved=true; document.getElementById('saveDot').classList.add('unsaved'); document.getElementById('saveLabel').textContent='Saqlanmagan'; }
-function markSaved()   { unsaved=false; document.getElementById('saveDot').classList.remove('unsaved'); document.getElementById('saveLabel').textContent='Saqlangan'; }
-
-// ═══════════════════════════════════════════════════════════
-//  PROP TAB SWITCH
-// ═══════════════════════════════════════════════════════════
-function switchPropTab(t) {
-    ['object','material','light','scene'].forEach(p => {
-        document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = p===t?'':'none';
-        document.getElementById('pt' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p===t);
+      }
     });
+  });
 }
 
-// ═══════════════════════════════════════════════════════════
-//  KEYBOARD
-// ═══════════════════════════════════════════════════════════
-document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveScene(); }
-    if (e.ctrlKey && e.key === 'd') { e.preventDefault(); duplicateSelected(); }
-    if (e.key === 'Delete' || e.key === 'Backspace') { if (selectedObj) { e.preventDefault(); deleteSelected(); } }
-    if (e.key === 'f' || e.key === 'F') focusSelected();
-    if (e.key === 'g') setTransformMode('translate');
-    if (e.key === 'r') setTransformMode('rotate');
-    if (e.key === 's' && !e.ctrlKey) setTransformMode('scale');
-    if (e.key === 'q') set3dTool('select');
+/* ══════════════════════════════════════════════════════════════════════════════
+   OUTLINER UI
+══════════════════════════════════════════════════════════════════════════════ */
+
+function updateOutlinerUI() {
+  const container = document.getElementById('outliner-list');
+  const countEl = document.getElementById('obj-count-display');
+  if (countEl) countEl.textContent = managedObjects.length;
+
+  if (managedObjects.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:2rem 0;color:var(--text3);font-size:12px;">Sahna bo\'sh. Shift+A bilan ob\'ekt qo\'shing.</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  managedObjects.forEach(obj => {
+    const isSelected = selectedObject === obj.mesh;
+    const item = document.createElement('div');
+    item.className = 'outliner-item' + (isSelected ? ' selected' : '');
+    item.onclick = (e) => {
+      e.stopPropagation();
+      selectObject(obj.mesh);
+    };
+
+    let icon = '📦';
+    if (obj.type === 'light') icon = '💡';
+    else if (obj.primType === 'sphere') icon = '⚽';
+    else if (obj.primType === 'box') icon = '🧊';
+    else if (obj.type === 'gltf') icon = '🤖';
+
+    item.innerHTML = `
+      <div class="outliner-item-left">
+        <span class="outliner-icon">${icon}</span>
+        <span class="outliner-name">${obj.name}</span>
+      </div>
+      <div class="outliner-actions">
+        <button class="outliner-act-btn" title="Ko'rinish" onclick="toggleVisibility('${obj.id}', event)">
+          ${obj.mesh.visible ? '👁️' : '🕶️'}
+        </button>
+        <button class="outliner-act-btn" title="O'chirish" onclick="deleteObjectById('${obj.id}', event)" style="color:var(--red);">
+          ✕
+        </button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function updateOutlinerHighlight() {
+  const items = document.querySelectorAll('.outliner-item');
+  items.forEach((it, idx) => {
+    if (managedObjects[idx] && managedObjects[idx].mesh === selectedObject) {
+      it.classList.add('selected');
+    } else {
+      it.classList.remove('selected');
+    }
+  });
+}
+
+function toggleVisibility(id, e) {
+  e.stopPropagation();
+  const obj = managedObjects.find(o => o.id === id);
+  if (obj) {
+    obj.mesh.visible = !obj.mesh.visible;
+    updateOutlinerUI();
+  }
+}
+
+function deleteObjectById(id, e) {
+  e.stopPropagation();
+  const obj = managedObjects.find(o => o.id === id);
+  if (obj) {
+    if (selectedObject === obj.mesh) {
+      selectObject(null);
+    }
+    scene.remove(obj.mesh);
+    managedObjects = managedObjects.filter(o => o.id !== id);
+    updateOutlinerUI();
+    markDirty();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SAVE & LOAD SCENE JSON
+══════════════════════════════════════════════════════════════════════════════ */
+
+function markDirty() {
+  isDirty = true;
+  document.getElementById('save-dot').classList.add('dirty');
+  document.getElementById('save-status-text').textContent = 'O\'zgarishlar bor';
+}
+
+function markSaved() {
+  isDirty = false;
+  document.getElementById('save-dot').classList.remove('dirty');
+  document.getElementById('save-status-text').textContent = 'Saqlangan';
+}
+
+function saveScene(silent = false) {
+  const title = document.getElementById('scene-title-input').value.trim() || 'Untitled Scene';
+
+  const serializedObjects = managedObjects.map(obj => {
+    let matProps = {};
+    if (obj.mesh.material) {
+      matProps = {
+        color: '#' + obj.mesh.material.color?.getHexString(),
+        roughness: obj.mesh.material.roughness,
+        metalness: obj.mesh.material.metalness,
+        wireframe: obj.mesh.material.wireframe,
+      };
+    }
+    return {
+      id: obj.id,
+      name: obj.name,
+      type: obj.type,
+      primType: obj.primType,
+      assetUrl: obj.assetUrl,
+      position: { x: obj.mesh.position.x, y: obj.mesh.position.y, z: obj.mesh.position.z },
+      rotation: { x: obj.mesh.rotation.x, y: obj.mesh.rotation.y, z: obj.mesh.rotation.z },
+      scale:    { x: obj.mesh.scale.x, y: obj.mesh.scale.y, z: obj.mesh.scale.z },
+      material: matProps,
+    };
+  });
+
+  const scenePayload = {
+    title: title,
+    scene_data: {
+      objects: serializedObjects,
+      camera: {
+        position: { x: camera.position.x, y: camera.position.y, z: camera.position.z },
+        target:   { x: orbit.target.x, y: orbit.target.y, z: orbit.target.z },
+      }
+    }
+  };
+
+  fetch(SAVE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRF_TOKEN,
+    },
+    body: JSON.stringify(scenePayload)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'saved') {
+      markSaved();
+      if (!silent) showToast("Sahna saqlandi! (" + data.object_count + " ob'ekt)");
+    } else {
+      if (!silent) showToast("Saqlashda xato: " + (data.error || ''), "error");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    if (!silent) showToast("Serverga saqlab bo'lmadi", "error");
+  });
+}
+
+function loadInitialScene() {
+  try {
+    const raw = document.getElementById('init-scene-data').textContent;
+    const data = JSON.parse(raw || '{}');
+    if (!data.objects || data.objects.length === 0) {
+      // Default initial scene: add a default box
+      addPrimitive('box');
+      markSaved();
+      return;
+    }
+
+    // Restore camera
+    if (data.camera) {
+      if (data.camera.position) camera.position.set(data.camera.position.x, data.camera.position.y, data.camera.position.z);
+      if (data.camera.target) {
+        orbit.target.set(data.camera.target.x, data.camera.target.y, data.camera.target.z);
+        orbit.update();
+      }
+    }
+
+    // Restore objects
+    data.objects.forEach(objData => {
+      if (objData.type === 'primitive') {
+        let geom;
+        switch (objData.primType) {
+          case 'sphere': geom = new THREE.SphereGeometry(1, 32, 32); break;
+          case 'cylinder': geom = new THREE.CylinderGeometry(0.75, 0.75, 2, 32); break;
+          case 'cone': geom = new THREE.ConeGeometry(0.8, 2, 32); break;
+          case 'plane': geom = new THREE.PlaneGeometry(3, 3); geom.rotateX(-Math.PI / 2); break;
+          case 'torus': geom = new THREE.TorusGeometry(1, 0.35, 16, 100); break;
+          default: geom = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+        }
+        const mat = new THREE.MeshStandardMaterial({
+          color: objData.material?.color || 0x00f5ff,
+          roughness: objData.material?.roughness ?? 0.4,
+          metalness: objData.material?.metalness ?? 0.1,
+          wireframe: !!objData.material?.wireframe,
+        });
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        mesh.position.set(objData.position.x, objData.position.y, objData.position.z);
+        mesh.rotation.set(objData.rotation.x, objData.rotation.y, objData.rotation.z);
+        mesh.scale.set(objData.scale.x, objData.scale.y, objData.scale.z);
+
+        const rec = { ...objData, mesh: mesh };
+        mesh.userData = rec;
+        scene.add(mesh);
+        managedObjects.push(rec);
+      } else if (objData.type === 'gltf' && objData.assetUrl) {
+        loadRemoteGLTF(objData.assetUrl, objData.name);
+      }
+    });
+
+    updateOutlinerUI();
+    markSaved();
+  } catch (err) {
+    console.warn("Failed to load initial scene data:", err);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   EXPORT SCENE GLTF (Blender round-trip)
+══════════════════════════════════════════════════════════════════════════════ */
+
+function exportSceneGLTF() {
+  showToast("Eksport qilinmoqda...");
+  const exporter = new THREE.GLTFExporter();
+  exporter.parse(scene, (result) => {
+    const output = JSON.stringify(result, null, 2);
+    const blob = new Blob([output], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = (document.getElementById('scene-title-input').value || 'scene') + '.gltf';
+    link.click();
+    showToast("GLTF fayl muvaffaqiyatli yuklab olindi!");
+  }, { binary: false });
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FLOATING ADD MENU & SHORTCUTS
+══════════════════════════════════════════════════════════════════════════════ */
+
+function openAddMenu(e) {
+  e.stopPropagation();
+  const popup = document.getElementById('add-menu-popup');
+  popup.style.top = (e.clientY || 60) + 'px';
+  popup.style.left = (e.clientX || 60) + 'px';
+  popup.classList.add('show');
+}
+
+function closeAddMenu() {
+  document.getElementById('add-menu-popup').classList.remove('show');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#add-menu-popup')) {
+    closeAddMenu();
+  }
 });
 
-// Auto-save
-setInterval(() => { if (unsaved) saveScene(); }, 45000);
+function handleKeyDown(e) {
+  // If typing in input, ignore
+  if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
 
-// ═══════════════════════════════════════════════════════════
-//  LOAD SCENE DATA
-// ═══════════════════════════════════════════════════════════
-(function loadSavedScene() {
-    try {
-        const saved = {{ scene.scene_data|default:'{}'|safe }};
-        if (!saved || !saved.objects) return;
-        if (saved.background) scene.background = new THREE.Color(saved.background);
-        saved.objects.forEach(o => {
-            const geomFn = MESH_GEOMETRIES[o.type];
-            if (!geomFn) return;
-            const geom = geomFn();
-            const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(o.color || '#8b5cf6') });
-            const mesh = new THREE.Mesh(geom, mat);
-            mesh.castShadow = true; mesh.receiveShadow = true;
-            if (o.position) mesh.position.set(...o.position);
-            if (o.rotation) mesh.rotation.set(...o.rotation);
-            if (o.scale) mesh.scale.set(...o.scale);
-            mesh.visible = o.visible !== false;
-            scene.add(mesh);
-            sceneObjects.push({ id: o.id, name: o.name, type: o.type, mesh, visible: mesh.visible });
-        });
-        renderOutliner();
-    } catch(e) {}
-})();
+  if (e.key === 'q' || e.key === 'Q') setGizmoMode('select');
+  else if (e.key === 'g' || e.key === 'G') setGizmoMode('translate');
+  else if (e.key === 'r' || e.key === 'R') setGizmoMode('rotate');
+  else if (e.key === 's' && !e.ctrlKey) setGizmoMode('scale');
+  else if (e.key === 's' && e.ctrlKey) {
+    e.preventDefault();
+    saveScene();
+  } else if (e.key === 'A' && e.shiftKey) {
+    e.preventDefault();
+    const popup = document.getElementById('add-menu-popup');
+    popup.style.top = '100px';
+    popup.style.left = '70px';
+    popup.classList.add('show');
+  } else if (e.key === 'Delete' || e.key === 'x' || e.key === 'X') {
+    deleteSelected();
+  } else if (e.key === '.') {
+    focusSelected();
+  } else if (e.key === 'Escape') {
+    selectObject(null);
+    closeAddMenu();
+  }
+}
 
-// Add default template objects
-(function addTemplateDefaults() {
-    const template = '{{ scene.template }}';
-    if (sceneObjects.length > 0) return;
-    if (template === 'showcase') {
-        addMesh('sphere'); addMesh('plane');
-    } else if (template === 'space') {
-        scene.background = new THREE.Color(0x000005);
-        for (let i=0;i<30;i++) {
-            const g = new THREE.SphereGeometry(Math.random()*0.05+0.01, 8, 8);
-            const m = new THREE.MeshBasicMaterial({color:0xffffff});
-            const s = new THREE.Mesh(g,m);
-            s.position.set((Math.random()-0.5)*30,(Math.random()-0.5)*20,(Math.random()-0.5)*30);
-            scene.add(s);
-        }
-    }
-})();
+function switchTab(name, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function showToast(msg, type = 'info') {
+  const box = document.getElementById('toast-box');
+  box.textContent = msg;
+  box.classList.add('show');
+  clearTimeout(box._timer);
+  box._timer = setTimeout(() => {
+    box.classList.remove('show');
+  }, 3000);
+}
 </script>
-{% endblock %}
+</body>
+</html>

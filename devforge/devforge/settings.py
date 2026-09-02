@@ -4,26 +4,33 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY    = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-!!!')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-!!!')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
-if DEBUG:
-    ALLOWED_HOSTS += ['.ngrok-free.dev', '.ngrok.io', 'localhost', '127.0.0.1']
 
+# ALLOWED_HOSTS: env var + Render.com auto-detect
+_allowed = os.environ.get('ALLOWED_HOSTS', 'localhost 127.0.0.1').split()
+_render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '')  # Render.com sets this
+if _render_host:
+    _allowed.append(_render_host)
+if DEBUG:
+    _allowed += ['.ngrok-free.dev', '.ngrok.io', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = _allowed
+
+# CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = []
+if _render_host:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_render_host}')
 if DEBUG:
     CSRF_TRUSTED_ORIGINS += [
-        'https://giving-hula-kilometer.ngrok-free.dev',
         'https://*.ngrok-free.dev',
         'https://*.ngrok.io',
         'http://localhost:8000',
         'http://127.0.0.1:8000',
-        'http://localhost',
-        'http://127.0.0.1',
     ]
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Initialize environment variables
 try:
@@ -390,14 +397,41 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # faqat local devda ochiq
+# ── CORS SOZLAMALARI ──────────────────────────────────────────────────────────
+# Local dev da barcha origin ochiq; production da faqat ruxsat etilganlar
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+# Production uchun — Render.com va env var orqali qo'shiladigan domenlar
+_cors_extra = [
+    o.strip() for o in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if o.strip()
+]
+if _render_host:
+    _cors_extra.append(f'https://{_render_host}')
 
 if not DEBUG:
-    CORS_ALLOWED_ORIGINS = [
-        origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
-        if origin.strip()
+    CORS_ALLOWED_ORIGINS = _cors_extra or [
+        # Hech narsa ko'rsatilmasa, Render domeniga ruxsat
+        f'https://{_render_host}' if _render_host else 'http://localhost:8000',
     ]
-    CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_CREDENTIALS = True   # JWT Cookie yoki session cookie bilan ishlash
+
+# Android / iOS / boshqa mobil ilovalar uchun zarur headerlar
+from corsheaders.defaults import default_headers  # noqa
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'Authorization',        # JWT Bearer token uchun
+    'X-CSRFToken',
+    'X-Requested-With',
+    'Content-Type',
+    'Accept',
+    'Accept-Language',
+    'X-Device-Id',          # Mobil qurilma ID (ixtiyoriy)
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT',
+]
+
 
 # ── SIMPLE JWT SOZLAMALARI ───────────────────────────────────────────────────
 from datetime import timedelta

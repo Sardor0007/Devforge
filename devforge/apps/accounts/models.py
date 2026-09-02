@@ -103,12 +103,23 @@ class User(AbstractUser):
         return None
 
     def add_xp(self, amount):
-        self.xp += amount          # <-- o'qiladi
-        next_level_xp = (self.level * 100) * 1.5
-        while self.xp >= next_level_xp:
-            self.level += 1
-            next_level_xp = (self.level * 100) * 1.5
-        self.save()                # <-- yoziladi
+        """XP qo'shish — race condition'dan himoyalangan (atomic + select_for_update)"""
+        from django.db import transaction
+        from django.db.models import F
+
+        with transaction.atomic():
+            # DB darajasida lock — bir vaqtda faqat bitta jarayon o'zgartira oladi
+            user = type(self).objects.select_for_update().get(pk=self.pk)
+            user.xp += amount
+            next_level_xp = (user.level * 100) * 1.5
+            while user.xp >= next_level_xp:
+                user.level += 1
+                next_level_xp = (user.level * 100) * 1.5
+            user.save(update_fields=['xp', 'level'])
+            # In-memory ob'ektni ham yangilash
+            self.xp    = user.xp
+            self.level = user.level
+
 
 
 class Skill(models.Model):
