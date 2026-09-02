@@ -1720,7 +1720,7 @@ class DevForgeStudio {
     });
 
     // 6. Grid & Environment Lighting
-    this.grid = new THREE.GridHelper(30, 30, 0x00f5ff, 0x161b22);
+    this.grid = new THREE.GridHelper(30, 30, 0x00f5ff, 0x334155);
     this.grid.position.y = -0.01;
     this.scene.add(this.grid);
 
@@ -1784,28 +1784,36 @@ class DevForgeStudio {
   }
 
   initOrientationGizmo() {
-    const canvas = document.getElementById('orientation-gizmo');
-    if (!canvas) return;
-    this.gizmoScene = new THREE.Scene();
-    this.gizmoCamera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 50);
-    this.gizmoCamera.position.set(0, 0, 10);
+    try {
+      const canvas = document.getElementById('orientation-gizmo');
+      if (!canvas) return;
+      this.gizmoScene = new THREE.Scene();
+      this.gizmoCamera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 50);
+      this.gizmoCamera.position.set(0, 0, 10);
 
-    const axes = new THREE.AxesHelper(1.5);
-    this.gizmoScene.add(axes);
+      const axes = new THREE.AxesHelper(1.5);
+      this.gizmoScene.add(axes);
 
-    this.gizmoRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    this.gizmoRenderer.setSize(80, 80);
+      this.gizmoRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      this.gizmoRenderer.setSize(80, 80);
+    } catch (err) {
+      console.warn('[DevForgeStudio] Orientation gizmo WebGL init skipped:', err);
+      this.gizmoRenderer = null;
+    }
   }
 
   onResize() {
     const wrap = document.getElementById('viewport-wrap');
-    if (!wrap || !this.renderer || !this.camera) return;
-    const w = wrap.offsetWidth  || window.innerWidth  - 300;
-    const h = wrap.offsetHeight || window.innerHeight - 120;
+    const canvas = document.getElementById('canvas3d');
+    if (!wrap || !canvas || !this.renderer || !this.camera) return;
+    const w = wrap.clientWidth || wrap.offsetWidth || (window.innerWidth - 300);
+    const h = wrap.clientHeight || wrap.offsetHeight || (window.innerHeight - 120);
     if (w < 10 || h < 10) return;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(w, h);  // updateStyle=true: fixes canvas display size too
+    this.renderer.setSize(w, h, false);
+    canvas.width = w * Math.min(window.devicePixelRatio, 2);
+    canvas.height = h * Math.min(window.devicePixelRatio, 2);
     console.log('[DevForgeStudio] resized to', w, 'x', h);
   }
 
@@ -2832,45 +2840,60 @@ class DevForgeStudio {
   loadInitialScene() {
     try {
       const raw = document.getElementById('dj-objects')?.textContent || '[]';
-      const list = JSON.parse(raw);
-      if (list && list.length > 0) {
+      let list = [];
+      try { list = JSON.parse(raw); } catch(e) { list = []; }
+
+      if (Array.isArray(list) && list.length > 0) {
         list.forEach(item => {
-          const pd = item.properties_data || {};
-          const td = item.transform_data || {};
-          const geoType = pd.geometry || 'box';
-          let geo = new THREE.BoxGeometry(2, 2, 2);
+          try {
+            const pd = item.properties_data || {};
+            const td = item.transform_data || {};
+            const geoType = pd.geometry || 'box';
+            let geo = new THREE.BoxGeometry(2, 2, 2);
 
-          if (geoType === 'sphere') geo = new THREE.SphereGeometry(1.2, 32, 24);
-          else if (geoType === 'cylinder') geo = new THREE.CylinderGeometry(1, 1, 2.5, 32);
-          else if (geoType === 'cone') geo = new THREE.ConeGeometry(1.2, 2.5, 32);
-          else if (geoType === 'torus') geo = new THREE.TorusGeometry(1.2, 0.4, 16, 48);
-          else if (geoType === 'plane') geo = new THREE.PlaneGeometry(4, 4);
+            if (geoType === 'sphere') geo = new THREE.SphereGeometry(1.2, 32, 24);
+            else if (geoType === 'cylinder') geo = new THREE.CylinderGeometry(1, 1, 2.5, 32);
+            else if (geoType === 'cone') geo = new THREE.ConeGeometry(1.2, 2.5, 32);
+            else if (geoType === 'torus') geo = new THREE.TorusGeometry(1.2, 0.4, 16, 48);
+            else if (geoType === 'plane') geo = new THREE.PlaneGeometry(4, 4);
 
-          const mat = new THREE.MeshStandardMaterial({
-            color: pd.color || 0x00f5ff,
-            metalness: pd.metalness !== undefined ? pd.metalness : 0.2,
-            roughness: pd.roughness !== undefined ? pd.roughness : 0.4,
-            wireframe: !!pd.wireframe
-          });
+            const mat = new THREE.MeshStandardMaterial({
+              color: pd.color || 0x00f5ff,
+              metalness: pd.metalness !== undefined ? pd.metalness : 0.2,
+              roughness: pd.roughness !== undefined ? pd.roughness : 0.4,
+              wireframe: !!pd.wireframe
+            });
 
-          const mesh = new THREE.Mesh(geo, mat);
-          mesh.name = item.name || 'Object';
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.name = item.name || 'Object';
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
 
-          if (td.position) mesh.position.fromArray(td.position);
-          if (td.rotation) mesh.rotation.fromArray(td.rotation);
-          if (td.scale) mesh.scale.fromArray(td.scale);
+            if (Array.isArray(td.position)) mesh.position.fromArray(td.position);
+            else if (td.position && typeof td.position === 'object') mesh.position.set(td.position.x||0, td.position.y||0, td.position.z||0);
 
-          this.scene.add(mesh);
-          this.objects.push(mesh);
+            if (Array.isArray(td.rotation)) mesh.rotation.fromArray(td.rotation);
+            else if (td.rotation && typeof td.rotation === 'object') mesh.rotation.set(td.rotation.x||0, td.rotation.y||0, td.rotation.z||0);
+
+            if (Array.isArray(td.scale)) mesh.scale.fromArray(td.scale);
+            else if (td.scale && typeof td.scale === 'object') mesh.scale.set(td.scale.x||1, td.scale.y||1, td.scale.z||1);
+
+            this.scene.add(mesh);
+            this.objects.push(mesh);
+          } catch(errItem) {
+            console.error('[DevForgeStudio] Error parsing object:', errItem);
+          }
         });
-      } else {
-        // Default starting cube
+      }
+
+      if (this.objects.length === 0) {
         this.addObject('box');
       }
     } catch(e) {
-      this.addObject('box');
+      console.error('[DevForgeStudio] loadInitialScene error:', e);
+      if (this.objects.length === 0) {
+        this.addObject('box');
+      }
     }
     this.updateOutlinerUI();
   }
@@ -2969,22 +2992,37 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// App initialization — double rAF ensures browser has completed layout before init
-window.addEventListener('DOMContentLoaded', () => {
+// App initialization — bulletproof with error handling
+function initDevForgeStudio() {
   if (typeof THREE === 'undefined') {
-    console.error('[DevForge] THREE.js failed to load — check CDN.');
+    console.error('[DevForge] THREE.js failed to load.');
     const vp = document.getElementById('viewport-wrap');
-    if (vp) vp.innerHTML = '<div style="color:#ef4444;padding:24px;font-family:monospace;">⚠ THREE.js failed to load. Check your internet connection and try again.</div>';
+    if (vp) vp.innerHTML = '<div style="color:#ef4444;padding:24px;font-family:monospace;font-size:14px;background:#0d1117;border:1px solid #ef4444;border-radius:8px;margin:20px;">⚠ THREE.js kutubxonasi yuklanmadi. Iltimos, sahifani qayta yuklang (F5).</div>';
     return;
   }
-  if (typeof THREE.OrbitControls === 'undefined') {
-    console.warn('[DevForge] OrbitControls not attached to THREE global — check CDN order.');
-  }
-  // Double rAF: guarantees browser has performed layout before querying dimensions
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+
+  try {
     window.studio = new DevForgeStudio();
-  }));
-});
+    console.log('[DevForge] 3D Studio Pro muvaffaqiyatli ishga tushdi!');
+  } catch (err) {
+    console.error('[DevForge] 3D Studio ishga tushishida xatolik:', err);
+    const vp = document.getElementById('viewport-wrap');
+    if (vp) {
+      const b = document.createElement('div');
+      b.style.cssText = 'position:absolute;top:10px;left:10px;right:10px;background:rgba(239,68,68,0.25);border:1px solid #ef4444;color:#fca5a5;padding:14px;border-radius:8px;font-family:monospace;font-size:12px;z-index:999;';
+      b.innerHTML = '<strong>3D Studio ishga tushishida xatolik yuz berdi:</strong> ' + (err.message || err);
+      vp.appendChild(b);
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', () => {
+    requestAnimationFrame(() => requestAnimationFrame(initDevForgeStudio));
+  });
+} else {
+  requestAnimationFrame(() => requestAnimationFrame(initDevForgeStudio));
+}
 </script>
 
 <!-- DevForge Multi-Language Engine -->
