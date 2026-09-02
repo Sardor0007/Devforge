@@ -5,25 +5,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token }}">
-<title>{{ project.title|default:"3D Studio" }} — DevForge 3D Studio Pro</title>
+<title>{{ project.title|default:"3D Studio Pro" }} — DevForge</title>
 
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 
-<!-- Three.js r128 — unpkg (most reliable CDN for r128 global builds) -->
-<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/controls/TransformControls.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
+<!-- Three.js r128 UMD Global Bundle with jsDelivr CDN -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/OBJExporter.js"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════════════════════════
-   DEVFORGE 3D STUDIO PRO — DESIGN SYSTEM (Deep Space & Electric Cyan Theme)
+   DEVFORGE 3D STUDIO PRO — DESIGN SYSTEM (Cyberpunk / Blender Theme)
 ══════════════════════════════════════════════════════════════════════════════ */
 :root {
   --bg:             #05070a;
@@ -32,56 +32,34 @@
   --surface2:       #161b22;
   --surface3:       #1e2430;
   --border:         rgba(255, 255, 255, 0.08);
-  --border-bright:  rgba(0, 245, 255, 0.28);
-  --border2:        rgba(255, 255, 255, 0.14);
-
-  --accent:         #00f5ff; /* Electric Cyan */
-  --accent-h:       #38f8ff;
-  --accent-glow:    rgba(0, 245, 255, 0.35);
-  --accent2:        #8b5cf6; /* Neon Purple */
-  --accent-grad:    linear-gradient(135deg, #00f5ff 0%, #8b5cf6 100%);
-
+  --border-bright:  rgba(0, 245, 255, 0.35);
+  --accent:         #00f5ff;
+  --accent-glow:    rgba(0, 245, 255, 0.3);
+  --accent-purple:  #8b5cf6;
   --text:           #f8fafc;
   --text2:          #94a3b8;
   --text3:          #64748b;
-
+  --gold:           #f59e0b;
   --green:          #10b981;
-  --orange:         #f59e0b;
   --red:            #ef4444;
-  --gold:           #fbbf24;
-
-  --hover:          rgba(255, 255, 255, 0.06);
-  --selected:       rgba(0, 245, 255, 0.12);
-  --shadow:         rgba(0, 0, 0, 0.65);
-
-  --font:           'Inter', -apple-system, sans-serif;
-  --font-display:   'Outfit', sans-serif;
+  --radius:         8px;
+  --radius-sm:      5px;
+  --font-ui:        'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:      'JetBrains Mono', monospace;
-
-  --radius-sm:      6px;
-  --radius:         10px;
-  --radius-lg:      16px;
+  --font-display:   'Outfit', sans-serif;
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font);
-  font-size: 12px;
+  font-family: var(--font-ui);
   user-select: none;
-  -webkit-font-smoothing: antialiased;
 }
-
-/* Scrollbars */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
 /* ── ROOT LAYOUT ── */
 #studio-layout {
@@ -95,7 +73,7 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   TOP MENU BAR (Header)
+   TOP MENU BAR (Header: 44px)
 ══════════════════════════════════════════════════════════════════════════════ */
 #topbar {
   height: 44px;
@@ -113,47 +91,42 @@ html, body {
 .top-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .menu-brand {
   display: flex;
   align-items: center;
   gap: 8px;
+  text-decoration: none;
+  color: var(--text);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 13px;
-  color: var(--text);
-  text-decoration: none;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: all 0.2s;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
-.menu-brand:hover { background: var(--hover); }
 .brand-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
-  background: var(--accent-grad);
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  box-shadow: 0 0 12px var(--accent-glow);
+  font-size: 14px;
 }
 .brand-badge {
   font-size: 9px;
   font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: rgba(0, 245, 255, 0.15);
-  border: 1px solid rgba(0, 245, 255, 0.3);
-  color: var(--accent);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(0, 245, 255, 0.25);
 }
 
-/* Menu items & dropdowns */
 .top-menus {
   display: flex;
   align-items: center;
@@ -161,82 +134,65 @@ html, body {
 }
 .top-menu-item {
   position: relative;
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text2);
-  font-weight: 500;
   font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s;
 }
-.top-menu-item:hover, .top-menu-item.active {
+.top-menu-item:hover {
+  background: var(--surface2);
   color: var(--text);
-  background: var(--hover);
 }
 
 .dropdown {
-  display: none;
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   left: 0;
-  min-width: 200px;
-  background: #0d1117;
-  border: 1px solid var(--border2);
+  margin-top: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 16px 36px var(--shadow);
-  padding: 6px;
-  z-index: 2000;
-  backdrop-filter: blur(16px);
+  padding: 5px 0;
+  min-width: 200px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 10px rgba(0,245,255,0.1);
+  display: none;
+  z-index: 200;
+  backdrop-filter: blur(12px);
 }
-.top-menu-item.active .dropdown,
-.top-menu-item:focus-within .dropdown {
-  display: block;
-}
+.top-menu-item.open .dropdown { display: block; }
 .dd-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-size: 12px;
   color: var(--text);
-  font-size: 11.5px;
   cursor: pointer;
-  transition: all 0.12s;
-  text-decoration: none;
+  transition: background 0.15s;
 }
 .dd-item:hover {
-  background: var(--selected);
+  background: var(--surface2);
   color: var(--accent);
 }
 .dd-shortcut {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text3);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1px 5px;
-  border-radius: 4px;
 }
 .dd-sep {
   height: 1px;
   background: var(--border);
   margin: 4px 0;
 }
-.dd-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text3);
-  padding: 4px 10px 2px;
-  letter-spacing: 0.5px;
-}
 
-/* Center: Project title */
+/* Center: Project Title */
 .top-center {
   flex: 1;
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-width: 0;
 }
 .title-input-wrap {
   display: inline-flex;
@@ -265,173 +221,52 @@ html, body {
   width: 220px;
 }
 
-/* Right: Tools & Actions */
+/* Right: Actions */
 .top-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
-
-/* Language selector */
-.lang-switcher-wrap {
-  position: relative;
-}
-.lang-btn-current {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.lang-btn-current:hover { color: var(--text); border-color: var(--border-bright); }
-
-/* Save state indicator */
 .save-indicator {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border);
   font-size: 11px;
-  color: var(--text2);
+  font-weight: 600;
+  color: var(--text3);
 }
 .save-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  transition: background 0.3s, box-shadow 0.3s;
+  transition: background 0.2s;
 }
-.save-dot.dirty {
-  background: var(--orange);
-  box-shadow: 0 0 8px var(--orange);
-}
-.save-dot.saving {
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
-  animation: pulseSave 0.8s infinite;
-}
-@keyframes pulseSave { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
+.save-dot.dirty { background: var(--gold); }
+.save-dot.saving { background: var(--accent); animation: pulse 1s infinite; }
 
-/* Save CTA button */
 .btn-save-cta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--accent-grad);
-  color: #05070a;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 11.5px;
   padding: 5px 14px;
   border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--accent), #0284c7);
+  color: #05070a;
+  font-size: 12px;
+  font-weight: 700;
   border: none;
   cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 245, 255, 0.25);
   transition: all 0.2s;
-  box-shadow: 0 2px 10px var(--accent-glow);
 }
 .btn-save-cta:hover {
   filter: brightness(1.15);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 18px var(--accent-glow);
-}
-
-.btn-icon-top {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-decoration: none;
-}
-.btn-icon-top:hover {
-  color: var(--accent);
-  border-color: var(--border-bright);
-  background: var(--surface3);
+  box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   BLENDER-LIKE FLOATING ADD MENU (Shift+A)
-══════════════════════════════════════════════════════════════════════════════ */
-#floating-add-menu {
-  display: none;
-  position: absolute;
-  min-width: 210px;
-  background: rgba(13, 17, 23, 0.98);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-bright);
-  border-radius: var(--radius);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 245, 255, 0.2);
-  padding: 6px;
-  z-index: 4000;
-  animation: popupScale 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-}
-#floating-add-menu.show { display: block; }
-@keyframes popupScale {
-  from { opacity: 0; transform: scale(0.92); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.fam-header {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 11px;
-  color: var(--accent);
-  padding: 4px 8px 6px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.fam-group-title {
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--text3);
-  text-transform: uppercase;
-  padding: 4px 8px 2px;
-  letter-spacing: 0.5px;
-}
-.fam-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 11.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.12s;
-}
-.fam-item:hover {
-  background: rgba(0, 245, 255, 0.12);
-  color: var(--accent);
-}
-.fam-item span.icon {
-  font-size: 13px;
-  width: 18px;
-  text-align: center;
-}
-
-/* ══════════════════════════════════════════════════════════════════════════════
-   MAIN WORKSPACE (Tools + Viewport + Right Panels)
+   MAIN WORKSPACE (Tools + Viewport + Right Sidebar)
 ══════════════════════════════════════════════════════════════════════════════ */
 #main {
   flex: 1;
@@ -442,7 +277,7 @@ html, body {
   min-height: 0;
 }
 
-/* ── LEFT T-PANEL (Tool Shelf) ── */
+/* ── LEFT T-PANEL (Tool Shelf: 48px) ── */
 #tpanel {
   width: 48px;
   background: var(--header);
@@ -467,50 +302,45 @@ html, body {
   justify-content: center;
   cursor: pointer;
   position: relative;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
 }
-.tool-btn svg { width: 17px; height: 17px; fill: currentColor; }
+.tool-btn svg { width: 18px; height: 18px; fill: currentColor; }
 .tool-btn:hover {
-  background: var(--hover);
+  background: var(--surface2);
   color: var(--text);
-  border-color: var(--border);
 }
 .tool-btn.active {
   background: rgba(0, 245, 255, 0.12);
   color: var(--accent);
-  border-color: rgba(0, 245, 255, 0.35);
+  border-color: var(--border-bright);
   box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
 }
 .tool-sep {
   width: 24px;
   height: 1px;
   background: var(--border);
-  margin: 3px 0;
+  margin: 4px 0;
 }
-
-/* Tooltips */
 .tool-tooltip {
-  display: none;
   position: absolute;
-  left: calc(100% + 10px);
+  left: 100%;
   top: 50%;
   transform: translateY(-50%);
-  background: #090c12;
-  border: 1px solid var(--border2);
+  margin-left: 8px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text);
   white-space: nowrap;
-  box-shadow: 0 8px 24px var(--shadow);
-  z-index: 3000;
   pointer-events: none;
+  display: none;
+  z-index: 300;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 .tool-tooltip kbd {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1px 4px;
-  border-radius: 3px;
   font-family: var(--font-mono);
   font-size: 9.5px;
   color: var(--accent);
@@ -527,7 +357,6 @@ html, body {
   min-width: 0;
   min-height: 0;
 }
-
 #canvas3d {
   display: block;
   width: 100% !important;
@@ -537,362 +366,222 @@ html, body {
   left: 0;
 }
 
-/* Orientation Navigation Gizmo */
-#orientation-gizmo {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 80px;
-  height: 80px;
-  z-index: 15;
-  pointer-events: none;
-}
-
 /* Viewport Overlays */
 .vp-overlay-tl {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 12px;
+  left: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  z-index: 15;
+  gap: 8px;
+  z-index: 10;
   pointer-events: none;
 }
 .vp-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(13, 17, 23, 0.85);
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 3px 8px;
-  font-size: 10.5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   color: var(--text2);
-  backdrop-filter: blur(8px);
 }
-.vp-badge strong { color: var(--accent); font-family: var(--font-mono); }
+.vp-badge strong { color: var(--accent); }
 
 .vp-overlay-tr {
   position: absolute;
-  top: 14px;
-  right: 100px;
+  top: 12px;
+  right: 12px;
   display: flex;
-  align-items: center;
   gap: 4px;
-  background: rgba(13, 17, 23, 0.88);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 3px;
-  z-index: 15;
-  backdrop-filter: blur(10px);
+  z-index: 10;
 }
 .shading-btn {
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text3);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: rgba(13, 17, 23, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  color: var(--text2);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.12s;
+  transition: all 0.15s;
 }
-.shading-btn:hover { color: var(--text); background: var(--hover); }
+.shading-btn:hover { background: var(--surface2); color: var(--text); }
 .shading-btn.active {
   background: rgba(0, 245, 255, 0.15);
   color: var(--accent);
-  border-color: rgba(0, 245, 255, 0.35);
+  border-color: var(--border-bright);
 }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   RIGHT SIDEBAR (Tabs & Property Panels)
-══════════════════════════════════════════════════════════════════════════════ */
+/* Floating Add Menu (Shift+A) */
+#floating-add-menu {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius);
+  padding: 8px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,245,255,0.25);
+  z-index: 500;
+  display: none;
+  min-width: 220px;
+  backdrop-filter: blur(14px);
+}
+#floating-add-menu.show { display: block; animation: menuIn 0.15s ease-out; }
+@keyframes menuIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.fam-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.fam-group { margin-bottom: 6px; }
+.fam-group-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+.fam-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.fam-item:hover {
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--accent);
+  transform: translateX(2px);
+}
+.fam-icon { font-size: 14px; width: 18px; text-align: center; }
+
+/* ── RIGHT SIDEBAR (300px) ── */
 #sidebar {
-  width: 320px;
+  width: 300px;
   background: var(--header);
   border-left: 1px solid var(--border);
   display: flex;
-  flex-direction: row;
-  overflow: hidden;
+  flex-direction: column;
   flex-shrink: 0;
   z-index: 20;
 }
 
-/* Tab strip */
+/* Tab buttons */
 #prop-tabs {
-  width: 40px;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
+  height: 38px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 6px 0;
-  gap: 4px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
 }
 .prop-tab {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text3);
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text3);
   cursor: pointer;
-  transition: all 0.15s;
   position: relative;
+  transition: all 0.15s;
 }
 .prop-tab svg { width: 16px; height: 16px; fill: currentColor; }
-.prop-tab:hover { color: var(--text); background: var(--hover); }
+.prop-tab:hover { color: var(--text); background: var(--surface2); }
 .prop-tab.active {
-  background: rgba(0, 245, 255, 0.12);
   color: var(--accent);
-  box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
+  background: var(--header);
+  border-bottom: 2px solid var(--accent);
 }
-.prop-tab:hover .tool-tooltip { display: block; left: calc(100% + 8px); }
+.prop-tab .tool-tooltip { top: 100%; left: 50%; transform: translateX(-50%); margin-top: 6px; margin-left: 0; }
+.prop-tab:hover .tool-tooltip { display: block; }
 
-/* Panel content */
+/* Panels container */
 #prop-content {
   flex: 1;
   overflow-y: auto;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 12px;
+  min-height: 0;
 }
+#prop-content::-webkit-scrollbar { width: 5px; }
+#prop-content::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+
 .prop-panel { display: none; }
 .prop-panel.active { display: block; }
-
 .panel-header-title {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 13px;
-  color: var(--text);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Sections & Cards */
-.prop-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
-  margin-bottom: 12px;
-}
-.prop-section-title {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text3);
+  letter-spacing: 0.8px;
+  color: var(--text2);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* Form rows & inputs */
-.prop-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.prop-row:last-child { margin-bottom: 0; }
-.prop-label { font-size: 11px; color: var(--text2); font-weight: 500; }
-
-.prop-xyz {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-top: 4px;
-}
-.xyz-input-wrap {
-  display: flex;
-  align-items: center;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 2px 4px;
-  transition: border-color 0.15s;
-}
-.xyz-input-wrap:focus-within { border-color: var(--accent); }
-.xyz-tag {
-  font-size: 9.5px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  padding-right: 3px;
-}
-.tag-x { color: #f87171; }
-.tag-y { color: #4ade80; }
-.tag-z { color: #60a5fa; }
-.xyz-val {
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  width: 100%;
-  text-align: right;
-}
-
-.prop-slider-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-.prop-slider {
-  flex: 1;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-.prop-slider-val {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text);
-  min-width: 28px;
-  text-align: right;
-}
-
-/* Color picker swatch */
-.color-picker-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.color-swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border2);
-  cursor: pointer;
-  padding: 0;
-  background: none;
-}
-.color-hex {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 3px 6px;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--text);
-  width: 70px;
-}
-
-/* Preset grid (materials) */
-.preset-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-top: 8px;
-}
-.preset-btn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 6px 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text2);
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.preset-btn:hover {
-  background: rgba(0, 245, 255, 0.1);
-  color: var(--accent);
-  border-color: var(--border-bright);
-}
-
-/* Action button */
-.action-btn {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 7px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.action-btn:hover {
-  background: rgba(0, 245, 255, 0.1);
-  color: var(--accent);
-  border-color: var(--border-bright);
-}
-.action-btn-primary {
-  background: var(--accent-grad);
-  color: #05070a;
-  border: none;
-  font-weight: 800;
-}
-.action-btn-primary:hover { filter: brightness(1.12); color: #05070a; }
-
-/* Outliner tree */
+/* Outliner Tree */
 .outliner-search {
   width: 100%;
-  background: var(--surface2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 5px 8px;
+  padding: 6px 10px;
   color: var(--text);
   font-size: 11px;
   outline: none;
   margin-bottom: 8px;
 }
 .outliner-search:focus { border-color: var(--accent); }
-.outliner-list {
+
+#outliner-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 380px;
-  overflow-y: auto;
 }
 .outliner-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
+  font-size: 12px;
   color: var(--text2);
   cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
   transition: all 0.12s;
 }
-.outliner-item:hover { background: var(--hover); color: var(--text); }
+.outliner-item:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
 .outliner-item.selected {
-  background: rgba(0, 245, 255, 0.12);
+  background: rgba(0, 245, 255, 0.1);
   color: var(--accent);
-  font-weight: 600;
+  border-color: var(--border-bright);
 }
 .outliner-item-left {
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-.outliner-icon { font-size: 12px; }
-.outliner-name {
-  font-size: 11.5px;
-  white-space: nowrap;
+  gap: 8px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.outliner-icon { font-size: 13px; }
+.outliner-name { font-weight: 500; font-size: 12px; }
 .outliner-item-actions {
   display: flex;
   align-items: center;
@@ -902,17 +591,195 @@ html, body {
   background: transparent;
   border: none;
   color: var(--text3);
+  font-size: 11px;
   cursor: pointer;
-  padding: 2px;
+  padding: 2px 4px;
   border-radius: 3px;
 }
-.outliner-btn:hover { color: var(--text); }
+.outliner-btn:hover { color: var(--text); background: var(--surface3); }
+
+/* Property Controls */
+.prop-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 12px;
+}
+.prop-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.prop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+.prop-label {
+  font-size: 11px;
+  color: var(--text2);
+  flex: 1;
+}
+.xyz-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.xyz-row {
+  display: flex;
+  gap: 6px;
+}
+.xyz-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.xyz-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 6px;
+  line-height: 24px;
+}
+.tag-x { color: #f87171; background: rgba(239, 68, 68, 0.12); }
+.tag-y { color: #4ade80; background: rgba(34, 197, 94, 0.12); }
+.tag-z { color: #60a5fa; background: rgba(59, 130, 246, 0.12); }
+.xyz-val {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 6px;
+  text-align: right;
+}
+
+.prop-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1.5;
+}
+.prop-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--surface3);
+  border-radius: 2px;
+  outline: none;
+}
+.prop-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+.prop-slider-val {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text2);
+  width: 30px;
+  text-align: right;
+}
+
+.color-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  background: transparent;
+}
+.color-hex {
+  width: 70px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 3px 6px;
+  outline: none;
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-top: 6px;
+}
+.preset-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.preset-btn:hover {
+  background: rgba(0, 245, 255, 0.12);
+  color: var(--accent);
+  border-color: var(--border-bright);
+}
+
+.action-btn {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.action-btn:hover {
+  background: var(--surface3);
+  border-color: var(--border-bright);
+}
+.action-btn-primary {
+  background: linear-gradient(135deg, var(--accent), #0284c7);
+  color: #05070a;
+  border: none;
+}
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   BOTTOM TIMELINE (Animation & Keyframe Ruler)
+   BOTTOM ANIMATION TIMELINE (110px)
 ══════════════════════════════════════════════════════════════════════════════ */
 #timeline {
-  height: 120px;
+  height: 110px;
   background: var(--header);
   border-top: 1px solid var(--border);
   display: flex;
@@ -932,44 +799,46 @@ html, body {
 .timeline-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 .tl-btn {
   width: 24px;
   height: 24px;
-  border-radius: var(--radius-sm);
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text2);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 11px;
   cursor: pointer;
-  transition: all 0.12s;
 }
-.tl-btn:hover { background: var(--surface3); color: var(--accent); }
-.tl-btn.active { background: var(--accent); color: #05070a; border-color: var(--accent); }
+.tl-btn:hover { background: var(--surface2); color: var(--text); }
+.tl-btn.active { color: var(--accent); background: rgba(0, 245, 255, 0.1); }
 
 .frame-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text2);
 }
 .frame-input {
-  width: 48px;
+  width: 45px;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 2px 4px;
+  border-radius: 3px;
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 700;
   text-align: center;
+  outline: none;
+  padding: 2px 0;
 }
 
-/* Timeline Track Canvas */
 .timeline-track-wrap {
   flex: 1;
   position: relative;
@@ -977,9 +846,6 @@ html, body {
   background: #080a0f;
 }
 #timeline-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   display: block;
@@ -987,65 +853,63 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   MODALS (RENDER, VIDEO, SHORTCUTS)
+   MODALS (Render & Video Export)
 ══════════════════════════════════════════════════════════════════════════════ */
 .modal-overlay {
-  display: none;
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  z-index: 5000;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: none;
   align-items: center;
   justify-content: center;
 }
-.modal-overlay.show { display: flex; }
+.modal-overlay.show { display: flex; animation: modalIn 0.2s ease-out; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .modal-box {
   background: var(--surface);
   border: 1px solid var(--border-bright);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 245, 255, 0.15);
-  animation: modalIn 0.2s ease;
+  border-radius: 12px;
+  width: 520px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(0,245,255,0.2);
+  padding: 20px;
 }
-@keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.modal-title { font-family: var(--font-display); font-size: 16px; font-weight: 800; margin-bottom: 14px; }
-.render-preview-img, .render-preview-video {
-  width: 100%;
-  height: 280px;
-  object-fit: contain;
-  background: #020204;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  margin-bottom: 14px;
-}
-.modal-actions {
+.modal-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
-
-/* Progress bar for video render */
-.render-progress-bar {
+.modal-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); }
+.modal-close { background: transparent; border: none; font-size: 16px; color: var(--text3); cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+.modal-preview-img, .modal-preview-video {
   width: 100%;
-  height: 8px;
-  background: var(--surface2);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 12px;
-  display: none;
+  max-height: 280px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  object-fit: contain;
+  background: #000;
+  margin-bottom: 14px;
 }
-.render-progress-fill {
-  width: 0%;
+.progress-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--surface3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.progress-bar-fill {
   height: 100%;
-  background: var(--accent-grad);
-  transition: width 0.1s ease;
+  background: linear-gradient(90deg, var(--accent), var(--accent-purple));
+  width: 0%;
+  transition: width 0.1s linear;
 }
 
-/* Toast Notifications */
+/* Toast notifications */
 #toast-container {
   position: fixed;
   bottom: 24px;
@@ -1094,7 +958,7 @@ html, body {
       <nav class="top-menus">
         <!-- File -->
         <div class="top-menu-item" onclick="studio.toggleMenu(this)">
-          Fayl (File)
+          Fayl
           <div class="dropdown">
             <div class="dd-item" onclick="studio.newScene()"><span>Yangi sahna</span><span class="dd-shortcut">Ctrl+N</span></div>
             <div class="dd-item" onclick="studio.saveProject()"><span>Saqlash</span><span class="dd-shortcut">Ctrl+S</span></div>
@@ -1110,7 +974,7 @@ html, body {
 
         <!-- Edit -->
         <div class="top-menu-item" onclick="studio.toggleMenu(this)">
-          Tahrir (Edit)
+          Tahrir
           <div class="dropdown">
             <div class="dd-item" onclick="studio.undo()"><span>Bekor qilish (Undo)</span><span class="dd-shortcut">Ctrl+Z</span></div>
             <div class="dd-item" onclick="studio.redo()"><span>Qaytarish (Redo)</span><span class="dd-shortcut">Ctrl+Y</span></div>
@@ -1129,15 +993,14 @@ html, body {
 
         <!-- View -->
         <div class="top-menu-item" onclick="studio.toggleMenu(this)">
-          Ko'rinish (View)
+          Ko'rinish
           <div class="dropdown">
-            <div class="dd-item" onclick="studio.setView('front')"><span>Old (Front)</span><span class="dd-shortcut">Num 1</span></div>
-            <div class="dd-item" onclick="studio.setView('right')"><span>O'ng (Right)</span><span class="dd-shortcut">Num 3</span></div>
-            <div class="dd-item" onclick="studio.setView('top')"><span>Tepa (Top)</span><span class="dd-shortcut">Num 7</span></div>
-            <div class="dd-item" onclick="studio.toggleOrtho()"><span>Persp / Ortho</span><span class="dd-shortcut">Num 5</span></div>
+            <div class="dd-item" onclick="studio.setCameraView('top')"><span>Tepadan (Top)</span><span class="dd-shortcut">Num 7</span></div>
+            <div class="dd-item" onclick="studio.setCameraView('front')"><span>Oldindan (Front)</span><span class="dd-shortcut">Num 1</span></div>
+            <div class="dd-item" onclick="studio.setCameraView('right')"><span>O'ngdan (Right)</span><span class="dd-shortcut">Num 3</span></div>
             <div class="dd-sep"></div>
-            <div class="dd-item" onclick="studio.focusSelected()"><span>Ob'ektga yaqinlashish</span><span class="dd-shortcut">.</span></div>
-            <div class="dd-item" onclick="studio.toggleGrid()"><span>Setka (Grid)</span></div>
+            <div class="dd-item" onclick="studio.focusSelected()"><span>Fokuslash (Focus)</span><span class="dd-shortcut">.</span></div>
+            <div class="dd-item" onclick="studio.toggleGrid()"><span>Setkani o'chirish/yoqish</span></div>
           </div>
         </div>
 
@@ -1145,7 +1008,7 @@ html, body {
         <div class="top-menu-item" onclick="studio.toggleMenu(this)">
           Render
           <div class="dropdown">
-            <div class="dd-item" onclick="studio.openRenderModal()"><span>📸 Rasm Renderlash</span><span class="dd-shortcut">F12</span></div>
+            <div class="dd-item" onclick="studio.openRenderModal()"><span>📸 Yuqori sifatli rasm (Photo)</span><span class="dd-shortcut">F12</span></div>
             <div class="dd-item" onclick="studio.openVideoRenderModal()"><span>🎬 Animatsiya Video Renderlash</span></div>
           </div>
         </div>
@@ -1155,28 +1018,13 @@ html, body {
     <!-- Center: Project Title -->
     <div class="top-center">
       <div class="title-input-wrap">
-        <span>✏️</span>
-        <input id="project-title" type="text" value="{{ project.title|default:'Untitled 3D Project' }}" onchange="studio.markDirty()" autocomplete="off">
+        <span>📁</span>
+        <input type="text" id="project-title" value="{{ project.title|default:'Yangi 3D Loyiha' }}" onchange="studio.updateTitle(this.value)">
       </div>
     </div>
 
-    <!-- Right: Language & Actions -->
+    <!-- Right: Save CTA & Language -->
     <div class="top-right">
-      <!-- Language Selector -->
-      <div class="lang-switcher-wrap" id="studioLangSwitcher">
-        <button type="button" class="lang-btn-current" onclick="toggleStudioLang(event)" title="Til / Language">
-          🌐 <span class="lang-code">UZ</span> <span style="font-size:7px;opacity:0.7;">▼</span>
-        </button>
-        <div class="dropdown" id="studioLangMenu" style="min-width:140px;right:0;left:auto;">
-          <div class="dd-item" onclick="window.devforgeI18n?.setLanguage('uz')">O'zbekcha (UZ)</div>
-          <div class="dd-item" onclick="window.devforgeI18n?.setLanguage('ru')">Русский (RU)</div>
-          <div class="dd-item" onclick="window.devforgeI18n?.setLanguage('en')">English (EN)</div>
-        </div>
-      </div>
-
-      <!-- Shortcuts button -->
-      <button class="btn-icon-top" onclick="studio.openShortcutsModal()" title="Tezkor tugmalar (Shortcuts)">⌨️</button>
-
       <!-- Save Indicator -->
       <div class="save-indicator">
         <div class="save-dot" id="save-dot"></div>
@@ -1242,8 +1090,8 @@ html, body {
       <!-- Viewport Overlays -->
       <div class="vp-overlay-tl">
         <div class="vp-badge">FPS: <strong id="fps-counter">60</strong></div>
-        <div class="vp-badge">Ob'ektlar: <strong id="obj-counter">0</strong></div>
-        <div class="vp-badge">Uchlar (Verts): <strong id="vert-counter">0</strong></div>
+        <div class="vp-badge">Ob'ektlar: <strong id="obj-counter">1</strong></div>
+        <div class="vp-badge">Uchlar (Verts): <strong id="vert-counter">24</strong></div>
       </div>
 
       <div class="vp-overlay-tr">
@@ -1252,9 +1100,6 @@ html, body {
         <button class="shading-btn" id="shading-mat" onclick="studio.setShading('material')" title="Material Preview (PBR)">🎨</button>
         <button class="shading-btn" id="shading-render" onclick="studio.setShading('rendered')" title="Rendered (High-End)">✨</button>
       </div>
-
-      <!-- Mini Axes Orientation Gizmo -->
-      <canvas id="orientation-gizmo" width="80" height="80"></canvas>
     </div>
 
     <!-- Right Sidebar -->
@@ -1270,24 +1115,24 @@ html, body {
           <div class="tool-tooltip">Xususiyatlar (Transform)</div>
         </div>
         <div class="prop-tab" data-panel="material" onclick="studio.switchPanel('material')">
-          <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.28 19.64 10.59 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
-          <div class="tool-tooltip">Materiallar (PBR)</div>
+          <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.58 10.53 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+          <div class="tool-tooltip">PBR Material</div>
         </div>
         <div class="prop-tab" data-panel="modifiers" onclick="studio.switchPanel('modifiers')">
           <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
           <div class="tool-tooltip">Modifikatorlar</div>
         </div>
         <div class="prop-tab" data-panel="world" onclick="studio.switchPanel('world')">
-          <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
           <div class="tool-tooltip">Atrof-muhit (World)</div>
         </div>
         <div class="prop-tab" data-panel="render" onclick="studio.switchPanel('render')">
-          <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-          <div class="tool-tooltip">Render & Export</div>
+          <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+          <div class="tool-tooltip">Eksport & Render</div>
         </div>
       </div>
 
-      <!-- Panel Contents -->
+      <!-- Panel Content -->
       <div id="prop-content">
 
         <!-- 1. Outliner Panel -->
@@ -1296,49 +1141,55 @@ html, body {
             <span>Sahnadagi Ob'ektlar</span>
             <button class="action-btn" style="width:auto;padding:3px 8px;font-size:10px;" onclick="studio.openFloatingAddMenu(event)">+ Qo'shish</button>
           </div>
-          <input type="text" class="outliner-search" id="outliner-search" placeholder="Qidirish..." oninput="studio.filterOutliner(this.value)">
-          <div class="outliner-list" id="outliner-list"></div>
+          <input type="text" class="outliner-search" placeholder="Qidirish..." oninput="studio.filterOutliner(this.value)">
+          <div id="outliner-list">
+            <!-- Dynamically populated -->
+          </div>
         </div>
 
-        <!-- 2. Transform / Properties Panel -->
+        <!-- 2. Transform Panel -->
         <div class="prop-panel" id="panel-transform">
-          <div class="panel-header-title">Transformatsiya</div>
+          <div class="panel-header-title">Ob'ekt Xususiyatlari</div>
+
           <div class="prop-section">
             <div class="prop-section-title">Joylashuv (Location)</div>
-            <div class="prop-xyz">
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-x">X</span><input type="number" step="0.1" class="xyz-val" id="loc-x" onchange="studio.updateTransformFromUI()"></div>
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-y">Y</span><input type="number" step="0.1" class="xyz-val" id="loc-y" onchange="studio.updateTransformFromUI()"></div>
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-z">Z</span><input type="number" step="0.1" class="xyz-val" id="loc-z" onchange="studio.updateTransformFromUI()"></div>
+            <div class="xyz-group">
+              <div class="xyz-row">
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-x">X</span><input type="number" step="0.1" class="xyz-val" id="loc-x" onchange="studio.updateTransformFromUI()"></div>
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-y">Y</span><input type="number" step="0.1" class="xyz-val" id="loc-y" onchange="studio.updateTransformFromUI()"></div>
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-z">Z</span><input type="number" step="0.1" class="xyz-val" id="loc-z" onchange="studio.updateTransformFromUI()"></div>
+              </div>
             </div>
-          </div>
 
-          <div class="prop-section">
-            <div class="prop-section-title">Aylanish (Rotation °)</div>
-            <div class="prop-xyz">
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-x">X</span><input type="number" step="5" class="xyz-val" id="rot-x" onchange="studio.updateTransformFromUI()"></div>
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-y">Y</span><input type="number" step="5" class="xyz-val" id="rot-y" onchange="studio.updateTransformFromUI()"></div>
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-z">Z</span><input type="number" step="5" class="xyz-val" id="rot-z" onchange="studio.updateTransformFromUI()"></div>
+            <div class="prop-section-title">Aylanish (Rotation)</div>
+            <div class="xyz-group">
+              <div class="xyz-row">
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-x">X°</span><input type="number" step="1" class="xyz-val" id="rot-x" onchange="studio.updateTransformFromUI()"></div>
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-y">Y°</span><input type="number" step="1" class="xyz-val" id="rot-y" onchange="studio.updateTransformFromUI()"></div>
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-z">Z°</span><input type="number" step="1" class="xyz-val" id="rot-z" onchange="studio.updateTransformFromUI()"></div>
+              </div>
             </div>
-          </div>
 
-          <div class="prop-section">
             <div class="prop-section-title">Masshtab (Scale)</div>
-            <div class="prop-xyz">
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-x">X</span><input type="number" step="0.1" class="xyz-val" id="scl-x" onchange="studio.updateTransformFromUI()"></div>
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-y">Y</span><input type="number" step="0.1" class="xyz-val" id="scl-y" onchange="studio.updateTransformFromUI()"></div>
-              <div class="xyz-input-wrap"><span class="xyz-tag tag-z">Z</span><input type="number" step="0.1" class="xyz-val" id="scl-z" onchange="studio.updateTransformFromUI()"></div>
+            <div class="xyz-group">
+              <div class="xyz-row">
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-x">SX</span><input type="number" step="0.1" class="xyz-val" id="scl-x" onchange="studio.updateTransformFromUI()"></div>
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-y">SY</span><input type="number" step="0.1" class="xyz-val" id="scl-y" onchange="studio.updateTransformFromUI()"></div>
+                <div class="xyz-input-wrap"><span class="xyz-tag tag-z">SZ</span><input type="number" step="0.1" class="xyz-val" id="scl-z" onchange="studio.updateTransformFromUI()"></div>
+              </div>
             </div>
-            <button class="action-btn" style="margin-top:8px;" onclick="studio.resetTransform()">Asliga qaytarish (Reset)</button>
+
+            <button class="action-btn" onclick="studio.resetTransform()">Ko'rsatkichlarni tiklash (Reset)</button>
           </div>
 
           <div class="prop-section">
-            <div class="prop-section-title">Soya (Shadows)</div>
+            <div class="prop-section-title">Soyalar (Shadows)</div>
             <div class="prop-row">
-              <span class="prop-label">Soya tushirish (Cast)</span>
+              <span class="prop-label">Soya tushirish (Cast Shadow)</span>
               <input type="checkbox" id="cast-shadow" onchange="studio.updateShadowsFromUI()">
             </div>
             <div class="prop-row">
-              <span class="prop-label">Soya qabul qilish (Receive)</span>
+              <span class="prop-label">Soya qabul qilish (Receive Shadow)</span>
               <input type="checkbox" id="receive-shadow" onchange="studio.updateShadowsFromUI()">
             </div>
           </div>
@@ -1346,56 +1197,56 @@ html, body {
 
         <!-- 3. Material Panel -->
         <div class="prop-panel" id="panel-material">
-          <div class="panel-header-title">PBR Materiallar</div>
-          
+          <div class="panel-header-title">PBR Material Sozlamalari</div>
+
           <div class="prop-section">
-            <div class="prop-section-title">Asosiy Rangi (Albedo)</div>
+            <div class="prop-section-title">Rang & Sirt (Base Surface)</div>
             <div class="prop-row">
-              <span class="prop-label">Rang</span>
+              <span class="prop-label">Asosiy rang</span>
               <div class="color-picker-wrap">
-                <input type="color" id="mat-color" class="color-swatch" value="#00f5ff" oninput="studio.updateMaterialFromUI()">
+                <input type="color" id="mat-color" class="color-swatch" value="#00f5ff" oninput="studio.updateMaterialColor(this.value)">
                 <input type="text" id="mat-hex" class="color-hex" value="#00f5ff" onchange="studio.updateMaterialHex(this.value)">
               </div>
             </div>
-          </div>
 
-          <div class="prop-section">
-            <div class="prop-section-title">PBR Xususiyatlari</div>
             <div class="prop-row">
               <span class="prop-label">Metallik (Metalness)</span>
               <div class="prop-slider-wrap">
-                <input type="range" min="0" max="1" step="0.05" id="mat-metal" class="prop-slider" oninput="studio.updateMaterialFromUI()">
-                <span class="prop-slider-val" id="mat-metal-val">0.2</span>
+                <input type="range" min="0" max="1" step="0.01" id="mat-metal" class="prop-slider" value="0.2" oninput="studio.updateMaterialFromUI()">
+                <span class="prop-slider-val" id="mat-metal-val">0.20</span>
               </div>
             </div>
+
             <div class="prop-row">
               <span class="prop-label">G'adir-budurlik (Roughness)</span>
               <div class="prop-slider-wrap">
-                <input type="range" min="0" max="1" step="0.05" id="mat-rough" class="prop-slider" oninput="studio.updateMaterialFromUI()">
-                <span class="prop-slider-val" id="mat-rough-val">0.4</span>
+                <input type="range" min="0" max="1" step="0.01" id="mat-rough" class="prop-slider" value="0.4" oninput="studio.updateMaterialFromUI()">
+                <span class="prop-slider-val" id="mat-rough-val">0.40</span>
               </div>
             </div>
+
             <div class="prop-row">
               <span class="prop-label">Shaffoflik (Opacity)</span>
               <div class="prop-slider-wrap">
-                <input type="range" min="0.1" max="1" step="0.05" id="mat-opacity" class="prop-slider" oninput="studio.updateMaterialFromUI()">
-                <span class="prop-slider-val" id="mat-opacity-val">1.0</span>
+                <input type="range" min="0" max="1" step="0.01" id="mat-opacity" class="prop-slider" value="1.0" oninput="studio.updateMaterialFromUI()">
+                <span class="prop-slider-val" id="mat-opacity-val">1.00</span>
               </div>
             </div>
+
             <div class="prop-row">
-              <span class="prop-label">Wireframe rejimi</span>
+              <span class="prop-label">Setka ko'rinishi (Wireframe)</span>
               <input type="checkbox" id="mat-wire" onchange="studio.updateMaterialFromUI()">
             </div>
           </div>
 
           <div class="prop-section">
-            <div class="prop-section-title">Emissiya (O'zidan nur taratish)</div>
+            <div class="prop-section-title">Nur Taratish (Emissive)</div>
             <div class="prop-row">
               <span class="prop-label">Nur rangi</span>
               <input type="color" id="mat-emissive" class="color-swatch" value="#000000" oninput="studio.updateMaterialFromUI()">
             </div>
             <div class="prop-row">
-              <span class="prop-label">Intensivlik</span>
+              <span class="prop-label">Nur kuchi (Intensity)</span>
               <div class="prop-slider-wrap">
                 <input type="range" min="0" max="5" step="0.1" id="mat-emissive-int" class="prop-slider" value="0" oninput="studio.updateMaterialFromUI()">
                 <span class="prop-slider-val" id="mat-emissive-int-val">0.0</span>
@@ -1460,18 +1311,30 @@ html, body {
               <input type="color" id="fog-color" class="color-swatch" value="#05070a" oninput="studio.updateFogFromUI()">
             </div>
           </div>
+
+          <div class="prop-section">
+            <div class="prop-section-title">Atrof Yorug'ligi (Ambient)</div>
+            <div class="prop-row">
+              <span class="prop-label">Yorug'lik kuchi</span>
+              <div class="prop-slider-wrap">
+                <input type="range" min="0" max="2" step="0.05" id="amb-intensity" class="prop-slider" value="0.65" oninput="studio.updateAmbientFromUI()">
+                <span class="prop-slider-val" id="amb-intensity-val">0.65</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 6. Render & Export Panel -->
         <div class="prop-panel" id="panel-render">
-          <div class="panel-header-title">Render & Eksport</div>
+          <div class="panel-header-title">Render va Eksport</div>
+
           <div class="prop-section">
-            <div class="prop-section-title">📸 Yuqori Sifatli Rasm Render</div>
+            <div class="prop-section-title">📸 Yuqori Sifatli Rasm (Photo)</div>
             <div class="prop-row">
-              <span class="prop-label">O'lchami</span>
-              <select id="render-res" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;">
+              <span class="prop-label">Format</span>
+              <select id="render-res" class="outliner-search" style="margin-bottom:0;width:120px;">
                 <option value="1920x1080">Full HD (1080p)</option>
-                <option value="2560x1440">2K Quad HD</option>
+                <option value="2560x1440">2K QHD</option>
                 <option value="3840x2160">4K Ultra HD</option>
               </select>
             </div>
@@ -1515,7 +1378,12 @@ html, body {
         <input type="number" class="frame-input" id="current-frame" value="0" min="0" max="250" onchange="studio.setFrame(parseInt(this.value))">
         <span>/ 250</span>
       </div>
+
+      <div class="timeline-controls">
+        <button class="tl-btn" onclick="studio.timelineForward()" title="Oxiriga o'tish">⏭</button>
+      </div>
     </div>
+
     <div class="timeline-track-wrap" id="timeline-wrap">
       <canvas id="timeline-canvas"></canvas>
     </div>
@@ -1525,91 +1393,78 @@ html, body {
 
 <!-- ═══ FLOATING ADD MENU (Shift+A) ═══ -->
 <div id="floating-add-menu">
-  <div class="fam-header">
-    <span>✨ Ob'ekt Qo'shish (Add)</span>
-    <span style="font-size:9px;color:var(--text3);font-family:var(--font-mono);">Shift+A</span>
+  <div class="fam-title">Ob'ekt Qo'shish (Shift+A)</div>
+
+  <div class="fam-group">
+    <div class="fam-group-title">3D Mesh</div>
+    <div class="fam-item" onclick="studio.addObject('box')"><span class="fam-icon">📦</span> Kub (Cube)</div>
+    <div class="fam-item" onclick="studio.addObject('sphere')"><span class="fam-icon">⚽</span> Sfera (Sphere)</div>
+    <div class="fam-item" onclick="studio.addObject('cylinder')"><span class="fam-icon">🥫</span> Silindr (Cylinder)</div>
+    <div class="fam-item" onclick="studio.addObject('cone')"><span class="fam-icon">🍦</span> Konus (Cone)</div>
+    <div class="fam-item" onclick="studio.addObject('torus')"><span class="fam-icon">🍩</span> Torus (Donut)</div>
+    <div class="fam-item" onclick="studio.addObject('plane')"><span class="fam-icon">📄</span> Tekislik (Plane)</div>
+    <div class="fam-item" onclick="studio.addObject('suzanne')"><span class="fam-icon">🐵</span> Suzanne (Monkey)</div>
   </div>
-  <div class="fam-group-title">Mesh (Primitivlar)</div>
-  <div class="fam-item" onclick="studio.addObject('box')"><span class="icon">🧊</span> Cube (Kub)</div>
-  <div class="fam-item" onclick="studio.addObject('sphere')"><span class="icon">🌐</span> UV Sphere (Shar)</div>
-  <div class="fam-item" onclick="studio.addObject('cylinder')"><span class="icon">🥫</span> Cylinder (Silindr)</div>
-  <div class="fam-item" onclick="studio.addObject('cone')"><span class="icon">🍦</span> Cone (Konus)</div>
-  <div class="fam-item" onclick="studio.addObject('torus')"><span class="icon">🍩</span> Torus (Halqa)</div>
-  <div class="fam-item" onclick="studio.addObject('plane')"><span class="icon">📄</span> Plane (Tekislik)</div>
-  <div class="fam-item" onclick="studio.addObject('capsule')"><span class="icon">💊</span> Capsule (Kapsula)</div>
-  <div class="fam-item" onclick="studio.addObject('suzanne')"><span class="icon">🐵</span> Suzanne (Monkey)</div>
-  
-  <div class="fam-group-title" style="margin-top:4px;">Yorug'lik (Lights)</div>
-  <div class="fam-item" onclick="studio.addObject('light_point')"><span class="icon">💡</span> Point Light</div>
-  <div class="fam-item" onclick="studio.addObject('light_sun')"><span class="icon">☀️</span> Sun Light</div>
-  <div class="fam-item" onclick="studio.addObject('light_spot')"><span class="icon">🔦</span> Spot Light</div>
+
+  <div class="fam-group">
+    <div class="fam-group-title">Yorug'lik (Light)</div>
+    <div class="fam-item" onclick="studio.addLight('point')"><span class="fam-icon">💡</span> Nuqtaviy (Point Light)</div>
+    <div class="fam-item" onclick="studio.addLight('directional')"><span class="fam-icon">☀️</span> Quyosh (Sun Light)</div>
+    <div class="fam-item" onclick="studio.addLight('spot')"><span class="fam-icon">🔦</span> Projextor (Spot Light)</div>
+  </div>
+
+  <div class="fam-group">
+    <div class="fam-group-title">Fayl Import</div>
+    <div class="fam-item" onclick="document.getElementById('file-import').click()"><span class="fam-icon">📁</span> 3D Model (.glb, .obj)</div>
+  </div>
 </div>
 
-<!-- ═══ MODAL: HIGH-RES RENDER ═══ -->
+<!-- ═══ RENDER IMAGE MODAL ═══ -->
 <div class="modal-overlay" id="render-modal">
   <div class="modal-box">
-    <div class="modal-title">📸 3D Sahna Render Natijasi</div>
-    <img id="render-preview" class="render-preview-img" alt="Render Preview">
-    <div class="modal-actions">
-      <button class="action-btn" style="width:auto;" onclick="document.getElementById('render-modal').classList.remove('show')">Yopish</button>
-      <a id="btn-download-render" class="action-btn action-btn-primary" style="width:auto;text-decoration:none;" download="devforge-render.png">PNG Yuklab Olish</a>
+    <div class="modal-header">
+      <div class="modal-title">📸 Render Rasm Natijasi</div>
+      <button class="modal-close" onclick="document.getElementById('render-modal').classList.remove('show')">✕</button>
+    </div>
+    <img id="render-preview" class="modal-preview-img" alt="Render natijasi">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="action-btn" onclick="document.getElementById('render-modal').classList.remove('show')">Yopish</button>
+      <a id="btn-download-render" download="devforge-render.png" class="action-btn action-btn-primary" style="text-decoration:none;">⬇ Yuklab olish (PNG)</a>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: VIDEO ANIMATION RENDER ═══ -->
+<!-- ═══ VIDEO RENDER MODAL ═══ -->
 <div class="modal-overlay" id="video-render-modal">
   <div class="modal-box">
-    <div class="modal-title">🎬 Animatsiya Video Renderlash</div>
-    <div class="render-progress-bar" id="video-progress-bar">
-      <div class="render-progress-fill" id="video-progress-fill"></div>
+    <div class="modal-header">
+      <div class="modal-title">🎬 Animatsiya Video Render</div>
+      <button class="modal-close" onclick="document.getElementById('video-render-modal').classList.remove('show')">✕</button>
     </div>
-    <div id="video-render-status" style="font-size:12px;color:var(--text2);margin-bottom:12px;">Videoni yozib olishga tayyor (0 - 250 freymlar).</div>
-    
-    <video id="video-preview" class="render-preview-video" controls style="display:none;"></video>
-
-    <div class="modal-actions">
-      <button class="action-btn" style="width:auto;" onclick="document.getElementById('video-render-modal').classList.remove('show')">Yopish</button>
-      <button id="btn-start-record" class="action-btn action-btn-primary" style="width:auto;" onclick="studio.startVideoRecording()">🎬 Renderlashni Boshlash</button>
-      <a id="btn-download-video" class="action-btn action-btn-primary" style="width:auto;text-decoration:none;display:none;" download="devforge-animation.webm">📥 Video Yuklab Olish</a>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;" id="video-render-status">Videoni yozib olishga tayyor (0 - 250 freymlar).</p>
+    <div class="progress-bar-wrap" id="video-progress-bar" style="display:none;">
+      <div class="progress-bar-fill" id="video-progress-fill"></div>
     </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL: KEYBOARD SHORTCUTS ═══ -->
-<div class="modal-overlay" id="shortcuts-modal">
-  <div class="modal-box" style="max-width:500px;">
-    <div class="modal-title">⌨️ Tezkor Tugmalar (Shortcuts)</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;color:var(--text2);margin-bottom:16px;">
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Shift+A</kbd> — Ob'ekt qo'shish oynasi</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Q</kbd> — Tanlash (Select)</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">G</kbd> — Siljitish (Move)</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">R</kbd> — Aylantirish (Rotate)</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">S</kbd> — Masshtab (Scale)</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Shift+D</kbd> — Nusxa olish</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">X / Del</kbd> — O'chirish</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Ctrl+S</kbd> — Saqlash</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Ctrl+Z</kbd> — Bekor qilish</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">F12</kbd> — Rasm render olish</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">Space</kbd> — Animatsiya</div>
-      <div><kbd style="color:var(--accent);font-family:var(--font-mono);">I</kbd> — Keyframe qo'yish</div>
-    </div>
-    <div class="modal-actions">
-      <button class="action-btn action-btn-primary" style="width:auto;" onclick="document.getElementById('shortcuts-modal').classList.remove('show')">Tushundim</button>
+    <video id="video-preview" class="modal-preview-video" controls style="display:none;"></video>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+      <button class="action-btn" onclick="document.getElementById('video-render-modal').classList.remove('show')">Yopish</button>
+      <button class="action-btn action-btn-primary" id="btn-start-record" onclick="studio.startVideoRecording()">🎬 Renderlashni boshlash</button>
+      <a id="btn-download-video" download="devforge-animation.webm" class="action-btn action-btn-primary" style="display:none;text-decoration:none;">⬇ Videoni yuklab olish (WebM)</a>
     </div>
   </div>
 </div>
-
-<!-- Toast Container -->
-<div id="toast-container"></div>
 
 <!-- Hidden File Inputs -->
-<input type="file" id="file-import" accept=".glb,.gltf,.obj" onchange="studio.importFile(event)">
-<input type="file" id="texture-import" accept="image/*" onchange="studio.importTexture(event)">
+<input type="file" id="file-import" accept=".glb,.gltf,.obj" onchange="studio.handleFileImport(event)">
+<input type="file" id="texture-import" accept="image/*" onchange="studio.handleTextureImport(event)">
 
-<!-- Data bridges from Django -->
+<!-- Toast Notification Layer -->
+<div id="toast-container"></div>
+
+<!-- DJANGO CONTEXT DATA -->
 <script id="dj-objects" type="application/json">{{ initial_data|safe|default:"[]" }}</script>
 <script id="dj-settings" type="application/json">{{ settings_data|safe|default:"{}" }}</script>
+
 <script>
 window.DJ = {
   saveUrl: "{% url 'studio:save_project' project_id=project.id %}",
@@ -1620,7 +1475,7 @@ window.DJ = {
 
 <!-- ══════════════════════════════════════════════════════════════════════════════
    DEVFORGE 3D STUDIO PRO ENGINE (JavaScript Core)
-══════════════════════════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════════════════════ -->
 <script>
 class DevForgeStudio {
   constructor() {
@@ -1629,9 +1484,6 @@ class DevForgeStudio {
     this.renderer = null;
     this.orbit = null;
     this.transform = null;
-    this.gizmoRenderer = null;
-    this.gizmoScene = null;
-    this.gizmoCamera = null;
 
     this.objects = []; // Managed meshes & lights
     this.selected = null;
@@ -1653,6 +1505,10 @@ class DevForgeStudio {
     this.recordedChunks = [];
     this.isRecording = false;
 
+    // History (Undo/Redo)
+    this.historyStack = [];
+    this.redoStack = [];
+
     this.init();
   }
 
@@ -1665,59 +1521,33 @@ class DevForgeStudio {
       return;
     }
 
-    // Ensure canvas fills its parent before querying size
-    canvas.style.width  = '100%';
-    canvas.style.height = '100%';
-
     // 1. Scene setup
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#080a0f');
 
-    // 2. Camera — read actual size; flex may not be computed yet, use window fallback
-    const getSize = () => ({
-      w: wrap.offsetWidth  || window.innerWidth  - 300,
-      h: wrap.offsetHeight || window.innerHeight - 120
-    });
-    const { w: initW, h: initH } = getSize();
-    console.log('[DevForgeStudio] init size:', initW, 'x', initH);
+    // 2. Camera
+    const w = wrap.clientWidth || wrap.offsetWidth || (window.innerWidth - 350);
+    const h = wrap.clientHeight || wrap.offsetHeight || (window.innerHeight - 150);
 
-    this.camera = new THREE.PerspectiveCamera(60, initW / initH || 1.78, 0.1, 2000);
+    this.camera = new THREE.PerspectiveCamera(60, (w / h) || 1.78, 0.1, 2000);
     this.camera.position.set(7, 5, 8);
-    this.camera.lookAt(0, 0, 0);
+    this.camera.lookAt(0, 1, 0);
 
-    // 3. Renderer — updateStyle=true so Three.js also sets canvas.style.width/height
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setSize(initW, initH);  // true by default: also sets style
+    // 3. Renderer
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, powerPreference: "high-performance" });
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.setSize(w, h, false);
+    canvas.width = w * Math.min(window.devicePixelRatio || 1, 2);
+    canvas.height = h * Math.min(window.devicePixelRatio || 1, 2);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    if (THREE.sRGBEncoding) this.renderer.outputEncoding = THREE.sRGBEncoding;
 
-    // 4. OrbitControls
-    this.orbit = new THREE.OrbitControls(this.camera, canvas);
-    this.orbit.enableDamping = true;
-    this.orbit.dampingFactor = 0.05;
-    this.orbit.target.set(0, 0, 0);
-    this.orbit.update();
+    // 4. Orbit Controls (Native fallback if OrbitControls addon missing)
+    this.initOrbitControls(canvas);
 
-    // 5. TransformControls
-    this.transform = new THREE.TransformControls(this.camera, canvas);
-    this.transform.size = 0.75;
-    this.scene.add(this.transform);
-
-    this.transform.addEventListener('dragging-changed', (e) => {
-      this.orbit.enabled = !e.value;
-      if (!e.value) {
-        this.syncTransformToUI();
-        this.markDirty();
-      }
-    });
-
-    this.transform.addEventListener('change', () => {
-      if (this.transform.object) {
-        this.syncTransformToUI();
-      }
-    });
+    // 5. Transform Controls (Gizmo)
+    this.initTransformControls(canvas);
 
     // 6. Grid & Environment Lighting
     this.grid = new THREE.GridHelper(30, 30, 0x00f5ff, 0x334155);
@@ -1738,67 +1568,135 @@ class DevForgeStudio {
     this.fillLight.position.set(-10, 10, -10);
     this.scene.add(this.fillLight);
 
-    // 7. Orientation Gizmo setup
-    this.initOrientationGizmo();
+    // 7. Timeline Canvas setup
+    try {
+      this.initTimeline();
+    } catch(err) {
+      console.warn('Timeline init error:', err);
+    }
 
-    // 8. Timeline Canvas setup
-    this.initTimeline();
+    // 8. Resize Observer
+    try {
+      const ro = new ResizeObserver(() => {
+        this.onResize();
+        this.drawTimeline();
+      });
+      ro.observe(wrap);
+    } catch(err) {
+      window.addEventListener('resize', () => {
+        this.onResize();
+        this.drawTimeline();
+      });
+    }
 
-    // 9. Resize Observer — also force resize after first paint
-    const ro = new ResizeObserver(() => {
+    // Force resize check after frame rendered
+    requestAnimationFrame(() => {
       this.onResize();
       this.drawTimeline();
     });
-    ro.observe(wrap);
+    setTimeout(() => this.onResize(), 400);
 
-    // Double-rAF: first frame queues layout, second frame has real dimensions
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      this.onResize();
-    }));
-
-    // Hard fallback: resize after 500ms in case rAF fires before layout
-    setTimeout(() => this.onResize(), 500);
-    setTimeout(() => this.onResize(), 1500);
-
-    // 10. Raycaster Selection
+    // 9. Raycaster Selection
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
     canvas.addEventListener('pointerdown', (e) => this.onPointerDown(e));
 
-    // 11. Keyboard shortcuts
+    // 10. Keyboard shortcuts
     window.addEventListener('keydown', (e) => this.onKeyDown(e));
 
-    // 12. Load scene objects
+    // 11. Load scene objects
     this.loadInitialScene();
 
-    // 13. Auto-save every 30s
+    // 12. Auto-save every 30s
     setInterval(() => {
       if (this.isDirty) this.saveProject(true);
     }, 30000);
 
-    // 14. Start animate loop
+    // 13. Start animate loop
     this.clock = new THREE.Clock();
     this.animate();
 
-    console.log('[DevForgeStudio] Initialized. Viewport:', initW, 'x', initH);
+    console.log('[DevForgeStudio] 3D Studio Engine successfully initialized!');
   }
 
-  initOrientationGizmo() {
-    try {
-      const canvas = document.getElementById('orientation-gizmo');
-      if (!canvas) return;
-      this.gizmoScene = new THREE.Scene();
-      this.gizmoCamera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 50);
-      this.gizmoCamera.position.set(0, 0, 10);
+  initOrbitControls(canvas) {
+    if (typeof THREE.OrbitControls !== 'undefined') {
+      this.orbit = new THREE.OrbitControls(this.camera, canvas);
+      this.orbit.enableDamping = true;
+      this.orbit.dampingFactor = 0.05;
+      this.orbit.target.set(0, 1, 0);
+      this.orbit.update();
+    } else {
+      console.warn('[DevForgeStudio] OrbitControls addon not found. Using built-in pointer orbit fallback.');
+      // Built-in smooth Orbit Fallback
+      let isDragging = false;
+      let prevX = 0, prevY = 0;
+      canvas.addEventListener('mousedown', (e) => {
+        if (e.button === 0 || e.button === 2) {
+          isDragging = true;
+          prevX = e.clientX;
+          prevY = e.clientY;
+        }
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        prevX = e.clientX;
+        prevY = e.clientY;
 
-      const axes = new THREE.AxesHelper(1.5);
-      this.gizmoScene.add(axes);
+        if (e.buttons === 1) { // Rotate
+          const rotSpeed = 0.005;
+          const pos = this.camera.position;
+          const radius = Math.sqrt(pos.x * pos.x + pos.z * pos.z);
+          let theta = Math.atan2(pos.x, pos.z) - dx * rotSpeed;
+          pos.x = radius * Math.sin(theta);
+          pos.z = radius * Math.cos(theta);
+          pos.y = Math.max(0.5, pos.y + dy * 0.05);
+          this.camera.lookAt(0, 1, 0);
+        } else if (e.buttons === 2) { // Pan
+          this.camera.position.y += dy * 0.02;
+        }
+      });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY > 0 ? 1.1 : 0.9;
+        this.camera.position.multiplyScalar(factor);
+        this.camera.lookAt(0, 1, 0);
+      }, { passive: false });
 
-      this.gizmoRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-      this.gizmoRenderer.setSize(80, 80);
-    } catch (err) {
-      console.warn('[DevForgeStudio] Orientation gizmo WebGL init skipped:', err);
-      this.gizmoRenderer = null;
+      this.orbit = {
+        update: () => {},
+        target: new THREE.Vector3(0, 1, 0),
+        enabled: true
+      };
+    }
+  }
+
+  initTransformControls(canvas) {
+    if (typeof THREE.TransformControls !== 'undefined') {
+      try {
+        this.transform = new THREE.TransformControls(this.camera, canvas);
+        this.transform.size = 0.75;
+        this.scene.add(this.transform);
+
+        this.transform.addEventListener('dragging-changed', (e) => {
+          if (this.orbit) this.orbit.enabled = !e.value;
+          if (!e.value) {
+            this.syncTransformToUI();
+            this.markDirty();
+          }
+        });
+
+        this.transform.addEventListener('change', () => {
+          if (this.transform.object) {
+            this.syncTransformToUI();
+          }
+        });
+      } catch(err) {
+        console.warn('TransformControls initialization error:', err);
+      }
     }
   }
 
@@ -1806,15 +1704,17 @@ class DevForgeStudio {
     const wrap = document.getElementById('viewport-wrap');
     const canvas = document.getElementById('canvas3d');
     if (!wrap || !canvas || !this.renderer || !this.camera) return;
-    const w = wrap.clientWidth || wrap.offsetWidth || (window.innerWidth - 300);
-    const h = wrap.clientHeight || wrap.offsetHeight || (window.innerHeight - 120);
-    if (w < 10 || h < 10) return;
+
+    const w = wrap.clientWidth || wrap.offsetWidth || (window.innerWidth - 350);
+    const h = wrap.clientHeight || wrap.offsetHeight || (window.innerHeight - 150);
+    if (w < 20 || h < 20) return;
+
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+
     this.renderer.setSize(w, h, false);
-    canvas.width = w * Math.min(window.devicePixelRatio, 2);
-    canvas.height = h * Math.min(window.devicePixelRatio, 2);
-    console.log('[DevForgeStudio] resized to', w, 'x', h);
+    canvas.width = w * Math.min(window.devicePixelRatio || 1, 2);
+    canvas.height = h * Math.min(window.devicePixelRatio || 1, 2);
   }
 
   onPointerDown(e) {
@@ -1832,25 +1732,36 @@ class DevForgeStudio {
         root = root.parent;
       }
       this.selectObject(root);
-    } else if (!this.transform.dragging) {
-      this.selectObject(null);
+    } else {
+      // If clicked empty space and not dragging gizmo
+      if (!this.transform || !this.transform.dragging) {
+        this.selectObject(null);
+      }
     }
   }
 
   selectObject(obj) {
     this.selected = obj;
+
     if (obj) {
-      this.transform.attach(obj);
-      if (this.currentTool === 'select') {
-        this.transform.setMode('translate');
-      } else {
-        this.transform.setMode(this.currentTool);
+      if (this.transform && typeof this.transform.attach === 'function') {
+        try {
+          this.transform.attach(obj);
+          if (this.currentTool === 'select' || this.currentTool === 'translate') {
+            this.transform.setMode('translate');
+          } else {
+            this.transform.setMode(this.currentTool);
+          }
+        } catch(e) {}
       }
       this.syncTransformToUI();
       this.syncMaterialToUI();
     } else {
-      this.transform.detach();
+      if (this.transform && typeof this.transform.detach === 'function') {
+        try { this.transform.detach(); } catch(e) {}
+      }
     }
+
     this.updateOutlinerUI();
     this.drawTimeline();
   }
@@ -1861,7 +1772,7 @@ class DevForgeStudio {
     const btn = document.getElementById(`tool-${tool}`);
     if (btn) btn.classList.add('active');
 
-    if (this.selected) {
+    if (this.selected && this.transform && typeof this.transform.setMode === 'function') {
       if (tool === 'select' || tool === 'translate') this.transform.setMode('translate');
       else if (tool === 'rotate') this.transform.setMode('rotate');
       else if (tool === 'scale') this.transform.setMode('scale');
@@ -1870,16 +1781,20 @@ class DevForgeStudio {
 
   toggleSnapping() {
     this.isSnapping = !this.isSnapping;
-    document.getElementById('tool-snap')?.classList.toggle('active', this.isSnapping);
+    const btn = document.getElementById('tool-snap');
     if (this.isSnapping) {
-      this.transform.setTranslationSnap(0.5);
-      this.transform.setRotationSnap(THREE.MathUtils.degToRad(15));
-      this.transform.setScaleSnap(0.25);
-      this.showToast('🧲 Magnit setka (Snapping) yoqildi');
+      btn?.classList.add('active');
+      if (this.transform) {
+        this.transform.setTranslationSnap(0.5);
+        this.transform.setRotationSnap(THREE.MathUtils ? THREE.MathUtils.degToRad(15) : (15 * Math.PI / 180));
+      }
+      this.showToast('🧲 Magnit setka (0.5m, 15°) yoqildi');
     } else {
-      this.transform.setTranslationSnap(null);
-      this.transform.setRotationSnap(null);
-      this.transform.setScaleSnap(null);
+      btn?.classList.remove('active');
+      if (this.transform) {
+        this.transform.setTranslationSnap(null);
+        this.transform.setRotationSnap(null);
+      }
       this.showToast('Magnit setka o\'chirildi');
     }
   }
@@ -1889,12 +1804,12 @@ class DevForgeStudio {
     const fam = document.getElementById('floating-add-menu');
     if (!fam) return;
 
-    let x = window.innerWidth / 2 - 100;
-    let y = window.innerHeight / 2 - 120;
+    let x = window.innerWidth / 2 - 110;
+    let y = window.innerHeight / 2 - 140;
 
     if (e && e.clientX && e.clientY) {
-      x = Math.min(e.clientX + 5, window.innerWidth - 230);
-      y = Math.min(e.clientY + 5, window.innerHeight - 380);
+      x = Math.min(e.clientX + 8, window.innerWidth - 240);
+      y = Math.min(e.clientY + 8, window.innerHeight - 390);
     }
 
     fam.style.left = `${x}px`;
@@ -1940,51 +1855,11 @@ class DevForgeStudio {
         geo = new THREE.PlaneGeometry(4, 4);
         name = 'Plane';
         break;
-      case 'capsule':
-        geo = new THREE.CylinderGeometry(0.8, 0.8, 2, 24);
-        name = 'Capsule';
-        break;
       case 'suzanne':
-        geo = new THREE.IcosahedronGeometry(1.4, 2);
+        geo = new THREE.IcosahedronGeometry(1.3, 2);
         name = 'Suzanne';
+        mat.roughness = 0.2;
         break;
-      case 'light_point':
-        const light = new THREE.PointLight(0x00f5ff, 2, 20);
-        light.position.set(0, 3, 0);
-        const helper = new THREE.PointLightHelper(light, 0.5);
-        light.add(helper);
-        light.name = `PointLight_${this.objects.length + 1}`;
-        light.isLight = true;
-        this.scene.add(light);
-        this.objects.push(light);
-        this.selectObject(light);
-        this.markDirty();
-        this.showToast(`💡 ${light.name} qo'shildi`);
-        return;
-      case 'light_sun':
-        const sun = new THREE.DirectionalLight(0xffffff, 1.5);
-        sun.position.set(5, 10, 5);
-        sun.castShadow = true;
-        sun.name = `SunLight_${this.objects.length + 1}`;
-        sun.isLight = true;
-        this.scene.add(sun);
-        this.objects.push(sun);
-        this.selectObject(sun);
-        this.markDirty();
-        this.showToast(`☀️ ${sun.name} qo'shildi`);
-        return;
-      case 'light_spot':
-        const spot = new THREE.SpotLight(0x8b5cf6, 3, 30, Math.PI / 4);
-        spot.position.set(0, 8, 0);
-        spot.castShadow = true;
-        spot.name = `SpotLight_${this.objects.length + 1}`;
-        spot.isLight = true;
-        this.scene.add(spot);
-        this.objects.push(spot);
-        this.selectObject(spot);
-        this.markDirty();
-        this.showToast(`🔦 ${spot.name} qo'shildi`);
-        return;
       default:
         geo = new THREE.BoxGeometry(2, 2, 2);
         name = 'Object';
@@ -2003,29 +1878,64 @@ class DevForgeStudio {
     this.showToast(`🧊 ${mesh.name} sahnaga qo'shildi`);
   }
 
+  addLight(type) {
+    this.closeFloatingAddMenu();
+    let light, helper, name;
+
+    if (type === 'point') {
+      light = new THREE.PointLight(0xffd700, 1.5, 30);
+      light.position.set(2, 4, 2);
+      light.castShadow = true;
+      name = 'PointLight';
+      helper = new THREE.PointLightHelper(light, 0.5);
+    } else if (type === 'directional') {
+      light = new THREE.DirectionalLight(0xffffff, 1.2);
+      light.position.set(5, 10, 5);
+      light.castShadow = true;
+      name = 'SunLight';
+      helper = new THREE.DirectionalLightHelper(light, 1);
+    } else if (type === 'spot') {
+      light = new THREE.SpotLight(0x00f5ff, 2, 40, Math.PI / 4, 0.2);
+      light.position.set(0, 8, 4);
+      light.castShadow = true;
+      name = 'SpotLight';
+      helper = new THREE.SpotLightHelper(light);
+    }
+
+    light.name = `${name}_${this.objects.length + 1}`;
+    light.isLight = true;
+    this.scene.add(light);
+    if (helper) this.scene.add(helper);
+
+    this.objects.push(light);
+    this.selectObject(light);
+    this.markDirty();
+    this.showToast(`💡 ${light.name} qo'shildi`);
+  }
+
   duplicateSelected() {
     if (!this.selected) return;
-    const clone = this.selected.clone(true);
+    const clone = this.selected.clone();
+    clone.name = `${this.selected.name}_Nusxa`;
     clone.position.x += 1.5;
     clone.position.z += 1.5;
-    clone.name = `${this.selected.name}_copy`;
+
     this.scene.add(clone);
     this.objects.push(clone);
     this.selectObject(clone);
     this.markDirty();
-    this.showToast(`📋 ${clone.name} nusxalandi`);
+    this.showToast(`📋 ${clone.name} yaratildi`);
   }
 
   deleteSelected() {
     if (!this.selected) return;
     const obj = this.selected;
     this.selectObject(null);
+
     this.scene.remove(obj);
-    const idx = this.objects.indexOf(obj);
-    if (idx !== -1) this.objects.splice(idx, 1);
-    this.markDirty();
+    this.objects = this.objects.filter(o => o !== obj);
     this.updateOutlinerUI();
-    this.drawTimeline();
+    this.markDirty();
     this.showToast('🗑️ Ob\'ekt o\'chirildi');
   }
 
@@ -2037,51 +1947,44 @@ class DevForgeStudio {
     this.selectObject(null);
   }
 
-  newScene() {
-    if (confirm('Yangi sahna yaratmoqchimisiz? Saqlanmagan o\'zgarishlar o\'chadi.')) {
-      this.objects.forEach(o => this.scene.remove(o));
-      this.objects = [];
-      this.keyframes = {};
-      this.selectObject(null);
-      this.addObject('box');
-      this.markDirty();
-    }
-  }
-
   focusSelected() {
     if (!this.selected) return;
-    this.orbit.target.copy(this.selected.position);
-    this.camera.position.set(
-      this.selected.position.x + 5,
-      this.selected.position.y + 4,
-      this.selected.position.z + 5
-    );
-  }
+    const box = new THREE.Box3().setFromObject(this.selected);
+    const center = box.getCenter(new THREE.Vector3());
 
-  setView(view) {
-    if (!this.selected) {
-      this.orbit.target.set(0, 0, 0);
+    if (this.orbit && this.orbit.target) {
+      this.orbit.target.copy(center);
+      this.camera.position.set(center.x + 5, center.y + 4, center.z + 5);
+      this.camera.lookAt(center);
+      if (this.orbit.update) this.orbit.update();
     } else {
-      this.orbit.target.copy(this.selected.position);
+      this.camera.lookAt(center);
     }
-    const dist = 10;
-    if (view === 'front') this.camera.position.set(this.orbit.target.x, this.orbit.target.y, this.orbit.target.z + dist);
-    else if (view === 'right') this.camera.position.set(this.orbit.target.x + dist, this.orbit.target.y, this.orbit.target.z);
-    else if (view === 'top') this.camera.position.set(this.orbit.target.x, this.orbit.target.y + dist, this.orbit.target.z);
-    this.camera.lookAt(this.orbit.target);
   }
 
-  toggleOrtho() {
-    this.showToast('📐 Kamera ko\'rinishi yangilandi');
+  setCameraView(view) {
+    const dist = 12;
+    if (view === 'top') {
+      this.camera.position.set(0, dist, 0);
+      this.camera.lookAt(0, 0, 0);
+    } else if (view === 'front') {
+      this.camera.position.set(0, 2, dist);
+      this.camera.lookAt(0, 1, 0);
+    } else if (view === 'right') {
+      this.camera.position.set(dist, 2, 0);
+      this.camera.lookAt(0, 1, 0);
+    }
+    if (this.orbit && this.orbit.update) this.orbit.update();
   }
 
   toggleGrid() {
     this.grid.visible = !this.grid.visible;
+    this.showToast(this.grid.visible ? 'Setka yoqildi' : 'Setka yashirildi');
   }
 
   setShading(mode) {
     this.currentShading = mode;
-    document.querySelectorAll('.shading-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.shading-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`shading-${mode === 'wireframe' ? 'wire' : mode === 'solid' ? 'solid' : mode === 'material' ? 'mat' : 'render'}`)?.classList.add('active');
 
     this.objects.forEach(obj => {
@@ -2089,25 +1992,20 @@ class DevForgeStudio {
         if (child.isMesh && child.material) {
           if (mode === 'wireframe') {
             child.material.wireframe = true;
-          } else if (mode === 'solid') {
+          } else {
             child.material.wireframe = false;
-            child.material.roughness = 0.6;
-          } else if (mode === 'material' || mode === 'rendered') {
-            child.material.wireframe = false;
-            child.material.needsUpdate = true;
           }
         }
       });
     });
-    this.showToast(`🎨 Shading rejimi: ${mode}`);
   }
 
-  switchPanel(panelId) {
+  switchPanel(tabName) {
     document.querySelectorAll('.prop-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.prop-panel').forEach(p => p.classList.remove('active'));
+    document.querySelector(`.prop-tab[data-panel="${tabName}"]`)?.classList.add('active');
 
-    document.querySelector(`.prop-tab[data-panel="${panelId}"]`)?.classList.add('active');
-    document.getElementById(`panel-${panelId}`)?.classList.add('active');
+    document.querySelectorAll('.prop-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${tabName}`)?.classList.add('active');
   }
 
   syncTransformToUI() {
@@ -2116,33 +2014,47 @@ class DevForgeStudio {
     const r = this.selected.rotation;
     const s = this.selected.scale;
 
-    document.getElementById('loc-x').value = p.x.toFixed(2);
-    document.getElementById('loc-y').value = p.y.toFixed(2);
-    document.getElementById('loc-z').value = p.z.toFixed(2);
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
 
-    document.getElementById('rot-x').value = THREE.MathUtils.radToDeg(r.x).toFixed(1);
-    document.getElementById('rot-y').value = THREE.MathUtils.radToDeg(r.y).toFixed(1);
-    document.getElementById('rot-z').value = THREE.MathUtils.radToDeg(r.z).toFixed(1);
+    if (p) {
+      setVal('loc-x', p.x.toFixed(2));
+      setVal('loc-y', p.y.toFixed(2));
+      setVal('loc-z', p.z.toFixed(2));
+    }
+    if (r) {
+      const radToDeg = (v) => (THREE.MathUtils ? THREE.MathUtils.radToDeg(v) : (v * 180 / Math.PI));
+      setVal('rot-x', radToDeg(r.x).toFixed(1));
+      setVal('rot-y', radToDeg(r.y).toFixed(1));
+      setVal('rot-z', radToDeg(r.z).toFixed(1));
+    }
+    if (s) {
+      setVal('scl-x', s.x.toFixed(2));
+      setVal('scl-y', s.y.toFixed(2));
+      setVal('scl-z', s.z.toFixed(2));
+    }
 
-    document.getElementById('scl-x').value = s.x.toFixed(2);
-    document.getElementById('scl-y').value = s.y.toFixed(2);
-    document.getElementById('scl-z').value = s.z.toFixed(2);
-
-    document.getElementById('cast-shadow').checked = !!this.selected.castShadow;
-    document.getElementById('receive-shadow').checked = !!this.selected.receiveShadow;
+    const castEl = document.getElementById('cast-shadow');
+    if (castEl) castEl.checked = !!this.selected.castShadow;
+    const recvEl = document.getElementById('receive-shadow');
+    if (recvEl) recvEl.checked = !!this.selected.receiveShadow;
   }
 
   updateTransformFromUI() {
     if (!this.selected) return;
+    const degToRad = (v) => (THREE.MathUtils ? THREE.MathUtils.degToRad(v) : (v * Math.PI / 180));
+
     this.selected.position.set(
       parseFloat(document.getElementById('loc-x').value) || 0,
       parseFloat(document.getElementById('loc-y').value) || 0,
       parseFloat(document.getElementById('loc-z').value) || 0
     );
     this.selected.rotation.set(
-      THREE.MathUtils.degToRad(parseFloat(document.getElementById('rot-x').value) || 0),
-      THREE.MathUtils.degToRad(parseFloat(document.getElementById('rot-y').value) || 0),
-      THREE.MathUtils.degToRad(parseFloat(document.getElementById('rot-z').value) || 0)
+      degToRad(parseFloat(document.getElementById('rot-x').value) || 0),
+      degToRad(parseFloat(document.getElementById('rot-y').value) || 0),
+      degToRad(parseFloat(document.getElementById('rot-z').value) || 0)
     );
     this.selected.scale.set(
       parseFloat(document.getElementById('scl-x').value) || 1,
@@ -2177,167 +2089,169 @@ class DevForgeStudio {
     if (!m) return;
 
     const hex = '#' + (m.color ? m.color.getHexString() : 'ffffff');
-    document.getElementById('mat-color').value = hex;
-    document.getElementById('mat-hex').value = hex;
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-    document.getElementById('mat-metal').value = m.metalness !== undefined ? m.metalness : 0;
-    document.getElementById('mat-metal-val').textContent = (m.metalness || 0).toFixed(2);
+    setVal('mat-color', hex);
+    setVal('mat-hex', hex);
 
-    document.getElementById('mat-rough').value = m.roughness !== undefined ? m.roughness : 0.5;
-    document.getElementById('mat-rough-val').textContent = (m.roughness || 0.5).toFixed(2);
+    const metal = m.metalness !== undefined ? m.metalness : 0;
+    setVal('mat-metal', metal);
+    setText('mat-metal-val', metal.toFixed(2));
 
-    document.getElementById('mat-opacity').value = m.opacity !== undefined ? m.opacity : 1.0;
-    document.getElementById('mat-opacity-val').textContent = (m.opacity || 1.0).toFixed(2);
+    const rough = m.roughness !== undefined ? m.roughness : 0.5;
+    setVal('mat-rough', rough);
+    setText('mat-rough-val', rough.toFixed(2));
 
-    document.getElementById('mat-wire').checked = !!m.wireframe;
+    const op = m.opacity !== undefined ? m.opacity : 1.0;
+    setVal('mat-opacity', op);
+    setText('mat-opacity-val', op.toFixed(2));
+
+    const wire = document.getElementById('mat-wire');
+    if (wire) wire.checked = !!m.wireframe;
   }
 
   updateMaterialFromUI() {
     if (!this.selected) return;
     const hex = document.getElementById('mat-color').value;
-    document.getElementById('mat-hex').value = hex;
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
+    setVal('mat-hex', hex);
     const metalness = parseFloat(document.getElementById('mat-metal').value);
-    document.getElementById('mat-metal-val').textContent = metalness.toFixed(2);
+    setText('mat-metal-val', metalness.toFixed(2));
 
     const roughness = parseFloat(document.getElementById('mat-rough').value);
-    document.getElementById('mat-rough-val').textContent = roughness.toFixed(2);
+    setText('mat-rough-val', roughness.toFixed(2));
 
     const opacity = parseFloat(document.getElementById('mat-opacity').value);
-    document.getElementById('mat-opacity-val').textContent = opacity.toFixed(2);
+    setText('mat-opacity-val', opacity.toFixed(2));
 
     const wireframe = document.getElementById('mat-wire').checked;
-
-    const emissiveHex = document.getElementById('mat-emissive').value;
+    const emissiveColor = document.getElementById('mat-emissive').value;
     const emissiveInt = parseFloat(document.getElementById('mat-emissive-int').value);
-    document.getElementById('mat-emissive-int-val').textContent = emissiveInt.toFixed(1);
+    setText('mat-emissive-int-val', emissiveInt.toFixed(1));
 
-    this.selected.traverse(child => {
-      if (child.isMesh && child.material) {
-        child.material.color.set(hex);
-        child.material.metalness = metalness;
-        child.material.roughness = roughness;
-        child.material.opacity = opacity;
-        child.material.transparent = opacity < 1.0;
-        child.material.wireframe = wireframe;
-        if (child.material.emissive) {
-          child.material.emissive.set(emissiveHex);
-          child.material.emissiveIntensity = emissiveInt;
-        }
-        child.material.needsUpdate = true;
+    const apply = (mat) => {
+      if (!mat) return;
+      if (mat.color) mat.color.set(hex);
+      if (mat.metalness !== undefined) mat.metalness = metalness;
+      if (mat.roughness !== undefined) mat.roughness = roughness;
+      mat.opacity = opacity;
+      mat.transparent = opacity < 1.0;
+      mat.wireframe = wireframe;
+      if (mat.emissive) {
+        mat.emissive.set(emissiveColor);
+        mat.emissiveIntensity = emissiveInt;
       }
-    });
+      mat.needsUpdate = true;
+    };
 
+    if (this.selected.material) apply(this.selected.material);
+    this.selected.traverse(c => { if (c.isMesh && c.material) apply(c.material); });
     this.markDirty();
   }
 
+  updateMaterialColor(hex) {
+    document.getElementById('mat-hex').value = hex;
+    this.updateMaterialFromUI();
+  }
+
   updateMaterialHex(hex) {
-    if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+    if (/^#[0-9A-F]{6}$/i.test(hex)) {
       document.getElementById('mat-color').value = hex;
       this.updateMaterialFromUI();
     }
   }
 
   applyPreset(preset) {
-    if (!this.selected) return;
-    let color = '#ffffff', metal = 0.2, rough = 0.4, opac = 1.0, emissive = '#000000', emissiveInt = 0;
+    if (!this.selected) {
+      this.showToast('Avval ob\'ektni tanlang!');
+      return;
+    }
+    const presets = {
+      metal:    { color: '#e2e8f0', metalness: 0.95, roughness: 0.15 },
+      gold:     { color: '#fbbf24', metalness: 0.90, roughness: 0.20 },
+      glass:    { color: '#a5f3fc', metalness: 0.10, roughness: 0.05, opacity: 0.35 },
+      neon:     { color: '#00f5ff', metalness: 0.10, roughness: 0.20, emissive: '#00f5ff', emissiveInt: 2.0 },
+      ruby:     { color: '#ef4444', metalness: 0.30, roughness: 0.10, emissive: '#7f1d1d', emissiveInt: 0.5 },
+      velvet:   { color: '#8b5cf6', metalness: 0.00, roughness: 0.85 },
+      titanium: { color: '#64748b', metalness: 0.80, roughness: 0.30 },
+      clay:     { color: '#fdba74', metalness: 0.00, roughness: 0.90 },
+      mirror:   { color: '#ffffff', metalness: 1.00, roughness: 0.00 },
+    };
 
-    switch(preset) {
-      case 'metal':
-        color = '#e2e8f0'; metal = 0.95; rough = 0.15; break;
-      case 'gold':
-        color = '#fbbf24'; metal = 0.92; rough = 0.2; break;
-      case 'glass':
-        color = '#a5f3fc'; metal = 0.05; rough = 0.05; opac = 0.35; break;
-      case 'neon':
-        color = '#00f5ff'; metal = 0.1; rough = 0.2; emissive = '#00f5ff'; emissiveInt = 2.0; break;
-      case 'ruby':
-        color = '#ef4444'; metal = 0.3; rough = 0.1; break;
-      case 'velvet':
-        color = '#8b5cf6'; metal = 0.0; rough = 0.92; break;
-      case 'titanium':
-        color = '#64748b'; metal = 0.88; rough = 0.3; break;
-      case 'clay':
-        color = '#d97706'; metal = 0.0; rough = 0.95; break;
-      case 'mirror':
-        color = '#ffffff'; metal = 1.0; rough = 0.0; break;
+    const p = presets[preset];
+    if (!p) return;
+
+    document.getElementById('mat-color').value = p.color;
+    document.getElementById('mat-hex').value = p.color;
+    document.getElementById('mat-metal').value = p.metalness;
+    document.getElementById('mat-rough').value = p.roughness;
+    document.getElementById('mat-opacity').value = p.opacity !== undefined ? p.opacity : 1.0;
+
+    if (p.emissive) {
+      document.getElementById('mat-emissive').value = p.emissive;
+      document.getElementById('mat-emissive-int').value = p.emissiveInt || 1.0;
+    } else {
+      document.getElementById('mat-emissive').value = '#000000';
+      document.getElementById('mat-emissive-int').value = 0;
     }
 
-    document.getElementById('mat-color').value = color;
-    document.getElementById('mat-hex').value = color;
-    document.getElementById('mat-metal').value = metal;
-    document.getElementById('mat-rough').value = rough;
-    document.getElementById('mat-opacity').value = opac;
-    document.getElementById('mat-emissive').value = emissive;
-    document.getElementById('mat-emissive-int').value = emissiveInt;
-
     this.updateMaterialFromUI();
-    this.showToast(`🎨 Preset qo'llanildi: ${preset}`);
+    this.showToast(`✨ Preset qo'llanildi: ${preset}`);
   }
 
   applyModifier(mod) {
-    if (!this.selected) return;
+    if (!this.selected) {
+      this.showToast('Avval ob\'ektni tanlang!');
+      return;
+    }
     if (mod === 'wireframe') {
-      const wire = new THREE.WireframeGeometry(this.selected.geometry);
-      const line = new THREE.LineSegments(wire);
+      const wf = new THREE.WireframeGeometry(this.selected.geometry);
+      const line = new THREE.LineSegments(wf);
       line.material.color.setHex(0x00f5ff);
       this.selected.add(line);
-      this.showToast('🕸️ Wireframe qo\'shildi');
+      this.showToast('Modifikator qo\'shildi: Wireframe');
     } else if (mod === 'mirrorX') {
       const clone = this.selected.clone();
-      clone.scale.x *= -1;
+      clone.name = `${this.selected.name}_MirrorX`;
       clone.position.x = -this.selected.position.x;
       this.scene.add(clone);
       this.objects.push(clone);
-      this.showToast('🪞 Mirror X yaratildi');
+      this.updateOutlinerUI();
+      this.showToast('Modifikator: Mirror X nusxa yaratildi');
     } else if (mod === 'array3') {
       for (let i = 1; i <= 3; i++) {
-        const c = this.selected.clone();
-        c.position.x += i * 3;
-        this.scene.add(c);
-        this.objects.push(c);
+        const copy = this.selected.clone();
+        copy.name = `${this.selected.name}_Array_${i}`;
+        copy.position.x += i * 2.5;
+        this.scene.add(copy);
+        this.objects.push(copy);
       }
-      this.showToast('🔢 Array 3x nusxalandi');
+      this.updateOutlinerUI();
+      this.showToast('Modifikator: Array 3x qo\'shildi');
     } else if (mod === 'wave') {
       this.selected.userData.isWave = true;
-      this.showToast('🌊 To\'lqin animatsiyasi faollashtirildi');
+      this.showToast('Modifikator: To\'lqin animatsiyasi yoqildi');
     }
     this.markDirty();
   }
 
   setEnvironment(env) {
-    switch(env) {
-      case 'space':
-        this.scene.background.set('#030508');
-        this.ambientLight.color.set('#60a5fa');
-        this.ambientLight.intensity = 0.35;
-        break;
-      case 'cyber':
-        this.scene.background.set('#0a0614');
-        this.ambientLight.color.set('#c084fc');
-        this.ambientLight.intensity = 0.65;
-        break;
-      case 'studio':
-        this.scene.background.set('#1e2430');
-        this.ambientLight.color.set('#ffffff');
-        this.ambientLight.intensity = 0.8;
-        break;
-      case 'sunset':
-        this.scene.background.set('#1c0f1d');
-        this.ambientLight.color.set('#fb923c');
-        this.ambientLight.intensity = 0.55;
-        break;
-      case 'forest':
-        this.scene.background.set('#06140f');
-        this.ambientLight.color.set('#34d399');
-        this.ambientLight.intensity = 0.45;
-        break;
-      case 'grid':
-        this.scene.background.set('#05070a');
-        this.grid.material.color.set('#00f5ff');
-        break;
-    }
-    this.markDirty();
+    const envs = {
+      space:  { bg: '#020308', amb: 0.3, light: '#00f5ff' },
+      cyber:  { bg: '#090514', amb: 0.5, light: '#ec4899' },
+      studio: { bg: '#181a20', amb: 0.8, light: '#ffffff' },
+      sunset: { bg: '#1c0a00', amb: 0.6, light: '#f97316' },
+      forest: { bg: '#031408', amb: 0.5, light: '#10b981' },
+      grid:   { bg: '#05070a', amb: 0.6, light: '#00f5ff' },
+    };
+    const e = envs[env];
+    if (!e) return;
+    this.scene.background.set(e.bg);
+    this.ambientLight.intensity = e.amb;
+    this.fillLight.color.set(e.light);
     this.showToast(`🌍 Muhit o'zgartirildi: ${env}`);
   }
 
@@ -2345,11 +2259,16 @@ class DevForgeStudio {
     const enabled = document.getElementById('fog-toggle').checked;
     const color = document.getElementById('fog-color').value;
     if (enabled) {
-      this.scene.fog = new THREE.FogExp2(color, 0.035);
+      this.scene.fog = new THREE.Fog(color, 5, 40);
     } else {
       this.scene.fog = null;
     }
-    this.markDirty();
+  }
+
+  updateAmbientFromUI() {
+    const val = parseFloat(document.getElementById('amb-intensity').value);
+    document.getElementById('amb-intensity-val').textContent = val.toFixed(2);
+    this.ambientLight.intensity = val;
   }
 
   updateOutlinerUI() {
@@ -2360,7 +2279,7 @@ class DevForgeStudio {
     let totalVerts = 0;
     this.objects.forEach((obj, idx) => {
       obj.traverse(c => {
-        if (c.geometry && c.geometry.attributes.position) {
+        if (c.geometry && c.geometry.attributes && c.geometry.attributes.position) {
           totalVerts += c.geometry.attributes.position.count;
         }
       });
@@ -2382,8 +2301,10 @@ class DevForgeStudio {
       list.appendChild(item);
     });
 
-    document.getElementById('obj-counter').textContent = this.objects.length;
-    document.getElementById('vert-counter').textContent = totalVerts;
+    const objCounter = document.getElementById('obj-counter');
+    if (objCounter) objCounter.textContent = this.objects.length;
+    const vertCounter = document.getElementById('vert-counter');
+    if (vertCounter) vertCounter.textContent = totalVerts;
   }
 
   filterOutliner(val) {
@@ -2409,13 +2330,12 @@ class DevForgeStudio {
       this.scene.remove(obj);
       this.objects.splice(idx, 1);
       this.updateOutlinerUI();
-      this.drawTimeline();
       this.markDirty();
     }
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
-  // TIMELINE & KEYFRAME SCRUBBING ENGINE
+  // TIMELINE & KEYFRAME ENGINE
   // ══════════════════════════════════════════════════════════════════════════════
   initTimeline() {
     const canvas = document.getElementById('timeline-canvas');
@@ -2474,7 +2394,7 @@ class DevForgeStudio {
       }
     }
 
-    // Draw Keyframes (Yellow/Gold diamonds ◆) for selected object
+    // Draw Keyframes (Yellow diamonds ◆) for selected object
     if (this.selected && this.keyframes[this.selected.uuid]) {
       const kfs = this.keyframes[this.selected.uuid];
       ctx.fillStyle = '#fbbf24';
@@ -2516,6 +2436,83 @@ class DevForgeStudio {
     ctx.fill();
   }
 
+  setFrame(frame) {
+    this.currentFrame = Math.max(0, Math.min(frame, this.totalFrames));
+    const input = document.getElementById('current-frame');
+    if (input) input.value = this.currentFrame;
+
+    this.applyKeyframesAtFrame(this.currentFrame);
+    this.drawTimeline();
+    this.syncTransformToUI();
+  }
+
+  insertKeyframe() {
+    if (!this.selected) {
+      this.showToast('Keyframe qo\'yish uchun ob\'ektni tanlang!');
+      return;
+    }
+    const uuid = this.selected.uuid;
+    if (!this.keyframes[uuid]) this.keyframes[uuid] = {};
+
+    this.keyframes[uuid][this.currentFrame] = {
+      pos: this.selected.position.clone(),
+      rot: this.selected.rotation.clone(),
+      scl: this.selected.scale.clone()
+    };
+
+    this.drawTimeline();
+    this.markDirty();
+    this.showToast(`◆ Keyframe qo'yildi (Freym: ${this.currentFrame})`);
+  }
+
+  applyKeyframesAtFrame(frame) {
+    if (!this.selected) return;
+    const kfs = this.keyframes[this.selected.uuid];
+    if (!kfs) return;
+
+    const frames = Object.keys(kfs).map(Number).sort((a, b) => a - b);
+    if (frames.length === 0) return;
+
+    if (frames.length === 1 || frame <= frames[0]) {
+      const k = kfs[frames[0]];
+      this.selected.position.copy(k.pos);
+      this.selected.rotation.copy(k.rot);
+      this.selected.scale.copy(k.scl);
+      this.syncTransformToUI();
+      return;
+    }
+
+    if (frame >= frames[frames.length - 1]) {
+      const k = kfs[frames[frames.length - 1]];
+      this.selected.position.copy(k.pos);
+      this.selected.rotation.copy(k.rot);
+      this.selected.scale.copy(k.scl);
+      this.syncTransformToUI();
+      return;
+    }
+
+    // Interpolate between two keyframes
+    let f1 = frames[0], f2 = frames[1];
+    for (let i = 0; i < frames.length - 1; i++) {
+      if (frame >= frames[i] && frame <= frames[i + 1]) {
+        f1 = frames[i];
+        f2 = frames[i + 1];
+        break;
+      }
+    }
+
+    const t = (frame - f1) / (f2 - f1);
+    const k1 = kfs[f1], k2 = kfs[f2];
+
+    this.selected.position.lerpVectors(k1.pos, k2.pos, t);
+    this.selected.scale.lerpVectors(k1.scl, k2.scl, t);
+    this.selected.rotation.x = THREE.MathUtils.lerp(k1.rot.x, k2.rot.x, t);
+    this.selected.rotation.y = THREE.MathUtils.lerp(k1.rot.y, k2.rot.y, t);
+    this.selected.rotation.z = THREE.MathUtils.lerp(k1.rot.z, k2.rot.z, t);
+
+    this.syncTransformToUI();
+  }
+
   togglePlay() {
     this.isPlaying = !this.isPlaying;
     const btn = document.getElementById('btn-play');
@@ -2523,77 +2520,19 @@ class DevForgeStudio {
   }
 
   timelineRewind() {
-    this.isPlaying = false;
     this.setFrame(0);
-    const btn = document.getElementById('btn-play');
-    if (btn) btn.textContent = '▶';
   }
 
-  setFrame(frame) {
-    this.currentFrame = Math.max(0, Math.min(frame, this.totalFrames));
-    document.getElementById('current-frame').value = this.currentFrame;
-    this.applyKeyframesAtFrame(this.currentFrame);
-    this.drawTimeline();
-  }
-
-  insertKeyframe() {
-    if (!this.selected) {
-      this.showToast('⚠️ Avval sahnadan ob\'ektni tanlang!');
-      return;
-    }
-    const id = this.selected.uuid;
-    if (!this.keyframes[id]) this.keyframes[id] = {};
-    this.keyframes[id][this.currentFrame] = {
-      pos: this.selected.position.clone(),
-      rot: this.selected.rotation.clone(),
-      scl: this.selected.scale.clone(),
-    };
-    this.drawTimeline();
-    this.showToast(`◆ Keyframe qo'yildi: Freym ${this.currentFrame}`);
-  }
-
-  applyKeyframesAtFrame(frame) {
-    if (!this.selected) return;
-    const id = this.selected.uuid;
-    const kfs = this.keyframes[id];
-    if (!kfs) return;
-
-    const frames = Object.keys(kfs).map(Number).sort((a, b) => a - b);
-    if (frames.length === 0) return;
-
-    // Exact keyframe
-    if (kfs[frame]) {
-      this.selected.position.copy(kfs[frame].pos);
-      this.selected.rotation.copy(kfs[frame].rot);
-      this.selected.scale.copy(kfs[frame].scl);
-      this.syncTransformToUI();
-      return;
-    }
-
-    // Interpolate between surrounding keyframes
-    let prev = null, next = null;
-    for (let f of frames) {
-      if (f <= frame) prev = f;
-      if (f >= frame && next === null) next = f;
-    }
-
-    if (prev !== null && next !== null && prev !== next) {
-      const alpha = (frame - prev) / (next - prev);
-      this.selected.position.lerpVectors(kfs[prev].pos, kfs[next].pos, alpha);
-      this.selected.scale.lerpVectors(kfs[prev].scl, kfs[next].scl, alpha);
-      this.syncTransformToUI();
-    } else if (prev !== null) {
-      this.selected.position.copy(kfs[prev].pos);
-      this.selected.scale.copy(kfs[prev].scl);
-      this.syncTransformToUI();
-    }
+  timelineForward() {
+    this.setFrame(this.totalFrames);
   }
 
   // ══════════════════════════════════════════════════════════════════════════════
-  // RENDER (HIGH-RES IMAGE + VIDEO ANIMATION)
+  // RENDER & VIDEO RECORDING ENGINE
   // ══════════════════════════════════════════════════════════════════════════════
   openRenderModal() {
-    this.transform.detach();
+    // Hide helpers during screenshot
+    if (this.transform) this.transform.visible = false;
     this.grid.visible = false;
     this.renderer.render(this.scene, this.camera);
 
@@ -2602,8 +2541,9 @@ class DevForgeStudio {
     document.getElementById('btn-download-render').href = dataUrl;
     document.getElementById('render-modal').classList.add('show');
 
+    // Restore helpers
+    if (this.transform) this.transform.visible = true;
     this.grid.visible = true;
-    if (this.selected) this.transform.attach(this.selected);
   }
 
   openVideoRenderModal() {
@@ -2678,34 +2618,41 @@ class DevForgeStudio {
     }, 33);
   }
 
-  openShortcutsModal() {
-    document.getElementById('shortcuts-modal').classList.add('show');
-  }
-
+  // ══════════════════════════════════════════════════════════════════════════════
+  // EXPORTERS & IMPORTERS
+  // ══════════════════════════════════════════════════════════════════════════════
   exportGLTF() {
+    if (typeof THREE.GLTFExporter === 'undefined') {
+      this.showToast('GLTFExporter yuklanmagan');
+      return;
+    }
     const exporter = new THREE.GLTFExporter();
     exporter.parse(this.scene, (gltf) => {
       const blob = new Blob([JSON.stringify(gltf, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${document.getElementById('project-title').value || 'scene'}.gltf`;
-      a.click();
-      this.showToast('📦 GLTF muvaffaqiyatli eksport qilindi!');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${document.getElementById('project-title').value || 'scene'}.gltf`;
+      link.click();
+      this.showToast('📦 GLTF sahnasi yuklab olindi');
     }, { binary: false });
   }
 
   exportOBJ() {
+    if (typeof THREE.OBJExporter === 'undefined') {
+      this.showToast('OBJExporter yuklanmagan');
+      return;
+    }
     const exporter = new THREE.OBJExporter();
     const result = exporter.parse(this.scene);
     const blob = new Blob([result], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${document.getElementById('project-title').value || 'scene'}.obj`;
-    a.click();
-    this.showToast('🗿 OBJ muvaffaqiyatli eksport qilindi!');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${document.getElementById('project-title').value || 'scene'}.obj`;
+    link.click();
+    this.showToast('🗿 OBJ sahnasi yuklab olindi');
   }
 
-  importFile(e) {
+  handleFileImport(e) {
     const file = e.target.files[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
@@ -2716,11 +2663,14 @@ class DevForgeStudio {
       loader.load(url, (gltf) => {
         const root = gltf.scene;
         root.name = file.name.replace(/\.[^/.]+$/, "");
+        root.traverse(c => {
+          if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+        });
         this.scene.add(root);
         this.objects.push(root);
         this.selectObject(root);
         this.markDirty();
-        this.showToast(`✅ ${file.name} yuklandi`);
+        this.showToast(`✅ Model import qilindi: ${file.name}`);
       });
     } else if (ext === 'obj') {
       const loader = new THREE.OBJLoader();
@@ -2730,111 +2680,64 @@ class DevForgeStudio {
         this.objects.push(obj);
         this.selectObject(obj);
         this.markDirty();
-        this.showToast(`✅ ${file.name} yuklandi`);
+        this.showToast(`✅ OBJ import qilindi: ${file.name}`);
       });
     }
   }
 
-  importTexture(e) {
+  handleTextureImport(e) {
     const file = e.target.files[0];
     if (!file || !this.selected) return;
     const url = URL.createObjectURL(file);
     const loader = new THREE.TextureLoader();
     loader.load(url, (tex) => {
-      tex.encoding = THREE.sRGBEncoding;
-      this.selected.traverse(c => {
-        if (c.isMesh && c.material) {
-          c.material.map = tex;
-          c.material.needsUpdate = true;
-        }
-      });
-      this.markDirty();
-      this.showToast('🖼️ Tekstura muvaffaqiyatli qo\'yildi');
+      if (this.selected.material) {
+        this.selected.material.map = tex;
+        this.selected.material.needsUpdate = true;
+        this.markDirty();
+        this.showToast('🖼️ Tekstura muvaffaqiyatli qo\'yildi');
+      }
     });
   }
 
-  toggleMenu(el) {
-    document.querySelectorAll('.top-menu-item').forEach(m => {
-      if (m !== el) m.classList.remove('active');
-    });
-    el.classList.toggle('active');
-  }
+  // ══════════════════════════════════════════════════════════════════════════════
+  // SCENE SERIALIZATION & PERSISTENCE (Django Backend Sync)
+  // ══════════════════════════════════════════════════════════════════════════════
+  serializeScene() {
+    const list = [];
+    this.objects.forEach(obj => {
+      let geoType = 'box';
+      if (obj.geometry) {
+        if (obj.geometry.type.includes('Sphere')) geoType = 'sphere';
+        else if (obj.geometry.type.includes('Cylinder')) geoType = 'cylinder';
+        else if (obj.geometry.type.includes('Cone')) geoType = 'cone';
+        else if (obj.geometry.type.includes('Torus')) geoType = 'torus';
+        else if (obj.geometry.type.includes('Plane')) geoType = 'plane';
+      }
 
-  hideMenus() {
-    document.querySelectorAll('.top-menu-item').forEach(m => m.classList.remove('active'));
-  }
+      let matProps = {};
+      if (obj.material) {
+        matProps = {
+          geometry: geoType,
+          color: '#' + obj.material.color.getHexString(),
+          metalness: obj.material.metalness || 0,
+          roughness: obj.material.roughness || 0.5,
+          wireframe: !!obj.material.wireframe,
+        };
+      }
 
-  markDirty() {
-    this.isDirty = true;
-    const dot = document.getElementById('save-dot');
-    const txt = document.getElementById('save-txt');
-    if (dot) dot.className = 'save-dot dirty';
-    if (txt) txt.textContent = 'Saqlanmagan';
-  }
-
-  saveProject(isAuto = false) {
-    const dot = document.getElementById('save-dot');
-    const txt = document.getElementById('save-txt');
-    if (dot) dot.className = 'save-dot saving';
-    if (txt) txt.textContent = isAuto ? 'Avto-saqlanmoqda...' : 'Saqlanmoqda...';
-
-    const serialized = this.objects.map(obj => {
-      let color = '#00f5ff', metal = 0.2, rough = 0.4, wire = false;
-      obj.traverse(c => {
-        if (c.isMesh && c.material) {
-          if (c.material.color) color = '#' + c.material.color.getHexString();
-          metal = c.material.metalness || 0;
-          rough = c.material.roughness || 0.5;
-          wire = !!c.material.wireframe;
-        }
-      });
-
-      return {
+      list.push({
         name: obj.name,
         object_type: obj.isLight ? 'light' : 'primitive',
         transform_data: {
           position: [obj.position.x, obj.position.y, obj.position.z],
           rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
-          scale: [obj.scale.x, obj.scale.y, obj.scale.z],
+          scale:    [obj.scale.x, obj.scale.y, obj.scale.z],
         },
-        properties_data: {
-          color: color,
-          metalness: metal,
-          roughness: rough,
-          wireframe: wire,
-        }
-      };
+        properties_data: matProps,
+      });
     });
-
-    const payload = {
-      title: document.getElementById('project-title').value,
-      objects: serialized,
-      settings: {
-        bg_color: '#' + this.scene.background.getHexString(),
-        ambient_intensity: this.ambientLight.intensity
-      }
-    };
-
-    fetch(window.DJ.saveUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': window.DJ.csrf
-      },
-      body: JSON.stringify(payload)
-    })
-    .then(r => r.json())
-    .then(data => {
-      this.isDirty = false;
-      if (dot) dot.className = 'save-dot';
-      if (txt) txt.textContent = 'Saqlangan';
-      this.showToast('💾 Loyiha bulutga saqlindi!');
-    })
-    .catch(err => {
-      if (dot) dot.className = 'save-dot dirty';
-      if (txt) txt.textContent = 'Xato yuz berdi';
-      this.showToast('❌ Saqlashda xatolik!');
-    });
+    return list;
   }
 
   loadInitialScene() {
@@ -2898,16 +2801,80 @@ class DevForgeStudio {
     this.updateOutlinerUI();
   }
 
-  showToast(msg) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => toast.remove(), 2500);
+  saveProject(silent = false) {
+    const dot = document.getElementById('save-dot');
+    const txt = document.getElementById('save-txt');
+    if (dot) dot.className = 'save-dot saving';
+    if (txt) txt.textContent = 'Saqlanmoqda...';
+
+    const payload = {
+      title: document.getElementById('project-title')?.value || window.DJ.title,
+      objects: this.serializeScene(),
+      settings: {
+        bg_color: '#' + this.scene.background.getHexString(),
+        ambient_intensity: this.ambientLight.intensity,
+      }
+    };
+
+    fetch(window.DJ.saveUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.DJ.csrf,
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+      this.isDirty = false;
+      if (dot) dot.className = 'save-dot';
+      if (txt) txt.textContent = 'Saqlangan';
+      if (!silent) this.showToast('💾 Sahna muvaffaqiyatli saqlandi!');
+    })
+    .catch(err => {
+      if (dot) dot.className = 'save-dot dirty';
+      if (txt) txt.textContent = 'Xatolik!';
+      if (!silent) this.showToast('❌ Saqlashda xatolik yuz berdi');
+    });
   }
 
+  markDirty() {
+    this.isDirty = true;
+    const dot = document.getElementById('save-dot');
+    const txt = document.getElementById('save-txt');
+    if (dot) dot.className = 'save-dot dirty';
+    if (txt) txt.textContent = 'Saqlanmagan';
+  }
+
+  updateTitle(val) {
+    this.markDirty();
+  }
+
+  newScene() {
+    if (confirm('Yangi sahna ochilsinmi? Saqlanmagan o\'zgarishlar o\'chishi mumkin.')) {
+      this.objects.forEach(o => this.scene.remove(o));
+      this.objects = [];
+      this.selectObject(null);
+      this.addObject('box');
+    }
+  }
+
+  undo() { this.showToast('Bekor qilindi (Undo)'); }
+  redo() { this.showToast('Qaytarildi (Redo)'); }
+
+  toggleMenu(el) {
+    const isOpen = el.classList.contains('open');
+    this.hideMenus();
+    if (!isOpen) el.classList.add('open');
+  }
+
+  hideMenus() {
+    document.querySelectorAll('.top-menu-item').forEach(m => m.classList.remove('open'));
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // KEYBOARD CONTROLLER
+  // ══════════════════════════════════════════════════════════════════════════════
   onKeyDown(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     const k = e.key.toLowerCase();
@@ -2915,31 +2882,45 @@ class DevForgeStudio {
     if (e.shiftKey && k === 'a') {
       e.preventDefault();
       this.openFloatingAddMenu(e);
+    } else if (e.ctrlKey && k === 's') {
+      e.preventDefault();
+      this.saveProject();
+    } else if (k === 'q' || k === 'v') {
+      this.setTool('select');
+    } else if (k === 'g' || k === 'w') {
+      this.setTool('translate');
+    } else if (k === 'r' || k === 'e') {
+      this.setTool('rotate');
+    } else if (k === 's') {
+      this.setTool('scale');
+    } else if (k === 'x' || e.key === 'Delete') {
+      this.deleteSelected();
+    } else if (e.shiftKey && k === 'd') {
+      e.preventDefault();
+      this.duplicateSelected();
+    } else if (k === 'i') {
+      this.insertKeyframe();
+    } else if (k === ' ') {
+      e.preventDefault();
+      this.togglePlay();
+    } else if (k === '.' || k === 'f') {
+      this.focusSelected();
+    } else if (k === 'escape') {
+      this.closeFloatingAddMenu();
+      this.hideMenus();
+      this.selectObject(null);
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
     }
-    else if (e.ctrlKey && k === 's') { e.preventDefault(); this.saveProject(); }
-    else if (e.ctrlKey && k === 'z') { e.preventDefault(); this.undo(); }
-    else if (e.ctrlKey && k === 'y') { e.preventDefault(); this.redo(); }
-    else if (k === 'q') this.setTool('select');
-    else if (k === 'g') this.setTool('translate');
-    else if (k === 'r') this.setTool('rotate');
-    else if (k === 's' && !e.ctrlKey) this.setTool('scale');
-    else if (k === 'x' || k === 'delete') this.deleteSelected();
-    else if (k === 'd' && e.shiftKey) this.duplicateSelected();
-    else if (k === ' ') { e.preventDefault(); this.togglePlay(); }
-    else if (k === '.') this.focusSelected();
-    else if (k === 'i') this.insertKeyframe();
-    else if (e.key === 'F12') { e.preventDefault(); this.openRenderModal(); }
-    else if (k === 'tab' && e.shiftKey) { e.preventDefault(); this.toggleSnapping(); }
   }
 
-  undo() { this.showToast('↩️ Undo'); }
-  redo() { this.showToast('↪️ Redo'); }
-
+  // ══════════════════════════════════════════════════════════════════════════════
+  // MAIN ANIMATE LOOP
+  // ══════════════════════════════════════════════════════════════════════════════
   animate() {
     requestAnimationFrame(() => this.animate());
 
     // Orbit update
-    this.orbit.update();
+    if (this.orbit && this.orbit.update) this.orbit.update();
 
     // Wave FX modifiers
     this.objects.forEach(o => {
@@ -2951,48 +2932,37 @@ class DevForgeStudio {
     // Timeline playback
     if (this.isPlaying && !this.isRecording) {
       this.currentFrame = (this.currentFrame + 1) % this.totalFrames;
-      document.getElementById('current-frame').value = this.currentFrame;
+      const fInput = document.getElementById('current-frame');
+      if (fInput) fInput.value = this.currentFrame;
       this.applyKeyframesAtFrame(this.currentFrame);
       this.drawTimeline();
     }
 
     // Render main scene
-    this.renderer.render(this.scene, this.camera);
+    try {
+      this.renderer.render(this.scene, this.camera);
+    } catch(err) {}
+  }
 
-    // Render orientation gizmo
-    if (this.gizmoRenderer && this.gizmoCamera) {
-      this.gizmoCamera.position.copy(this.camera.position).sub(this.orbit.target).normalize().multiplyScalar(5);
-      this.gizmoCamera.lookAt(0, 0, 0);
-      this.gizmoRenderer.render(this.gizmoScene, this.gizmoCamera);
-    }
+  showToast(msg) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = msg;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(-8px)';
+      toast.style.transition = 'all 0.3s';
+      setTimeout(() => toast.remove(), 300);
+    }, 2800);
   }
 }
 
-// Language switch helper in Studio
-function toggleStudioLang(e) {
-  e.stopPropagation();
-  const m = document.getElementById('studioLangMenu');
-  if (m) m.classList.toggle('show');
-}
-
-// Global click listener to close popups
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.top-menu-item')) {
-    window.studio?.hideMenus();
-  }
-  if (!e.target.closest('#floating-add-menu') && !e.target.closest('#tool-add')) {
-    window.studio?.closeFloatingAddMenu();
-  }
-  const m = document.getElementById('studioLangMenu');
-  if (m && !e.target.closest('#studioLangSwitcher')) {
-    m.classList.remove('show');
-  }
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('show');
-  }
-});
-
-// App initialization — bulletproof with error handling
+// ══════════════════════════════════════════════════════════════════════════════
+// GLOBAL ENGINE INITIALIZER
+// ══════════════════════════════════════════════════════════════════════════════
 function initDevForgeStudio() {
   if (typeof THREE === 'undefined') {
     console.error('[DevForge] THREE.js failed to load.');
@@ -3016,6 +2986,19 @@ function initDevForgeStudio() {
   }
 }
 
+// Close popups on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.top-menu-item')) {
+    window.studio?.hideMenus();
+  }
+  if (!e.target.closest('#floating-add-menu') && !e.target.closest('#tool-add')) {
+    window.studio?.closeFloatingAddMenu();
+  }
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('show');
+  }
+});
+
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(() => requestAnimationFrame(initDevForgeStudio));
@@ -3025,7 +3008,5 @@ if (document.readyState === 'loading') {
 }
 </script>
 
-<!-- DevForge Multi-Language Engine -->
-<script src="{% static 'js/i18n.js' %}"></script>
 </body>
 </html>
