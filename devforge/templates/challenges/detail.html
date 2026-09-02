@@ -215,7 +215,7 @@
                             <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="10"/>
                             <circle cx="50" cy="50" r="42" fill="none" stroke="url(#grad)" stroke-width="10"
                                     stroke-linecap="round"
-                                    stroke-dasharray="{{ user_participation.current_count|widthratio:challenge.target_count:264 }} 264"/>
+                                    stroke-dasharray="{% widthratio user_participation.current_count challenge.target_count 264 %} 264"/>
                             <defs>
                                 <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
                                     <stop offset="0%" stop-color="#6366f1"/>

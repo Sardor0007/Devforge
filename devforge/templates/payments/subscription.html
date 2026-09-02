@@ -380,15 +380,6 @@
 {% endblock %}
 
 {% block content %}
-{% if request.user.subscription_type == 'free' or not request.user.subscription_type %}
-  {% with plan_type='free' %}
-{% elif request.user.subscription_type == 'pro' or request.user.subscription_type == 'gold' %}
-  {% with plan_type='pro' %}
-{% elif request.user.subscription_type == 'studio' or request.user.subscription_type == 'platinum' %}
-  {% with plan_type='studio' %}
-{% else %}
-  {% with plan_type='enterprise' %}
-{% endif %}
 
 <div class="sub-shell">
 
@@ -751,5 +742,4 @@ document.getElementById('cancel-modal').addEventListener('click', function(e) {
 });
 </script>
 
-{% endwith %}{% endwith %}{% endwith %}{% endwith %}
 {% endblock %}
