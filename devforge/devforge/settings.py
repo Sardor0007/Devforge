@@ -209,13 +209,38 @@ try:
 except ImportError:
     CELERY_BEAT_SCHEDULE = {}
 
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
+DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 if DATABASE_URL:
     try:
         import dj_database_url
-        DATABASES = {'default': dj_database_url.parse(DATABASE_URL)}
-    except ImportError:
-        pass
+        import socket
+        from urllib.parse import urlparse
+
+        parsed = urlparse(DATABASE_URL)
+        use_fallback = False
+
+        if parsed.hostname:
+            try:
+                # Test whether database host actually resolves in DNS
+                socket.gethostbyname(parsed.hostname)
+            except (socket.gaierror, socket.herror, Exception) as dns_err:
+                print(f"[CRITICAL WARNING] DATABASE_URL host '{parsed.hostname}' could not be resolved ({dns_err}).")
+                print("[FALLBACK] Automatically switching to SQLite to keep DevForge online.")
+                use_fallback = True
+
+        if not use_fallback:
+            DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
+        else:
+            DATABASES = {'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }}
+    except Exception as e:
+        print(f"[DATABASE CONFIG ERROR] {e}. Falling back to SQLite.")
+        DATABASES = {'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }}
 else:
     DATABASES = {'default': {
         'ENGINE': 'django.db.backends.sqlite3',

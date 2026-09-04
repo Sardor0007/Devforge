@@ -646,7 +646,7 @@ class SiteConfig(models.Model):
         try:
             cfg = cls.objects.get(key=key)
             return cfg.value_bool
-        except cls.DoesNotExist:
+        except Exception:
             return default
 
     @classmethod

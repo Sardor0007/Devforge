@@ -17,18 +17,23 @@ def home_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
-    stats = {
-        'users': User.objects.count(),
-        'projects': Project.objects.filter(status='active').count(),
-        'assets': Asset.objects.count(),
-    }
-    latest_projects = Project.objects.filter(
-        visibility='public', status='active'
-    ).select_related('creator').order_by('-created_at')[:6]
+    try:
+        stats = {
+            'users': User.objects.count(),
+            'projects': Project.objects.filter(status='active').count(),
+            'assets': Asset.objects.count(),
+        }
+        latest_projects = Project.objects.filter(
+            visibility='public', status='active'
+        ).select_related('creator').order_by('-created_at')[:6]
 
-    latest_assets = Asset.objects.filter(
-        is_approved=True
-    ).select_related('creator').order_by('-created_at')[:6]
+        latest_assets = Asset.objects.filter(
+            is_approved=True
+        ).select_related('creator').order_by('-created_at')[:6]
+    except Exception:
+        stats = {'users': 0, 'projects': 0, 'assets': 0}
+        latest_projects = []
+        latest_assets = []
 
     return render(request, 'home.html', {
         'stats': stats,
