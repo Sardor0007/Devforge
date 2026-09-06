@@ -13,14 +13,24 @@ def asset_list_view(request):
     price_filter = request.GET.get('price', '')
     fmt = request.GET.get('format', '')
 
-    # Private Offer (only_for_user) logic
+    is_moderator = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'developer'
+    )
+    pending_count = Asset.objects.filter(status='pending').count() if is_moderator else 0
+
+    # Private Offer (only_for_user) and public approval logic
     if request.user.is_authenticated:
         assets = Asset.objects.filter(
             Q(only_for_user__isnull=True) | Q(only_for_user=request.user) | Q(creator=request.user),
-            is_approved=True
+            is_approved=True,
+            status='approved'
         ).select_related('creator', 'category')
     else:
-        assets = Asset.objects.filter(only_for_user__isnull=True, is_approved=True).select_related('creator', 'category')
+        assets = Asset.objects.filter(
+            only_for_user__isnull=True,
+            is_approved=True,
+            status='approved'
+        ).select_related('creator', 'category')
 
     if query:
         assets = assets.filter(
@@ -45,23 +55,35 @@ def asset_list_view(request):
         'categories': categories,
         'query': query,
         'format_choices': Asset.FORMAT_CHOICES,
+        'is_moderator': is_moderator,
+        'pending_count': pending_count,
     })
 
 
 def asset_detail_view(request, pk):
-    asset = get_object_or_404(Asset.objects.select_related('creator', 'category'), pk=pk, is_approved=True)
+    asset = get_object_or_404(Asset.objects.select_related('creator', 'category'), pk=pk)
 
-    # BUG FIX: anonim foydalanuvchi uchun only_for_user tekshiruvi
+    is_moderator = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'developer'
+    )
+
+    # If unapproved, only creator and moderators can view
+    if not asset.is_approved:
+        if not request.user.is_authenticated or (asset.creator != request.user and not is_moderator):
+            messages.info(request, "Ushbu aktiv hozirda moderator ko'rib chiqish jarayonida (kutilmoqda).")
+            return redirect('asset_list')
+
+    # Private Offer (only_for_user) logic
     if asset.only_for_user:
         if not request.user.is_authenticated:
             messages.error(request, "Ushbu aktiv faqat maxsus foydalanuvchi uchun mo'ljallangan.")
             return redirect('asset_list')
-        if asset.only_for_user != request.user and asset.creator != request.user:
+        if asset.only_for_user != request.user and asset.creator != request.user and not is_moderator:
             messages.error(request, "Ushbu aktiv faqat maxsus foydalanuvchi uchun mo'ljallangan.")
             return redirect('asset_list')
 
     related = Asset.objects.filter(
-        category=asset.category, is_approved=True
+        category=asset.category, is_approved=True, status='approved'
     ).exclude(pk=pk)[:4]
 
     is_liked = request.user.is_authenticated and asset.likes.filter(pk=request.user.pk).exists()
@@ -82,6 +104,7 @@ def asset_detail_view(request, pk):
         'is_purchased': is_purchased,
         'is_in_cart': is_in_cart,
         'user_projects': user_projects,
+        'is_moderator': is_moderator,
     })
 
 
@@ -215,6 +238,8 @@ def asset_upload_view(request):
         if form.is_valid():
             asset = form.save(commit=False)
             asset.creator = request.user
+            asset.is_approved = False
+            asset.status = 'pending'
             asset.save()
             
             # Log Activity & Award XP
@@ -224,8 +249,11 @@ def asset_upload_view(request):
             except Exception as e:
                 print(f"Failed to log asset upload activity: {e}")
 
-            messages.success(request, f"'{asset.title}' aktivu yuklandi!")
-            return redirect('asset_detail', pk=asset.pk)
+            messages.success(
+                request,
+                f"'{asset.title}' aktivi muvaffaqiyatli yuklandi! 🛡️ U hozirda moderator ko'rib chiqish navbatida. Tasdiqlangach, platformada e'lon qilinadi."
+            )
+            return redirect('my_assets')
     else:
         form = AssetUploadForm()
     return render(request, 'assets/upload.html', {'form': form})
@@ -354,3 +382,162 @@ def asset_buy_direct(request, pk):
     user.refresh_from_db()
     messages.success(request, f"✅ '{asset.title}' muvaffaqiyatli sotib olindi! 🎉")
     return redirect('asset_download', pk=pk)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# MODERATSIYA PANELI (Admin & Developerlar uchun)
+# ──────────────────────────────────────────────────────────────────────────────
+@login_required
+def asset_moderation_list_view(request):
+    """Admin va Developerlar uchun barcha aktivlarni tekshirish va tasdiqlash paneli"""
+    is_moderator = request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'developer'
+    if not is_moderator:
+        messages.error(request, "Ushbu bo'limga faqat moderatorlar va developerlar kira oladi.")
+        return redirect('asset_list')
+
+    status_filter = request.GET.get('status', 'pending')
+    query = request.GET.get('q', '').strip()
+    category_slug = request.GET.get('category', '').strip()
+
+    base_qs = Asset.objects.all().select_related('creator', 'category', 'reviewed_by')
+
+    if query:
+        base_qs = base_qs.filter(Q(title__icontains=query) | Q(creator__username__icontains=query))
+    if category_slug:
+        base_qs = base_qs.filter(category__slug=category_slug)
+
+    pending_qs = base_qs.filter(status='pending').order_by('-created_at')
+    approved_qs = base_qs.filter(status='approved').order_by('-reviewed_at', '-created_at')
+    rejected_qs = base_qs.filter(status='rejected').order_by('-reviewed_at', '-created_at')
+
+    counts = {
+        'pending': Asset.objects.filter(status='pending').count(),
+        'approved': Asset.objects.filter(status='approved').count(),
+        'rejected': Asset.objects.filter(status='rejected').count(),
+    }
+
+    if status_filter == 'approved':
+        active_qs = approved_qs
+    elif status_filter == 'rejected':
+        active_qs = rejected_qs
+    else:
+        active_qs = pending_qs
+        status_filter = 'pending'
+
+    from django.core.paginator import Paginator
+    categories = AssetCategory.objects.all()
+    paginator = Paginator(active_qs, 12)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    return render(request, 'assets/moderation.html', {
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+        'counts': counts,
+        'categories': categories,
+        'query': query,
+        'selected_category': category_slug,
+    })
+
+
+@login_required
+def asset_moderation_approve_view(request, pk):
+    """Aktivni tasdiqlash (Approve)"""
+    is_moderator = request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'developer'
+    if not is_moderator:
+        messages.error(request, "Ruxsat etilmagan amal.")
+        return redirect('asset_list')
+
+    asset = get_object_or_404(Asset, pk=pk)
+    from django.utils import timezone
+    asset.is_approved = True
+    asset.status = 'approved'
+    asset.rejection_reason = None
+    asset.reviewed_by = request.user
+    asset.reviewed_at = timezone.now()
+    asset.save()
+
+    # Muallifga bildirishnoma yuborish
+    try:
+        from apps.notifications.models import Notification
+        from django.urls import reverse
+        Notification.objects.create(
+            recipient=asset.creator,
+            sender=request.user,
+            notif_type='asset_approved',
+            title="Aktiv tasdiqlandi! 🎉",
+            message=f"Tabriklaymiz! Sizning '{asset.title}' nomli aktivingiz administrator tomonidan tasdiqlandi va platformada ommaga e'lon qilindi.",
+            link=reverse('asset_detail', args=[asset.pk])
+        )
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+
+    messages.success(request, f"'{asset.title}' aktivi muvaffaqiyatli tasdiqlandi va ommaga e'lon qilindi!")
+    return redirect(request.META.get('HTTP_REFERER') or 'asset_moderation_list')
+
+
+@login_required
+def asset_moderation_reject_view(request, pk):
+    """Aktivni bekor qilish / rad etish (Reject)"""
+    is_moderator = request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'developer'
+    if not is_moderator:
+        messages.error(request, "Ruxsat etilmagan amal.")
+        return redirect('asset_list')
+
+    asset = get_object_or_404(Asset, pk=pk)
+    reason = request.POST.get('reason', '').strip()
+    if not reason:
+        reason = "Format, fayl butunligi yoki sifat talablariga mos kelmadi."
+
+    from django.utils import timezone
+    asset.is_approved = False
+    asset.status = 'rejected'
+    asset.rejection_reason = reason
+    asset.reviewed_by = request.user
+    asset.reviewed_at = timezone.now()
+    asset.save()
+
+    # Muallifga bildirishnoma yuborish
+    try:
+        from apps.notifications.models import Notification
+        from django.urls import reverse
+        Notification.objects.create(
+            recipient=asset.creator,
+            sender=request.user,
+            notif_type='asset_rejected',
+            title="Aktiv rad etildi ⚠️",
+            message=f"Sizning '{asset.title}' nomli aktivingiz rad etildi. Sababi: {reason}",
+            link=reverse('my_assets')
+        )
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+
+    messages.warning(request, f"'{asset.title}' aktivi rad etildi.")
+    return redirect(request.META.get('HTTP_REFERER') or 'asset_moderation_list')
+
+
+@login_required
+def my_assets_view(request):
+    """Foydalanuvchining shaxsiy aktivlari va ularning holati"""
+    user_assets = Asset.objects.filter(creator=request.user).select_related('category').order_by('-created_at')
+
+    counts = {
+        'all': user_assets.count(),
+        'pending': user_assets.filter(status='pending').count(),
+        'approved': user_assets.filter(status='approved').count(),
+        'rejected': user_assets.filter(status='rejected').count(),
+    }
+
+    status_filter = request.GET.get('status', 'all')
+    if status_filter in ('pending', 'approved', 'rejected'):
+        user_assets = user_assets.filter(status=status_filter)
+
+    from django.core.paginator import Paginator
+    paginator = Paginator(user_assets, 12)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    return render(request, 'assets/my_assets.html', {
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+        'counts': counts,
+    })
+

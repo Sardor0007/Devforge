@@ -122,6 +122,35 @@
         </div>
     </div>
 
+    <!-- Moderation Status Banner (visible to creator and moderators) -->
+    {% if not asset.is_approved %}
+    <div style="margin: 1.5rem 0; padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem;{% if asset.status == 'rejected' %}background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);{% else %}background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3);{% endif %}">
+        <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+            <span style="font-size: 1.5rem; line-height: 1.2;">{% if asset.status == 'rejected' %}❌{% else %}⏳{% endif %}</span>
+            <div>
+                <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem;{% if asset.status == 'rejected' %}color: #f87171;{% else %}color: #fbbf24;{% endif %}">
+                    {% if asset.status == 'rejected' %}Aktiv rad etildi{% else %}Moderatsiya kutilmoqda{% endif %}
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                    {% if asset.status == 'rejected' %}Sababi: <strong style="color: #fca5a5;">{{ asset.rejection_reason|default:"Format yoki sifat talablariga mos kelmadi." }}</strong>
+                    {% else %}Bu aktiv administrator yoki developer tomonidan tekshirilmoqda. Tasdiqlangach, ommaga ko'rsatiladi.{% endif %}
+                </p>
+            </div>
+        </div>
+        {% if is_moderator %}
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            {% if asset.status != 'approved' %}
+            <form action="{% url 'asset_moderation_approve' pk=asset.pk %}" method="post" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="btn" style="background: #10b981; color: #fff; font-weight: 700; font-size: 0.82rem; border-radius: 8px; padding: 0.45rem 1rem; border: none; cursor: pointer;">✅ Tasdiqlash</button>
+            </form>
+            {% endif %}
+            <a href="{% url 'asset_moderation_list' %}" class="btn btn-outline" style="font-size: 0.82rem; border-radius: 8px; padding: 0.45rem 0.9rem;">🛡️ Panel</a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="asset-main-layout">
         <div class="asset-content">
             <div class="asset-preview-container" id="mediaContainer">

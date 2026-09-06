@@ -1,24 +1,256 @@
 {% extends "base.html" %}
-{% block title %}Aktiv Yuklash{% endblock %}
+{% load static %}
+
+{% block title %}Aktiv Yuklash — DevForge{% endblock %}
+
 {% block content %}
-<div class="container" style="padding:2rem 2rem 3rem;max-width:680px;">
-    <div class="page-header"><h1 class="page-title">📦 Aktiv Yuklash</h1><p class="page-subtitle">3D modelingizni platformaga qo'shing</p></div>
-    <div class="card"><div class="card-body">
-        <form method="post" enctype="multipart/form-data">{% csrf_token %}
-            <div class="form-group"><label class="form-label">Aktiv Nomi *</label>{{ form.title }}</div>
-            <div class="form-group"><label class="form-label">Tavsif *</label>{{ form.description }}</div>
-            <div class="grid-2" style="gap:1rem;">
-                <div class="form-group"><label class="form-label">Kategoriya</label>{{ form.category }}</div>
-                <div class="form-group"><label class="form-label">Format</label>{{ form.format }}</div>
+<div class="container" style="padding: 2.5rem 1.5rem 4rem; max-width: 820px;">
+
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span>📦</span> Aktiv Yuklash
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem;">
+                O'yin dasturlash aktivlaringizni (3D model, tekstura, audio, paket) platformaga qo'shing
+            </p>
+        </div>
+        <a href="{% url 'my_assets' %}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.88rem; border-radius: 8px;">
+            📁 Mening aktivlarim
+        </a>
+    </div>
+
+    <!-- Moderation Info Notice -->
+    <div style="background: rgba(0, 245, 255, 0.06); border: 1px solid rgba(0, 245, 255, 0.25); border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-start;">
+        <div style="font-size: 1.5rem; line-height: 1;">🛡️</div>
+        <div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--cyan, #00f5ff); margin-bottom: 0.25rem;">
+                Format tekshiruvi va Moderatsiya tizimi
+            </h4>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                Aktiv yuklashdan oldin uning <strong>formatini to'g'ri tanlang</strong>. Yuklangan fayl formati tanlangan format bilan bir xil bo'lishi shart. Yuklangan har bir aktiv administratorlar yoki developerlar tomonidan tekshirilib tasdiqlangach (Approve), ommaviy platformada ko'rinadi.
+            </p>
+        </div>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="card" style="background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); overflow: hidden;">
+        <div class="card-body" style="padding: 2rem;">
+
+            {% if form.errors %}
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
+                <div style="font-weight: 700; color: #f87171; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>⚠️</span> Iltimos, xatoliklarni to'g'rilang:
+                </div>
+                <ul style="margin: 0; padding-left: 1.25rem; color: #fca5a5; font-size: 0.88rem;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li><strong>{{ field|capfirst }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
             </div>
-            <div class="form-group"><label class="form-label">Fayl *</label>{{ form.file }}</div>
-            <div class="form-group"><label class="form-label">Muqova rasm</label>{{ form.thumbnail }}</div>
-            <div class="grid-2" style="gap:1rem;">
-                <div class="form-group"><label class="form-label">Narx ($) — 0 = bepul</label>{{ form.price }}</div>
-                <div class="form-group"><label class="form-label">Teglar</label>{{ form.tags }}</div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-lg">Aktivni Yuklash</button>
-        </form>
-    </div></div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" id="asset-upload-form">
+                {% csrf_token %}
+
+                <!-- Title -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                        Aktiv Nomi *
+                    </label>
+                    {{ form.title }}
+                </div>
+
+                <!-- Description -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                        Tavsif *
+                    </label>
+                    {{ form.description }}
+                </div>
+
+                <!-- Category & Format -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                            Kategoriya *
+                        </label>
+                        {{ form.category }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                            Fayl Formati (Kengaytmasi) *
+                        </label>
+                        {{ form.format }}
+                        <div id="format-hint" style="font-size: 0.8rem; color: var(--cyan, #00f5ff); margin-top: 0.35rem; font-weight: 500;">
+                            Ruxsat etilgan kengaytma: .glb
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Upload with Format Indicator -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                        Asosiy Aktiv Fayli *
+                    </label>
+                    <div style="position: relative;">
+                        {{ form.file }}
+                    </div>
+                    <!-- Real-time format mismatch warning -->
+                    <div id="file-mismatch-alert" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 8px; padding: 0.6rem 0.9rem; margin-top: 0.5rem; font-size: 0.84rem; color: #fca5a5;">
+                        ⚠️ <strong>Format xatosi:</strong> Tanlangan fayl formati siz belgilagan formatga mos emas!
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        Fayl formati yuqorida tanlangan format bilan bir xil bo'lishi kerak.
+                    </div>
+                </div>
+
+                <!-- Thumbnail -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                        Muqova Rasm (Preview Thumbnail)
+                    </label>
+                    {{ form.thumbnail }}
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        Tavsiya etiladi: 16:9 yoki 1:1 formatdagi sifatli rasm (PNG/JPG). Avtomatik WebP ga siqiladi.
+                    </div>
+                </div>
+
+                <!-- Price & Tags -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                            Narx ($ USD) — 0 = Bepul
+                        </label>
+                        {{ form.price }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                            Teglar (Vergul bilan)
+                        </label>
+                        {{ form.tags }}
+                    </div>
+                </div>
+
+                <!-- Private Offer (only_for_user) -->
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem; display: block;">
+                        Faqat ma'lum bir foydalanuvchi uchun (Ixtiyoriy)
+                    </label>
+                    {{ form.only_for_user }}
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem;">
+                        Agar shaxsiy buyurtma bo'lsa, ushbu aktiv faqat tanlangan foydalanuvchiga ko'rinadi.
+                    </div>
+                </div>
+
+                <!-- Submit CTA -->
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                    <a href="{% url 'asset_list' %}" class="btn btn-outline" style="padding: 0.75rem 1.5rem; border-radius: 8px;">
+                        Bekor qilish
+                    </a>
+                    <button type="submit" id="btn-submit-upload" class="btn btn-primary btn-lg" style="padding: 0.75rem 2.25rem; font-weight: 700; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📤</span> Aktivni Yuklash & Moderatsiyaga Yuborish
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
 </div>
+
+<!-- Client-side Format Matching & Real-time Validation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formatSelect = document.getElementById('id_format');
+    const fileInput = document.getElementById('id_file');
+    const formatHint = document.getElementById('format-hint');
+    const mismatchAlert = document.getElementById('file-mismatch-alert');
+    const submitBtn = document.getElementById('btn-submit-upload');
+
+    // Format extension mappings
+    const formatExtMap = {
+        'glb': ['.glb'],
+        'gltf': ['.gltf', '.bin', '.zip'],
+        'obj': ['.obj', '.mtl', '.zip'],
+        'fbx': ['.fbx', '.zip'],
+        'blend': ['.blend'],
+        'png': ['.png'],
+        'jpg': ['.jpg', '.jpeg'],
+        'tga': ['.tga'],
+        'psd': ['.psd'],
+        'mp3': ['.mp3'],
+        'wav': ['.wav'],
+        'ogg': ['.ogg'],
+        'zip': ['.zip', '.rar', '.7z'],
+        'unitypackage': ['.unitypackage'],
+        'other': []
+    };
+
+    function updateAcceptedFormats() {
+        if (!formatSelect || !fileInput) return;
+        const selectedFmt = formatSelect.value;
+        const exts = formatExtMap[selectedFmt] || [];
+
+        if (exts.length > 0) {
+            fileInput.setAttribute('accept', exts.join(','));
+            if (formatHint) {
+                formatHint.innerHTML = 'Ruxsat etilgan kengaytmalar: <strong>' + exts.join(', ') + '</strong>';
+                formatHint.style.color = 'var(--cyan, #00f5ff)';
+            }
+        } else {
+            fileInput.removeAttribute('accept');
+            if (formatHint) {
+                formatHint.innerHTML = 'Ixtiyoriy fayl formati (.exe va scriptlar taqiqlanadi)';
+                formatHint.style.color = 'var(--text-muted)';
+            }
+        }
+        checkFileFormat();
+    }
+
+    function checkFileFormat() {
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            if (mismatchAlert) mismatchAlert.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+        }
+
+        const fileName = fileInput.files[0].name.toLowerCase();
+        const selectedFmt = formatSelect.value;
+        const exts = formatExtMap[selectedFmt] || [];
+
+        if (exts.length === 0) {
+            if (mismatchAlert) mismatchAlert.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+        }
+
+        const matched = exts.some(ext => fileName.endsWith(ext));
+        if (!matched) {
+            const actualExt = fileName.substring(fileName.lastIndexOf('.')) || 'kengaytmasiz';
+            if (mismatchAlert) {
+                mismatchAlert.innerHTML = '⚠️ <strong>Format xatosi:</strong> Siz <strong>' + selectedFmt.toUpperCase() + '</strong> formatini tanlagansiz, ammo yuklagan faylingiz kengaytmasi <strong>' + actualExt + '</strong>! Ruxsat etilgan: ' + exts.join(', ');
+                mismatchAlert.style.display = 'block';
+            }
+            if (submitBtn) submitBtn.disabled = true;
+        } else {
+            if (mismatchAlert) mismatchAlert.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    }
+
+    if (formatSelect) {
+        formatSelect.addEventListener('change', updateAcceptedFormats);
+        updateAcceptedFormats();
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', checkFileFormat);
+    }
+});
+</script>
 {% endblock %}

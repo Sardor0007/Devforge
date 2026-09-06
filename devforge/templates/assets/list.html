@@ -116,7 +116,22 @@
                 Built for Unreal Engine, Unity, and Godot.
             </p>
         </div>
-        <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'my_assets' %}" class="btn btn-outline" style="border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; padding: 0.7rem 1.2rem;">
+                📁 Mening Aktivlarim
+            </a>
+            {% endif %}
+
+            {% if is_moderator %}
+            <a href="{% url 'asset_moderation_list' %}" class="btn" style="background: rgba(0, 245, 255, 0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; padding: 0.7rem 1.2rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <span>🛡️ Moderatsiya</span>
+                {% if pending_count > 0 %}
+                <span style="background: #f59e0b; color: #000; font-size: 0.75rem; padding: 1px 7px; border-radius: 10px; font-weight: 800;">{{ pending_count }}</span>
+                {% endif %}
+            </a>
+            {% endif %}
+
             <a href="{% url 'asset_upload' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.6rem; font-weight: 700; font-size: 0.95rem; border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(99,102,241,0.3);">
                 <span>📤 Aktiv Yuklash</span>
             </a>

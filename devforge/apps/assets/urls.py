@@ -4,6 +4,10 @@ from . import views
 urlpatterns = [
     path('', views.asset_list_view, name='asset_list'),
     path('upload/', views.asset_upload_view, name='asset_upload'),
+    path('my-assets/', views.my_assets_view, name='my_assets'),
+    path('moderation/', views.asset_moderation_list_view, name='asset_moderation_list'),
+    path('moderation/<int:pk>/approve/', views.asset_moderation_approve_view, name='asset_moderation_approve'),
+    path('moderation/<int:pk>/reject/', views.asset_moderation_reject_view, name='asset_moderation_reject'),
     path('cart/', views.cart_list_view, name='cart_list'),
     path('cart/add/<int:pk>/', views.add_to_cart_view, name='add_to_cart'),
     path('cart/remove/<int:pk>/', views.remove_from_cart_view, name='remove_from_cart'),

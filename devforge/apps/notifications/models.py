@@ -16,6 +16,8 @@ class Notification(models.Model):
         # Aktivlar
         ('asset_liked',      '❤️ Aktivingizga like'),
         ('asset_downloaded', '⬇️ Aktivingiz yuklandi'),
+        ('asset_approved',   '✅ Aktivingiz tasdiqlandi'),
+        ('asset_rejected',   '❌ Aktivingiz rad etildi'),
         # Marketplace
         ('order_placed',     '🛒 Yangi buyurtma'),
         ('order_completed',  '✅ Buyurtma bajarildi'),
@@ -57,6 +59,8 @@ class Notification(models.Model):
             'task_completed':   '✓',
             'asset_liked':      '❤️',
             'asset_downloaded': '⬇️',
+            'asset_approved':   '✅',
+            'asset_rejected':   '❌',
             'order_placed':     '🛒',
             'order_completed':  '✅',
             'review_received':  '⭐',

@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Aktivlar Moderatsiyasi — DevForge Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+
+    <!-- Breadcrumb & Top Bar -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem;">
+                <a href="{% url 'asset_list' %}" style="color: var(--text-muted); text-decoration: none;">Aktivlar</a>
+                <span>/</span>
+                <span style="color: var(--cyan, #00f5ff);">Moderatsiya Paneli</span>
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">
+                <span>🛡️</span> Aktivlar Moderatsiya Paneli
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+                Foydalanuvchilar yuklagan aktivlarni tekshiring, formatini nazorat qiling va tasdiqlang
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'asset_list' %}" class="btn btn-outline" style="border-radius: 8px; font-size: 0.88rem;">
+                📦 Ommaviy do'kon
+            </a>
+            <a href="{% url 'super_admin_dashboard' %}" class="btn btn-outline" style="border-radius: 8px; font-size: 0.88rem; color: #a78bfa; border-color: rgba(167, 139, 250, 0.3);">
+                ⚙️ Dev Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Tabs & Filter -->
+    <div style="background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 12px; padding: 1rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        
+        <!-- Status Tabs -->
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="?status=pending{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+               class="btn"
+               style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'pending' %}background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+                <span>🟡 Kutilmoqda</span>
+                <span style="background: #f59e0b; color: #000; font-size: 0.75rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">{{ counts.pending }}</span>
+            </a>
+
+            <a href="?status=approved{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+               class="btn"
+               style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'approved' %}background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+                <span>🟢 Tasdiqlanganlar</span>
+                <span style="background: #10b981; color: #fff; font-size: 0.75rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">{{ counts.approved }}</span>
+            </a>
+
+            <a href="?status=rejected{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+               class="btn"
+               style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'rejected' %}background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+                <span>🔴 Rad etilganlar</span>
+                <span style="background: #ef4444; color: #fff; font-size: 0.75rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">{{ counts.rejected }}</span>
+            </a>
+        </div>
+
+        <!-- Search & Filter Form -->
+        <form method="get" style="display: flex; gap: 0.5rem; margin: 0;">
+            <input type="hidden" name="status" value="{{ status_filter }}">
+            <input type="text" name="q" value="{{ query }}" placeholder="Aktiv yoki muallif..."
+                   style="background: var(--surface2, #161b22); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px; padding: 0.45rem 0.85rem; font-size: 0.85rem; color: var(--text-primary); width: 180px;">
+            <select name="category" onchange="this.form.submit()"
+                    style="background: var(--surface2, #161b22); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 8px; padding: 0.45rem 0.85rem; font-size: 0.85rem; color: var(--text-primary);">
+                <option value="">Barcha kategoriyalar</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary" style="border-radius: 8px; padding: 0.45rem 0.85rem;">🔍</button>
+        </form>
+
+    </div>
+
+    <!-- Asset Cards List -->
+    {% if page_obj.object_list %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;">
+        {% for asset in page_obj %}
+        <div class="card" style="background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+            
+            <!-- Thumbnail preview -->
+            <div style="height: 180px; background: #05070a; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                {% if asset.thumbnail %}
+                    <img src="{{ asset.thumbnail.url }}" alt="{{ asset.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <div style="font-size: 3rem; color: var(--text-muted); opacity: 0.4;">📦</div>
+                {% endif %}
+
+                <!-- Format badge -->
+                <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; color: var(--cyan, #00f5ff); text-transform: uppercase;">
+                    {{ asset.get_format_display }}
+                </div>
+
+                <!-- Price badge -->
+                <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); border-radius: 6px; padding: 3px 8px; font-size: 0.8rem; font-weight: 700; color: {% if asset.is_free %}#34d399{% else %}#fbbf24{% endif %};">
+                    {% if asset.is_free %}BEPUL{% else %}${{ asset.price }}{% endif %}
+                </div>
+
+                <!-- Status pill -->
+                <div style="position: absolute; bottom: 10px; left: 10px; border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700;
+                    {% if asset.status == 'approved' %}background: rgba(16, 185, 129, 0.85); color: #fff;
+                    {% elif asset.status == 'rejected' %}background: rgba(239, 68, 68, 0.85); color: #fff;
+                    {% else %}background: rgba(245, 158, 11, 0.85); color: #000;{% endif %}">
+                    {{ asset.get_status_display }}
+                </div>
+            </div>
+
+            <!-- Content info -->
+            <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                    {{ asset.title }}
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ asset.description }}
+                </p>
+
+                <!-- Metadata details -->
+                <div style="background: var(--surface2, #161b22); border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Muallif:</span>
+                        <strong style="color: var(--text-primary);">@{{ asset.creator.username }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Kategoriya:</span>
+                        <span style="color: var(--text-secondary);">{{ asset.category.name|default:"Umumiy" }}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Fayl kengaytmasi / Hajmi:</span>
+                        <span style="color: var(--cyan, #00f5ff); font-family: monospace;">{{ asset.file_extension|upper }} ({{ asset.file_size_display }})</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Yuklangan vaqt:</span>
+                        <span>{{ asset.created_at|date:"d M Y, H:i" }}</span>
+                    </div>
+
+                    {% if asset.status == 'rejected' and asset.rejection_reason %}
+                    <div style="margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); color: #f87171;">
+                        <strong>Rad etish sababi:</strong> {{ asset.rejection_reason }}
+                    </div>
+                    {% endif %}
+
+                    {% if asset.reviewed_by %}
+                    <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.3rem; margin-top: 0.2rem;">
+                        <span>Tekshirdi: @{{ asset.reviewed_by.username }}</span>
+                        <span>{{ asset.reviewed_at|date:"d M, H:i" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action buttons -->
+                <div style="margin-top: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+                    
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="{% url 'asset_detail' pk=asset.pk %}" class="btn btn-outline" style="flex: 1; border-radius: 6px; font-size: 0.8rem; text-align: center;">
+                            👁️ Ko'rish
+                        </a>
+                        <a href="{% url 'asset_download' pk=asset.pk %}" class="btn btn-outline" style="border-radius: 6px; font-size: 0.8rem;" title="Faylni yuklab olib tekshirish">
+                            ⬇️ Fayl
+                        </a>
+                    </div>
+
+                    {% if asset.status == 'pending' %}
+                    <div style="display: flex; gap: 0.5rem;">
+                        <!-- Approve Form -->
+                        <form action="{% url 'asset_moderation_approve' pk=asset.pk %}" method="post" style="flex: 1; margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn" style="width: 100%; background: #10b981; color: #fff; font-weight: 700; font-size: 0.85rem; border-radius: 6px; padding: 0.5rem; border: none; cursor: pointer;">
+                                ✅ Tasdiqlash (Approve)
+                            </button>
+                        </form>
+
+                        <!-- Reject Trigger Button -->
+                        <button type="button" onclick="openRejectModal({{ asset.pk }}, '{{ asset.title|escapejs }}')" class="btn" style="flex: 1; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); font-weight: 700; font-size: 0.85rem; border-radius: 6px; padding: 0.5rem; cursor: pointer;">
+                            ❌ Rad etish
+                        </button>
+                    </div>
+                    {% elif asset.status == 'rejected' %}
+                    <!-- Can re-approve if corrected -->
+                    <form action="{% url 'asset_moderation_approve' pk=asset.pk %}" method="post" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline" style="width: 100%; border-color: #10b981; color: #34d399; font-size: 0.82rem; border-radius: 6px; padding: 0.45rem;">
+                            🔄 Qayta tasdiqlash (Approve)
+                        </button>
+                    </form>
+                    {% elif asset.status == 'approved' %}
+                    <!-- Can reject / unpublish if issue reported -->
+                    <button type="button" onclick="openRejectModal({{ asset.pk }}, '{{ asset.title|escapejs }}')" class="btn btn-outline" style="border-color: #ef4444; color: #f87171; font-size: 0.82rem; border-radius: 6px; padding: 0.45rem;">
+                        🛑 Bekor qilish (Ommadan olish)
+                    </button>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2.5rem;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="btn btn-outline" style="border-radius: 6px; font-size: 0.85rem;">« Oldingi</a>
+        {% endif %}
+
+        <span style="display: flex; align-items: center; padding: 0 1rem; color: var(--text-muted); font-size: 0.85rem;">
+            Sahifa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}{% if query %}&q={{ query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}" class="btn btn-outline" style="border-radius: 6px; font-size: 0.85rem;">Keyingi »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div style="text-align: center; padding: 4rem 1rem; background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 14px;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">✨</div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+            {% if status_filter == 'pending' %}
+                Kutilayotgan aktivlar mavjud emas
+            {% elif status_filter == 'approved' %}
+                Tasdiqlangan aktivlar topilmadi
+            {% else %}
+                Rad etilgan aktivlar mavjud emas
+            {% endif %}
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto;">
+            {% if status_filter == 'pending' %}
+                Ajoyib! Barcha yuklangan aktivlar ko'rib chiqilgan.
+            {% else %}
+                Ushbu bo'limda hozircha aktivlar yo'q.
+            {% endif %}
+        </p>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ═══ REJECT MODAL ═══ -->
+<div id="reject-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); border-radius: 14px; width: 480px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.8); padding: 1.75rem;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: #f87171; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                <span>❌</span> Aktivni Rad Etish
+            </h3>
+            <button type="button" onclick="closeRejectModal()" style="background: transparent; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">✕</button>
+        </div>
+
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;" id="reject-modal-desc">
+            Aktivni rad etish sababini ko'rsating. Bu sabab muallifga bildirishnoma orqali yuboriladi.
+        </p>
+
+        <!-- Quick Reason Presets -->
+        <div style="margin-bottom: 1rem;">
+            <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 0.4rem;">
+                Tezkor sabablar:
+            </label>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                <button type="button" onclick="setRejectReason('Fayl formati noto\'g\'ri yoki fayl buzilgan')" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px;">Format noto'g'ri / buzilgan</button>
+                <button type="button" onclick="setRejectReason('Mualliflik huquqi (litsenziya) talablariga mos emas')" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px;">Litsenziya talabi</button>
+                <button type="button" onclick="setRejectReason('Model sifati past yoki teksturalari yetarli emas')" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px;">Sifat past</button>
+                <button type="button" onclick="setRejectReason('Tavsif yoki muqova rasm to\'liq emas')" class="btn btn-outline" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 6px;">Ma'lumot yetarli emas</button>
+            </div>
+        </div>
+
+        <form id="reject-form" method="post" action="">
+            {% csrf_token %}
+            <div style="margin-bottom: 1.5rem;">
+                <label style="font-size: 0.84rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.35rem;">
+                    Batafsil sabab *
+                </label>
+                <textarea name="reason" id="reject-reason-input" rows="3" required placeholder="Foydalanuvchiga nima sababdan rad etilganini va qanday tuzatish kerakligini tushuntiring..."
+                          style="width: 100%; background: var(--surface2, #161b22); border: 1px solid var(--border-color, rgba(255,255,255,0.15)); border-radius: 8px; padding: 0.75rem; font-size: 0.85rem; color: var(--text-primary); resize: vertical;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeRejectModal()" class="btn btn-outline" style="border-radius: 8px; font-size: 0.85rem;">
+                    Bekor qilish
+                </button>
+                <button type="submit" class="btn" style="background: #ef4444; color: #fff; font-weight: 700; border-radius: 8px; font-size: 0.85rem; padding: 0.5rem 1.25rem; border: none; cursor: pointer;">
+                    Rad etishni tasdiqlash
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+function openRejectModal(assetId, assetTitle) {
+    const modal = document.getElementById('reject-modal');
+    const form = document.getElementById('reject-form');
+    const desc = document.getElementById('reject-modal-desc');
+    const reasonInput = document.getElementById('reject-reason-input');
+
+    form.action = '/assets/moderation/' + assetId + '/reject/';
+    desc.innerHTML = '<strong>' + assetTitle + '</strong> aktivini rad etish sababini ko\'rsating:';
+    reasonInput.value = '';
+    modal.style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('reject-modal').style.display = 'none';
+}
+
+function setRejectReason(text) {
+    document.getElementById('reject-reason-input').value = text;
+}
+
+// Close on backdrop click
+document.getElementById('reject-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeRejectModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mening Aktivlarim — DevForge{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.5rem 4rem;">
+
+    <!-- Top bar -->
+    <div style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 0.75rem;">
+                <span>📁</span> Mening Aktivlarim
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+                Siz yuklagan aktivlar, ularning moderatsiya holati va yuklab olish statistikasi
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{% url 'asset_list' %}" class="btn btn-outline" style="border-radius: 8px; font-size: 0.88rem;">
+                📦 Umumiy Do'kon
+            </a>
+            <a href="{% url 'asset_upload' %}" class="btn btn-primary" style="border-radius: 8px; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+                <span>📤</span> Yangi Aktiv Yuklash
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Tabs -->
+    <div style="background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="?status=all"
+           class="btn"
+           style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.45rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'all' %}background: var(--surface2, #161b22); color: var(--text-primary); border: 1px solid var(--border-color, rgba(255,255,255,0.2));{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+            <span>Barchasi</span>
+            <span style="background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.75rem; padding: 1px 6px; border-radius: 10px;">{{ counts.all }}</span>
+        </a>
+
+        <a href="?status=pending"
+           class="btn"
+           style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.45rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'pending' %}background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+            <span>🟡 Kutilmoqda</span>
+            <span style="background: #f59e0b; color: #000; font-size: 0.75rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">{{ counts.pending }}</span>
+        </a>
+
+        <a href="?status=approved"
+           class="btn"
+           style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.45rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'approved' %}background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+            <span>🟢 Tasdiqlangan (Ommada)</span>
+            <span style="background: #10b981; color: #fff; font-size: 0.75rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">{{ counts.approved }}</span>
+        </a>
+
+        <a href="?status=rejected"
+           class="btn"
+           style="border-radius: 8px; font-size: 0.88rem; font-weight: 600; padding: 0.45rem 1rem; display: flex; align-items: center; gap: 0.5rem; {% if status_filter == 'rejected' %}background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);{% else %}background: transparent; color: var(--text-muted); border: 1px solid transparent;{% endif %}">
+            <span>🔴 Rad etilgan</span>
+            <span style="background: #ef4444; color: #fff; font-size: 0.75rem; padding: 1px 6px; border-radius: 10px; font-weight: 700;">{{ counts.rejected }}</span>
+        </a>
+    </div>
+
+    <!-- Assets Grid -->
+    {% if page_obj.object_list %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+        {% for asset in page_obj %}
+        <div class="card" style="background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+            
+            <!-- Thumbnail -->
+            <div style="height: 160px; background: #05070a; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                {% if asset.thumbnail %}
+                    <img src="{{ asset.thumbnail.url }}" alt="{{ asset.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <div style="font-size: 3rem; color: var(--text-muted); opacity: 0.4;">📦</div>
+                {% endif %}
+
+                <!-- Format badge -->
+                <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700; color: var(--cyan, #00f5ff); text-transform: uppercase;">
+                    {{ asset.get_format_display }}
+                </div>
+
+                <!-- Price badge -->
+                <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); border-radius: 6px; padding: 3px 8px; font-size: 0.8rem; font-weight: 700; color: {% if asset.is_free %}#34d399{% else %}#fbbf24{% endif %};">
+                    {% if asset.is_free %}BEPUL{% else %}${{ asset.price }}{% endif %}
+                </div>
+
+                <!-- Status pill -->
+                <div style="position: absolute; bottom: 10px; left: 10px; border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; font-weight: 700;
+                    {% if asset.status == 'approved' %}background: rgba(16, 185, 129, 0.9); color: #fff;
+                    {% elif asset.status == 'rejected' %}background: rgba(239, 68, 68, 0.9); color: #fff;
+                    {% else %}background: rgba(245, 158, 11, 0.9); color: #000;{% endif %}">
+                    {{ asset.get_status_display }}
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                    {{ asset.title }}
+                </h3>
+
+                <!-- Rejection alert if rejected -->
+                {% if asset.status == 'rejected' %}
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.82rem; color: #fca5a5; margin-bottom: 0.75rem;">
+                    <strong>Rad etilish sababi:</strong> {{ asset.rejection_reason|default:"Format yoki sifat talablariga mos kelmadi." }}
+                </div>
+                {% elif asset.status == 'pending' %}
+                <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 8px; padding: 0.65rem 0.85rem; font-size: 0.82rem; color: #fbbf24; margin-bottom: 0.75rem;">
+                    ⏳ Administratorlar ko'rib chiqmoqda. Tasdiqlangach, barchaga ko'rinadi.
+                </div>
+                {% endif %}
+
+                <!-- Info meta -->
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    <span>Hajmi: <strong style="color: var(--text-primary);">{{ asset.file_size_display }}</strong></span>
+                    <span>Yuklab olishlar: <strong style="color: var(--cyan, #00f5ff);">{{ asset.downloads }}</strong></span>
+                    <span>Likes: <strong style="color: #f87171;">{{ asset.like_count }}</strong></span>
+                </div>
+
+                <!-- Actions -->
+                <div style="margin-top: auto; display: flex; gap: 0.5rem;">
+                    <a href="{% url 'asset_detail' pk=asset.pk %}" class="btn btn-outline" style="flex: 1; border-radius: 6px; font-size: 0.82rem; text-align: center;">
+                        Ko'rish
+                    </a>
+                    <a href="{% url 'asset_download' pk=asset.pk %}" class="btn btn-outline" style="border-radius: 6px; font-size: 0.82rem;" title="Faylni yuklab olish">
+                        ⬇️
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2.5rem;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}" class="btn btn-outline" style="border-radius: 6px; font-size: 0.85rem;">« Oldingi</a>
+        {% endif %}
+
+        <span style="display: flex; align-items: center; padding: 0 1rem; color: var(--text-muted); font-size: 0.85rem;">
+            Sahifa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}" class="btn btn-outline" style="border-radius: 6px; font-size: 0.85rem;">Keyingi »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty -->
+    <div style="text-align: center; padding: 4rem 1rem; background: var(--surface-card, #0d1117); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 14px;">
+        <div style="font-size: 3.5rem; margin-bottom: 1rem;">📦</div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+            Aktivlar topilmadi
+        </h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto 1.5rem;">
+            Siz hali ushbu holatdagi aktiv yuklamagansiz.
+        </p>
+        <a href="{% url 'asset_upload' %}" class="btn btn-primary" style="border-radius: 8px; font-size: 0.88rem; font-weight: 700;">
+            Birinchi aktivni yuklash
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
