@@ -20,9 +20,22 @@ def dashboard(request):
 def editor_view(request, map_id):
     world_map = get_object_or_404(WorldMap, id=map_id, owner=request.user)
     import json as _json
+    # Optional user assets (png, jpg, svg) that can be placed on map
+    user_assets = []
+    try:
+        from apps.assets.models import Asset
+        user_assets = list(Asset.objects.filter(
+            creator=request.user,
+            format__in=['png', 'jpg', 'other'],
+            is_approved=True
+        ).values('id', 'title', 'file', 'format')[:30])
+    except Exception:
+        pass
+
     return render(request, 'world_builder/editor.html', {
         'map': world_map,
-        'map_data_json': _json.dumps(world_map.data or {})
+        'map_data_json': _json.dumps(world_map.data or {}),
+        'user_assets_json': _json.dumps(user_assets),
     })
 
 
@@ -32,16 +45,44 @@ def create_map(request):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip() or 'Untitled Map'
         map_type = request.POST.get('map_type', 'level')
+        THEME_DEFAULTS = {
+            'dungeon': {'paper': 'parchment_dark', 'gridColor': 'rgba(245,158,11,0.12)', 'lighting': 'torch'},
+            'village': {'paper': 'vintage_cream', 'gridColor': 'rgba(34,197,94,0.12)', 'lighting': 'daylight'},
+            'castle': {'paper': 'blueprint', 'gridColor': 'rgba(59,130,246,0.15)', 'lighting': 'sunset'},
+            'wilderness': {'paper': 'forest_bark', 'gridColor': 'rgba(16,185,129,0.12)', 'lighting': 'daylight'},
+            'overworld': {'paper': 'antique_atlas', 'gridColor': 'rgba(217,119,6,0.12)', 'lighting': 'daylight'},
+            'desert': {'paper': 'sandstone', 'gridColor': 'rgba(234,179,8,0.15)', 'lighting': 'golden_hour'},
+            'coastal': {'paper': 'nautical_chart', 'gridColor': 'rgba(14,165,233,0.15)', 'lighting': 'daylight'},
+            'architecture': {'paper': 'grid_blueprint', 'gridColor': 'rgba(100,116,139,0.2)', 'lighting': 'flat'},
+            'level': {'paper': 'dark_slate', 'gridColor': 'rgba(255,255,255,0.08)', 'lighting': 'dramatic'},
+        }
+        theme_cfg = THEME_DEFAULTS.get(map_type, THEME_DEFAULTS['dungeon'])
         default_data = {
             'version': 2,
+            'mapType': map_type,
             'gridSize': 32,
-            'activeLayer': 'ly_walls',
+            'gridType': 'square',
+            'paperTheme': theme_cfg['paper'],
+            'lighting': theme_cfg['lighting'],
+            'shadowIntensity': 0.65,
+            'shadowAngle': 45,
+            'shadowDistance': 12,
+            'vignette': True,
+            'fogOfWar': False,
+            'weather': 'none',
+            'activeLayer': 'ly_structures',
             'layers': [
-                {'id': 'ly_ground',   'name': 'Ground',   'visible': True, 'locked': False, 'color': '#22c55e'},
-                {'id': 'ly_walls',    'name': 'Walls',    'visible': True, 'locked': False, 'color': '#00d4ff'},
-                {'id': 'ly_objects',  'name': 'Objects',  'visible': True, 'locked': False, 'color': '#f59e0b'},
-                {'id': 'ly_notes',    'name': 'Notes',    'visible': True, 'locked': False, 'color': '#a78bfa'},
+                {'id': 'ly_terrain',     'name': 'Terrain & Biome',  'visible': True, 'locked': False, 'color': '#22c55e'},
+                {'id': 'ly_water',       'name': 'Water & Roads',    'visible': True, 'locked': False, 'color': '#38bdf8'},
+                {'id': 'ly_structures',  'name': 'Walls & Buildings','visible': True, 'locked': False, 'color': '#f59e0b'},
+                {'id': 'ly_nature',      'name': 'Trees & Nature',   'visible': True, 'locked': False, 'color': '#10b981'},
+                {'id': 'ly_props',       'name': 'Props & Details',  'visible': True, 'locked': False, 'color': '#ec4899'},
+                {'id': 'ly_lights',      'name': 'Lights & Effects', 'visible': True, 'locked': False, 'color': '#eab308'},
+                {'id': 'ly_labels',      'name': 'Labels & Notes',   'visible': True, 'locked': False, 'color': '#a855f7'},
             ],
+            'elements': [],
+            'paths': [],
+            'regions': [],
             'objects': [],
             'groups': [],
         }

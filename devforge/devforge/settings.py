@@ -4,6 +4,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-this-in-production-!!!')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
@@ -34,7 +36,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Initialize environment variables
 try:
-    import environ
     env = environ.Env(
         DEBUG=(bool, False),
         CELERY_BROKER_URL=(str, 'redis://localhost:6379/0'),
@@ -44,10 +45,7 @@ try:
         STRIPE_WEBHOOK_SECRET=(str, ''),
         REDIS_URL=(str, 'redis://localhost:6379/1'),
     )
-    # Read .env file if it exists
-    environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 except ImportError:
-    # Fallback to os.environ if django-environ is not installed
     def env(key, default=None):
         return os.environ.get(key, default)
 

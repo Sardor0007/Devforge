@@ -1,823 +1,2302 @@
-{% extends 'base.html' %}
-{% block title %}{{ map.title }} — World Builder{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="csrf-token" content="{{ csrf_token }}">
+<title>{{ map.title|default:"Canvas of Kings — 2D Map Maker" }} — DevForge World Builder</title>
 
-{% block extra_css %}
+<!-- Fonts: Medieval/Fantasy display + Clean modern UI + Monospace stats -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=MedievalSharp&display=swap" rel="stylesheet">
+
 <style>
-body { overflow: hidden !important; }
-footer.footer { display: none !important; }
-main.container { max-width: 100% !important; padding: 0 !important; margin: 0 !important; height: calc(100vh - 72px) !important; height: calc(100dvh - 72px) !important; overflow: hidden !important; }
+:root {
+    --bg-dark: #07090e;
+    --bg-panel: #0d111a;
+    --bg-panel-alt: #131926;
+    --bg-hover: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-gold: rgba(245, 158, 11, 0.4);
+    --gold: #f59e0b;
+    --gold-bright: #fbbf24;
+    --gold-glow: rgba(245, 158, 11, 0.25);
+    --cyan: #00f5ff;
+    --emerald: #10b981;
+    --crimson: #ef4444;
+    --purple: #a855f7;
+    --text-main: #f3f4f6;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --font-fantasy: 'Cinzel', serif;
+    --font-ui: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
 
-/* Shell */
-.wb-shell {
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-ui);
+}
+
+/* App Shell */
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TOP HEADER (Canvas of Kings Medieval Header)
+   ══════════════════════════════════════════════════════════════ */
+.ck-header {
+    height: 52px;
+    background: linear-gradient(180deg, #10141f 0%, #0a0d14 100%);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 12px;
+    z-index: 50;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.ck-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    padding-right: 12px;
+    border-right: 1px solid var(--border);
+}
+.ck-logo-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: radial-gradient(circle at 30% 30%, #fbbf24 0%, #b45309 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    font-size: 1.1rem;
+}
+.ck-brand-text {
+    display: flex;
+    flex-direction: column;
+}
+.ck-brand-title {
+    font-family: var(--font-fantasy);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #fde68a, #f59e0b, #d97706);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.ck-brand-sub {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.map-title-input {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 4px 10px;
+    color: var(--text-main);
+    font-family: var(--font-fantasy);
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    width: 220px;
+    transition: all 0.2s;
+}
+.map-title-input:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: var(--border);
+}
+.map-title-input:focus {
+    background: rgba(255,255,255,0.09);
+    border-color: var(--gold);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--gold-glow);
+}
+
+.theme-pill-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    font-size: 0.72rem;
+    color: var(--gold-bright);
+    font-weight: 600;
+}
+
+.header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
+}
+.btn-header:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: var(--text-main);
+    border-color: rgba(255,255,255,0.2);
+}
+.btn-header.gold {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: #f59e0b;
+    color: #05070a;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+}
+.btn-header.gold:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45);
+}
+
+.save-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-right: 4px;
+}
+.status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--emerald);
+    box-shadow: 0 0 8px var(--emerald);
+    transition: all 0.3s;
+}
+.status-dot.dirty {
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MAIN WORKSPACE LAYOUT
+   ══════════════════════════════════════════════════════════════ */
+.ck-workspace {
     display: grid;
-    grid-template-columns: 64px 240px 1fr 260px;
-    height: calc(100vh - 72px);
-    height: calc(100dvh - 72px);
-    background: #08090d; font-family: var(--font-mono);
+    grid-template-columns: 54px 280px 1fr 290px;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
 }
 
-/* ── Top Toolbar ── */
-.wb-topbar {
-    position:fixed; top:0; left:0; right:0; z-index:100;
-    height:44px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
-    display:flex; align-items:center; gap:.4rem; padding:0 .75rem;
+/* 1. LEFT TOOL SHELF */
+.ck-tools-bar {
+    background: #090c13;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    gap: 6px;
+    z-index: 20;
 }
-.wb-brand { font-family:var(--font-display); font-weight:800; font-size:.9rem;
-    background:linear-gradient(135deg,#f59e0b,#10b981); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-right:.5rem; }
-.tb-btn { display:inline-flex; align-items:center; gap:4px; padding:.28rem .6rem; border-radius:5px; font-size:.75rem;
-    background:transparent; border:none; color:var(--text-secondary); cursor:pointer; transition:all .15s; white-space:nowrap; }
-.tb-btn:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
-.tb-btn.primary { background:linear-gradient(135deg,#f59e0b,#10b981); color:#000; font-weight:700; border:none; }
-.tb-sep { width:1px; height:22px; background:rgba(255,255,255,.08); margin:0 .35rem; }
-.save-dot { width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block; }
-.save-dot.unsaved { background:#f59e0b; animation:blink 1.5s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-/* ── Left Tool Icons ── */
-.wb-tool-icons {
-    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
-    display:flex; flex-direction:column; align-items:center; padding:.5rem 0; gap:2px;
-    margin-top:44px; overflow-y:auto;
+.tool-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
 }
-.wb-tool { width:46px; height:40px; display:flex; align-items:center; justify-content:center;
-    border-radius:7px; cursor:pointer; font-size:1rem; transition:all .15s;
-    background:none; border:none; color:var(--text-muted); }
-.wb-tool:hover { background:rgba(255,255,255,.07); color:var(--text-primary); }
-.wb-tool.active { background:rgba(245,158,11,.2); color:#fbbf24; box-shadow:0 0 0 1px rgba(245,158,11,.4); }
-.wb-tool-sep { width:30px; height:1px; background:rgba(255,255,255,.06); margin:3px 0; }
-
-/* ── Left Tile Palette ── */
-.wb-palette {
-    background:#0a0b10; border-right:1px solid rgba(255,255,255,.06);
-    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+.tool-icon-btn svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
-.palette-header { padding:.5rem .75rem; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; gap:.4rem; }
-.palette-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; }
-.palette-category { padding:.4rem .75rem; font-size:.62rem; text-transform:uppercase; letter-spacing:.5px; font-weight:700;
-    color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,.04); }
-.palette-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; padding:.5rem; }
-.tile-btn {
-    aspect-ratio:1; border-radius:5px; border:2px solid transparent; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; font-size:1.1rem;
-    transition:all .1s; background:rgba(255,255,255,.04);
+.tool-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+    border-color: rgba(255, 255, 255, 0.1);
 }
-.tile-btn:hover { transform:scale(1.1); border-color:rgba(245,158,11,.5); }
-.tile-btn.selected { border-color:#f59e0b; box-shadow:0 0 0 1px #f59e0b; }
-.palette-body { flex:1; overflow-y:auto; }
-.palette-body::-webkit-scrollbar { width:4px; }
-.palette-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
-
-/* ── Canvas Viewport ── */
-.wb-viewport {
-    margin-top:44px; display:flex; flex-direction:column; overflow:hidden; background:#0c0e15; position:relative;
+.tool-icon-btn.active {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--gold-bright);
+    border-color: var(--border-gold);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
 }
-.viewport-bar { height:30px; background:#0a0b10; border-bottom:1px solid rgba(255,255,255,.06);
-    display:flex; align-items:center; padding:0 .75rem; gap:.75rem; font-size:.68rem; color:var(--text-muted); flex-shrink:0; }
-.canvas-scroll { flex:1; overflow:auto; position:relative; display:flex; align-items:flex-start; justify-content:flex-start; padding:20px; }
-.canvas-scroll::-webkit-scrollbar { width:6px; height:6px; }
-.canvas-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:3px; }
-#mapCanvas { display:block; cursor:crosshair; box-shadow:0 0 0 1px rgba(245,158,11,.2), 0 8px 32px rgba(0,0,0,.8); }
-.canvas-info { position:absolute; bottom:8px; left:8px; font-size:.62rem; color:rgba(255,255,255,.25); font-family:var(--font-mono); pointer-events:none; }
-.zoom-controls { position:absolute; bottom:8px; right:8px; display:flex; gap:4px; }
-.zoom-btn { width:26px; height:26px; border-radius:5px; background:rgba(13,17,23,.9); border:1px solid rgba(255,255,255,.1);
-    color:var(--text-muted); cursor:pointer; font-size:.9rem; display:flex; align-items:center; justify-content:center; }
-.zoom-btn:hover { color:#fbbf24; border-color:#f59e0b; }
-
-/* ── Right Props Panel ── */
-.wb-right {
-    background:#0a0b10; border-left:1px solid rgba(255,255,255,.06);
-    display:flex; flex-direction:column; margin-top:44px; overflow:hidden;
+.tool-shortcut-tag {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    position: absolute;
+    bottom: 2px;
+    right: 3px;
+    color: var(--text-dim);
+    font-weight: 700;
 }
-.right-tabs { display:flex; border-bottom:1px solid rgba(255,255,255,.06); }
-.rt { flex:1; padding:.4rem; text-align:center; font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
-    color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .15s; }
-.rt.active { color:#fbbf24; border-bottom-color:#f59e0b; background:rgba(245,158,11,.05); }
-.right-body { flex:1; overflow-y:auto; padding:.75rem; }
-.right-body::-webkit-scrollbar { width:4px; }
-.right-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px; }
-.r-sec { margin-bottom:1.25rem; }
-.r-sec-title { font-size:.6rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700; margin-bottom:.5rem; }
-.r-row { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
-.r-label { font-size:.7rem; color:var(--text-muted); min-width:70px; }
-.r-input { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
-    padding:3px 6px; color:var(--text-primary); font-size:.75rem; outline:none; font-family:var(--font-mono); }
-.r-input:focus { border-color:#f59e0b; }
-.r-select { flex:1; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:4px;
-    padding:3px 6px; color:var(--text-primary); font-size:.75rem; outline:none; }
-.r-select option { background:#0d1117; }
-.r-range { flex:1; accent-color:#f59e0b; cursor:pointer; }
+.tool-divider {
+    width: 26px;
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
 
-/* Layer list */
-.layer-item { display:flex; align-items:center; gap:6px; padding:.35rem .5rem; border-radius:5px; cursor:pointer; transition:all .15s; margin-bottom:2px; }
-.layer-item:hover { background:rgba(255,255,255,.04); }
-.layer-item.active { background:rgba(245,158,11,.1); }
-.layer-color { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
-.layer-name { flex:1; font-size:.75rem; }
-.layer-vis { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.75rem; }
+/* Tooltip on hover */
+.tool-icon-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 48px;
+    background: #1e2536;
+    color: #fff;
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    z-index: 100;
+    font-family: var(--font-ui);
+}
+.tool-icon-btn:hover::after {
+    opacity: 1;
+}
 
-/* Object Inspector */
-.obj-info { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:6px; padding:.6rem; font-size:.72rem; margin-bottom:.75rem; }
+/* 2. MATERIAL & ASSET PALETTE (Canvas of Kings style) */
+.ck-palette-panel {
+    background: #0c1018;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 15;
+}
+.palette-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: #090d14;
+}
+.pal-tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.pal-tab:hover {
+    color: var(--text-main);
+}
+.pal-tab.active {
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.palette-filter-bar {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+    background: #0e131d;
+}
+.filter-search-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    color: var(--text-main);
+    outline: none;
+}
+.filter-search-input:focus {
+    border-color: var(--gold);
+}
+
+.palette-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.palette-content::-webkit-scrollbar {
+    width: 5px;
+}
+.palette-content::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding: 0 2px;
+}
+.category-count {
+    font-size: 0.65rem;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px;
+    border-radius: 10px;
+    color: var(--text-muted);
+}
+
+.materials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+.material-card {
+    aspect-ratio: 1;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: rgba(255,255,255,0.02);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    gap: 4px;
+    transition: all 0.15s ease;
+    position: relative;
+    overflow: hidden;
+}
+.material-card:hover {
+    border-color: rgba(245, 158, 11, 0.4);
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.05);
+}
+.material-card.active {
+    border-color: var(--gold);
+    background: rgba(245, 158, 11, 0.12);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+}
+.material-preview-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: rgba(0,0,0,0.3);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.material-name {
+    font-size: 0.63rem;
+    color: var(--text-muted);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    font-weight: 500;
+}
+.material-card.active .material-name {
+    color: var(--gold-bright);
+    font-weight: 700;
+}
+
+/* 3. CENTER VIEWPORT (Infinite Parchment Canvas) */
+.ck-viewport {
+    background: #06070a;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.canvas-floating-toolbar {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    background: rgba(13, 17, 26, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.vp-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px 7px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+.vp-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-main);
+}
+.vp-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--border);
+}
+
+.canvas-hud-stats {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    background: rgba(13, 17, 26, 0.8);
+    backdrop-filter: blur(8px);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+
+.zoom-widget {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    background: rgba(13, 17, 26, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+    z-index: 10;
+}
+.zoom-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.zoom-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--gold-bright);
+}
+.zoom-display {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--gold-bright);
+    min-width: 44px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Canvas element */
+#mainCanvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+}
+
+/* 4. RIGHT PROPERTIES & ATMOSPHERE PANEL */
+.ck-inspector-panel {
+    background: #0c1018;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 15;
+}
+.inspector-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: #090d14;
+}
+.insp-tab {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.insp-tab:hover {
+    color: var(--text-main);
+}
+.insp-tab.active {
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold);
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.inspector-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.inspector-body::-webkit-scrollbar {
+    width: 5px;
+}
+.inspector-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+}
+
+.insp-section {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+}
+.insp-section-title {
+    font-family: var(--font-fantasy);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold-bright);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.74rem;
+}
+.control-row:last-child {
+    margin-bottom: 0;
+}
+.control-label {
+    color: var(--text-muted);
+}
+.control-val {
+    color: var(--gold-bright);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+}
+
+.ck-range {
+    width: 100%;
+    accent-color: var(--gold);
+    cursor: pointer;
+    margin: 4px 0;
+}
+
+.ck-select, .ck-input {
+    background: #141a27;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 5px 8px;
+    color: var(--text-main);
+    font-size: 0.75rem;
+    outline: none;
+    width: 120px;
+}
+.ck-select:focus, .ck-input:focus {
+    border-color: var(--gold);
+}
+
+/* Layer row in Layers panel */
+.layer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 4px;
+}
+.layer-row:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: var(--border);
+}
+.layer-row.active {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: var(--border-gold);
+}
+.layer-color-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+.layer-name-text {
+    flex: 1;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.layer-action-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+.layer-action-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.1);
+}
+
+/* Modal overlay */
+.ck-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.ck-modal.show {
+    display: flex;
+}
+.ck-modal-card {
+    background: #0f1420;
+    border: 1px solid var(--border-gold);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 540px;
+    padding: 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.ck-modal-title {
+    font-family: var(--font-fantasy);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gold-bright);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Toast */
+.ck-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(50px);
+    background: #141a27;
+    border: 1px solid var(--gold);
+    color: var(--text-main);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 300;
+}
+.ck-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
 </style>
-{% endblock %}
+</head>
+<body>
 
-{% block content %}
-<!-- Top Toolbar -->
-<div class="wb-topbar">
-    <a href="{% url 'world_builder:dashboard' %}" class="tb-btn">◀</a>
-    <span class="wb-brand">🏰</span>
-    <input type="text" id="mapTitle" value="{{ map.title }}"
-        style="background:none;border:none;color:var(--text-primary);font-size:.85rem;font-weight:600;outline:none;width:160px;"
-        onchange="markUnsaved()">
-    <div class="tb-sep"></div>
-    <!-- Grid settings -->
-    <span style="font-size:.68rem;color:var(--text-muted);">Grid</span>
-    <select id="gridSizeSelect" onchange="changeGridSize(+this.value)" style="background:#050607;border:1px solid rgba(255,255,255,.08);border-radius:4px;color:var(--text-secondary);font-size:.72rem;padding:2px 4px;">
-        <option value="16">16px</option>
-        <option value="32" selected>32px</option>
-        <option value="48">48px</option>
-        <option value="64">64px</option>
-    </select>
-    <span style="font-size:.68rem;color:var(--text-muted);">Show grid</span>
-    <input type="checkbox" id="showGrid" checked onchange="redraw()" style="accent-color:#f59e0b;cursor:pointer;">
-    <div class="tb-sep"></div>
-    <!-- Undo/Redo -->
-    <button class="tb-btn" onclick="undo()" title="Ctrl+Z">↩ Undo</button>
-    <button class="tb-btn" onclick="redo()" title="Ctrl+Y">↪ Redo</button>
-    <button class="tb-btn" onclick="clearMap()" style="color:#fca5a5;">🗑 Clear</button>
-    <div class="tb-sep"></div>
-    <!-- Export -->
-    <button class="tb-btn" onclick="exportJSON()">📄 JSON</button>
-    <button class="tb-btn" onclick="exportPNG()">🖼️ PNG</button>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
-        <span style="font-size:.68rem;color:var(--text-muted);">
-            <span class="save-dot" id="saveDot"></span>
-            <span id="saveLabel">Saqlangan</span>
-        </span>
-        <button class="tb-btn primary" onclick="saveMap()">💾 Save</button>
+<div class="app-shell">
+    <!-- ════ TOP HEADER ════ -->
+    <header class="ck-header">
+        <a href="{% url 'world_builder:dashboard' %}" class="ck-brand" title="Dashboardga qaytish">
+            <div class="ck-logo-badge">⚔️</div>
+            <div class="ck-brand-text">
+                <span class="ck-brand-title">Canvas of Kings</span>
+                <span class="ck-brand-sub">2D Map Maker</span>
+            </div>
+        </a>
+
+        <input type="text" id="mapTitleInput" class="map-title-input" value="{{ map.title }}" title="Xarita nomini o'zgartirish">
+
+        <div class="theme-pill-badge" id="themePillBadge">
+            <span id="themeIcon">🏰</span>
+            <span id="themeNameLabel">{{ map.get_map_type_display|default:map.map_type|title }}</span>
+        </div>
+
+        <div class="header-actions">
+            <div class="save-status-indicator">
+                <div class="status-dot" id="saveDot"></div>
+                <span id="saveText">Saqlangan</span>
+            </div>
+
+            <button class="btn-header" onclick="undo()" title="Bekor qilish (Ctrl+Z)">
+                ↩ <span>Undo</span>
+            </button>
+            <button class="btn-header" onclick="redo()" title="Qaytarish (Ctrl+Y)">
+                ↪ <span>Redo</span>
+            </button>
+
+            <button class="btn-header" onclick="openEnvironmentModal()" title="Muhit va Ob-havoni sozlash">
+                🕯️ <span>Muhit</span>
+            </button>
+
+            <button class="btn-header" onclick="exportMapPNG()" title="Yuqori sifatli rasm sifatida saqlash">
+                🖼️ <span>PNG</span>
+            </button>
+            <button class="btn-header" onclick="exportMapJSON()" title="JSON ma'lumotni yuklab olish">
+                📄 <span>JSON</span>
+            </button>
+
+            <button class="btn-header gold" onclick="saveMapData()" title="Xaritani saqlash (Ctrl+S)">
+                💾 <span>Saqlash</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ════ MAIN WORKSPACE ════ -->
+    <main class="ck-workspace">
+        <!-- 1. LEFT TOOL SHELF -->
+        <aside class="ck-tools-bar">
+            <button class="tool-icon-btn active" id="tool_select" onclick="setTool('select')" data-tooltip="Tanlash & Harakatlantirish (V)">
+                <svg viewBox="0 0 24 24"><path d="M3 3l7 18 3-7 7-3L3 3z"/></svg>
+                <span class="tool-shortcut-tag">V</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_brush" onclick="setTool('brush')" data-tooltip="Sehrli Cho'tka / Qo'lda chizish (B)">
+                <svg viewBox="0 0 24 24"><path d="M18 13.5l-8.5-8.5-4 4 8.5 8.5m-5 5l-4-4 2.5-2.5 4 4z"/></svg>
+                <span class="tool-shortcut-tag">B</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_stamp" onclick="setTool('stamp')" data-tooltip="Obyekt / Element Shtampi (S)">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 9v6m-3-3h6"/></svg>
+                <span class="tool-shortcut-tag">S</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_wall" onclick="setTool('wall')" data-tooltip="Devor & Bino chizig'i (W)">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v6M15 9v6M9 15v6"/></svg>
+                <span class="tool-shortcut-tag">W</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_path" onclick="setTool('path')" data-tooltip="Yo'l & Daryo / Suv o'zani (P)">
+                <svg viewBox="0 0 24 24"><path d="M4 19c4-4 4-8 8-8s4 4 8 0"/></svg>
+                <span class="tool-shortcut-tag">P</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_polygon" onclick="setTool('polygon')" data-tooltip="Ko'pburchak hudud (Hudud belgilash)">
+                <svg viewBox="0 0 24 24"><path d="M12 2l8 5-3 12H7L4 7z"/></svg>
+                <span class="tool-shortcut-tag">G</span>
+            </button>
+
+            <div class="tool-divider"></div>
+
+            <button class="tool-icon-btn" id="tool_light" onclick="setTool('light')" data-tooltip="Yorug'lik manbai (Mash'ala/Lampa) (L)">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m14.14-14.14l-1.41 1.41"/></svg>
+                <span class="tool-shortcut-tag">L</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_text" onclick="setTool('text')" data-tooltip="Xarita yozuvi / Matn (T)">
+                <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                <span class="tool-shortcut-tag">T</span>
+            </button>
+            <button class="tool-icon-btn" id="tool_erase" onclick="setTool('erase')" data-tooltip="O'chirg'ich (E)">
+                <svg viewBox="0 0 24 24"><path d="M19 20H5M18 10l-8.5 8.5a2.12 2.12 0 01-3-3L15 7l4 4z"/></svg>
+                <span class="tool-shortcut-tag">E</span>
+            </button>
+        </aside>
+
+        <!-- 2. MATERIAL & THEME PALETTE -->
+        <aside class="ck-palette-panel">
+            <div class="palette-tabs">
+                <div class="pal-tab active" id="tab_materials" onclick="switchPaletteTab('materials')">Elementlar</div>
+                <div class="pal-tab" id="tab_biomes" onclick="switchPaletteTab('biomes')">Muhitlar</div>
+                <div class="pal-tab" id="tab_paths" onclick="switchPaletteTab('paths')">Yo'llar</div>
+            </div>
+
+            <div class="palette-filter-bar">
+                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (daraxt, devor, tosh...)" oninput="filterPalette(this.value)">
+            </div>
+
+            <div class="palette-content" id="paletteListContainer">
+                <!-- Dynamically populated based on map_type theme -->
+            </div>
+        </aside>
+
+        <!-- 3. CENTER VIEWPORT -->
+        <section class="ck-viewport" id="viewportContainer">
+            <div class="canvas-floating-toolbar">
+                <button class="vp-btn" onclick="resetCanvasTransform()" title="Markazga keltirish">
+                    ⊹ <span>Reset</span>
+                </button>
+                <button class="vp-btn" onclick="fitCanvasView()" title="Ekranga moslashtirish">
+                    ⊞ <span>Fit</span>
+                </button>
+                <div class="vp-sep"></div>
+                <button class="vp-btn" id="gridToggleBtn" onclick="toggleGridDisplay()">
+                    ▦ <span id="gridBtnText">Grid: On</span>
+                </button>
+                <button class="vp-btn" id="shadowToggleBtn" onclick="toggleShadowsDisplay()">
+                    🌑 <span id="shadowBtnText">Soyalar: On</span>
+                </button>
+                <div class="vp-sep"></div>
+                <button class="vp-btn" id="weatherToggleBtn" onclick="cycleWeatherEffect()">
+                    🌧️ <span id="weatherBtnText">Ob-havo: None</span>
+                </button>
+            </div>
+
+            <canvas id="mainCanvas"></canvas>
+
+            <div class="canvas-hud-stats" id="hudStats">
+                <span>X: <strong id="hudX">0</strong> Y: <strong id="hudY">0</strong></span>
+                <span>Obyektlar: <strong id="hudObjCount">0</strong></span>
+                <span>Muhit: <strong id="hudTheme">{{ map.map_type|title }}</strong></span>
+            </div>
+
+            <div class="zoom-widget">
+                <button class="zoom-btn" onclick="zoomCanvas(-0.15)" title="Kichiklashtirish">−</button>
+                <span class="zoom-display" id="zoomValDisplay">100%</span>
+                <button class="zoom-btn" onclick="zoomCanvas(0.15)" title="Kattalashtirish">+</button>
+            </div>
+        </section>
+
+        <!-- 4. RIGHT PROPERTIES & ATMOSPHERE PANEL -->
+        <aside class="ck-inspector-panel">
+            <div class="inspector-tabs">
+                <div class="insp-tab active" id="tab_props" onclick="switchInspectorTab('props')">Xossalar</div>
+                <div class="insp-tab" id="tab_layers" onclick="switchInspectorTab('layers')">Qatlamlar</div>
+                <div class="insp-tab" id="tab_lighting" onclick="switchInspectorTab('lighting')">Yorug'lik</div>
+            </div>
+
+            <div class="inspector-body" id="inspectorContent">
+                <!-- Inspector sections dynamically rendered -->
+            </div>
+        </aside>
+    </main>
+</div>
+
+<!-- Toast notification -->
+<div class="ck-toast" id="ckToast">Bildirishnoma</div>
+
+<!-- Environment / Weather Settings Modal -->
+<div class="ck-modal" id="envModal">
+    <div class="ck-modal-card">
+        <div class="ck-modal-title">
+            <span>🕯️ Muhit va Vizual Effetlar</span>
+            <button onclick="closeEnvironmentModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div class="control-row">
+                <span class="control-label">Qog'oz / Tekstura foni:</span>
+                <select id="paperThemeSelect" class="ck-select" onchange="changePaperTheme(this.value)">
+                    <option value="parchment_dark">Qadimiy Pergament (Qorong'i)</option>
+                    <option value="vintage_cream">Vintage Qaymoqrang</option>
+                    <option value="blueprint">Sehrgar Chizmasi (Blueprint)</option>
+                    <option value="forest_bark">O'rmon Po'stlog'i</option>
+                    <option value="antique_atlas">Qadimiy Atlas</option>
+                    <option value="sandstone">Sahro Qumtoshi</option>
+                    <option value="nautical_chart">Dengiz Xaritasi</option>
+                    <option value="dark_slate">Qora Slants (Dungeon)</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Soya yo'nalishi (Burchak):</span>
+                <input type="range" class="ck-range" id="shadowAngleRange" min="0" max="360" value="45" oninput="updateShadowParams()">
+            </div>
+            <div class="control-row">
+                <span class="control-label">Soya intensivligi:</span>
+                <input type="range" class="ck-range" id="shadowIntRange" min="0" max="100" value="65" oninput="updateShadowParams()">
+            </div>
+            <div class="control-row">
+                <span class="control-label">Soya masofasi (Balandlik):</span>
+                <input type="range" class="ck-range" id="shadowDistRange" min="2" max="30" value="12" oninput="updateShadowParams()">
+            </div>
+            <div class="control-row">
+                <span class="control-label">Vinyetka (Burchaklar xiraligi):</span>
+                <input type="checkbox" id="vignetteCheckbox" checked onchange="toggleVignette(this.checked)" style="accent-color:var(--gold);">
+            </div>
+            <div class="control-row">
+                <span class="control-label">Tuman / Zulum qatlami (Fog of War):</span>
+                <input type="checkbox" id="fogCheckbox" onchange="toggleFog(this.checked)" style="accent-color:var(--gold);">
+            </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <button class="btn-header gold" onclick="closeEnvironmentModal()">Tayyor</button>
+        </div>
     </div>
 </div>
 
-<div class="wb-shell">
-    <!-- ── TOOL ICONS ── -->
-    <div class="wb-tool-icons">
-        <button class="wb-tool active" id="tool-draw" onclick="setTool('draw')" title="Draw (B)">✏️</button>
-        <button class="wb-tool" id="tool-erase" onclick="setTool('erase')" title="Erase (E)">🧹</button>
-        <button class="wb-tool" id="tool-fill" onclick="setTool('fill')" title="Fill (G)">🪣</button>
-        <button class="wb-tool" id="tool-select" onclick="setTool('select')" title="Select (V)">⊹</button>
-        <div class="wb-tool-sep"></div>
-        <button class="wb-tool" id="tool-rect" onclick="setTool('rect')" title="Rectangle (R)">⬜</button>
-        <button class="wb-tool" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse (C)">⬤</button>
-        <button class="wb-tool" id="tool-line" onclick="setTool('line')" title="Line (L)">╱</button>
-        <div class="wb-tool-sep"></div>
-        <button class="wb-tool" id="tool-spawn" onclick="setTool('spawn')" title="Spawn Point">🚩</button>
-        <button class="wb-tool" id="tool-enemy" onclick="setTool('enemy')" title="Enemy">👾</button>
-        <button class="wb-tool" id="tool-item" onclick="setTool('item')" title="Item">💎</button>
-        <button class="wb-tool" id="tool-trigger" onclick="setTool('trigger')" title="Trigger Zone">⚡</button>
-    </div>
-
-    <!-- ── TILE PALETTE ── -->
-    <div class="wb-palette">
-        <div class="palette-header">
-            <span class="palette-title">🎨 Tiles</span>
-        </div>
-        <div class="palette-body" id="paletteBody">
-            <!-- Terrain -->
-            <div class="palette-category">🌍 Terrain</div>
-            <div class="palette-grid" id="tileGrid"></div>
-            <!-- Structures -->
-            <div class="palette-category">🏗 Structures</div>
-            <div class="palette-grid" id="structGrid"></div>
-            <!-- Objects -->
-            <div class="palette-category">🎁 Objects</div>
-            <div class="palette-grid" id="objectGrid"></div>
-            <!-- Entities -->
-            <div class="palette-category">👾 Entities</div>
-            <div class="palette-grid" id="entityGrid"></div>
-        </div>
-    </div>
-
-    <!-- ── CANVAS ── -->
-    <div class="wb-viewport">
-        <div class="viewport-bar">
-            <span id="vpLabel">🗺 World Map</span>
-            <button class="tb-btn" style="font-size:.65rem;" onclick="resetView()">⊹ Reset</button>
-            <button class="tb-btn" style="font-size:.65rem;" onclick="fitCanvas()">⊞ Fit</button>
-            <span style="margin-left:auto;font-size:.68rem;color:#f59e0b;" id="zoomLabel">100%</span>
-        </div>
-        <div class="canvas-scroll" id="canvasScroll">
-            <canvas id="mapCanvas"></canvas>
-        </div>
-        <div class="canvas-info" id="canvasInfo">x: 0, y: 0 | Tile: (0,0)</div>
-        <div class="zoom-controls">
-            <button class="zoom-btn" onclick="zoomIn()">+</button>
-            <button class="zoom-btn" onclick="zoomOut()">−</button>
-        </div>
-    </div>
-
-    <!-- ── RIGHT PANEL ── -->
-    <div class="wb-right">
-        <div class="right-tabs">
-            <div class="rt active" id="rtLayers" onclick="switchRightTab('layers')">Layers</div>
-            <div class="rt" id="rtProps" onclick="switchRightTab('props')">Props</div>
-            <div class="rt" id="rtMinimap" onclick="switchRightTab('minimap')">Map</div>
-        </div>
-
-        <!-- LAYERS -->
-        <div class="right-body" id="panelLayers">
-            <div class="r-sec">
-                <div class="r-sec-title">📑 Layers</div>
-                <div id="layersList"></div>
-                <div style="display:flex;gap:4px;margin-top:.5rem;">
-                    <button onclick="addLayer()" style="flex:1;padding:.3rem;border-radius:5px;font-size:.72rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.15);color:#fbbf24;cursor:pointer;">+ Layer</button>
-                    <button onclick="deleteActiveLayer()" style="flex:1;padding:.3rem;border-radius:5px;font-size:.72rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:var(--text-muted);cursor:pointer;">Del</button>
-                </div>
-            </div>
-            <div class="r-sec">
-                <div class="r-sec-title">📍 Selected Object</div>
-                <div class="obj-info" id="objInfo">Object tanlanmagan</div>
-            </div>
-        </div>
-
-        <!-- PROPS -->
-        <div class="right-body" id="panelProps" style="display:none;">
-            <div class="r-sec">
-                <div class="r-sec-title">🗺 Map Settings</div>
-                <div class="r-row"><span class="r-label">Width</span><input type="number" class="r-input" id="mapW" value="40" min="10" max="200" onchange="resizeMap()"></div>
-                <div class="r-row"><span class="r-label">Height</span><input type="number" class="r-input" id="mapH" value="25" min="10" max="200" onchange="resizeMap()"></div>
-                <div class="r-row"><span class="r-label">BG Color</span><input type="color" id="mapBg" value="#0d1a0d" style="width:32px;height:22px;border:1px solid var(--border);border-radius:4px;" onchange="redraw()"></div>
-                <div class="r-row"><span class="r-label">Ambient</span>
-                    <select class="r-select" id="ambientLight" onchange="redraw()">
-                        <option value="day">Day ☀️</option>
-                        <option value="night">Night 🌙</option>
-                        <option value="cave">Cave 🕯️</option>
-                        <option value="dungeon">Dungeon ⚔️</option>
-                    </select>
-                </div>
-            </div>
-            <div class="r-sec">
-                <div class="r-sec-title">🔲 Grid</div>
-                <div class="r-row"><span class="r-label">Color</span><input type="color" id="gridColor" value="#1a2a1a" style="width:32px;height:22px;border:1px solid var(--border);border-radius:4px;" onchange="redraw()"></div>
-                <div class="r-row"><span class="r-label">Opacity</span><input type="range" class="r-range" id="gridOpacity" min="0" max="100" value="30" oninput="redraw()"><span style="font-size:.68rem;color:#fbbf24;min-width:28px;" id="gridOpVal">30%</span></div>
-            </div>
-        </div>
-
-        <!-- MINIMAP -->
-        <div class="right-body" id="panelMinimap" style="display:none;">
-            <div class="r-sec">
-                <div class="r-sec-title">🗺 Minimap</div>
-                <canvas id="minimapCanvas" width="236" height="148"
-                    style="width:100%;border-radius:6px;background:#050607;border:1px solid rgba(255,255,255,.06);display:block;"></canvas>
-            </div>
-            <div class="r-sec">
-                <div class="r-sec-title">📊 Stats</div>
-                <div id="mapStats" style="font-size:.72rem;color:var(--text-muted);line-height:2;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-// ═══════════════════════════════════════════════════════════
-//  TILES DEFINITION
-// ═══════════════════════════════════════════════════════════
-const TERRAIN_TILES = [
-    {id:'grass',emoji:'🟩',color:'#166534',label:'Grass'},
-    {id:'dirt',emoji:'🟫',color:'#78350f',label:'Dirt'},
-    {id:'stone',emoji:'⬛',color:'#374151',label:'Stone'},
-    {id:'water',emoji:'🟦',color:'#1d4ed8',label:'Water'},
-    {id:'sand',emoji:'🟨',color:'#92400e',label:'Sand'},
-    {id:'snow',emoji:'⬜',color:'#e2e8f0',label:'Snow'},
-    {id:'lava',emoji:'🟥',color:'#991b1b',label:'Lava'},
-    {id:'void',emoji:'🔲',color:'#000000',label:'Void'},
-];
-const STRUCT_TILES = [
-    {id:'wall',emoji:'🧱',color:'#374151',label:'Wall'},
-    {id:'door',emoji:'🚪',color:'#7c3aed',label:'Door'},
-    {id:'floor',emoji:'⬜',color:'#1e293b',label:'Floor'},
-    {id:'path',emoji:'🟫',color:'#92400e',label:'Path'},
-    {id:'stairs',emoji:'🪜',color:'#6b7280',label:'Stairs'},
-    {id:'pillar',emoji:'🏛️',color:'#4b5563',label:'Pillar'},
-    {id:'bridge',emoji:'🌉',color:'#78350f',label:'Bridge'},
-    {id:'fence',emoji:'🚧',color:'#9a3412',label:'Fence'},
-];
-const OBJECT_TILES = [
-    {id:'chest',emoji:'📦',color:'#d97706',label:'Chest'},
-    {id:'tree',emoji:'🌲',color:'#15803d',label:'Tree'},
-    {id:'rock',emoji:'🪨',color:'#6b7280',label:'Rock'},
-    {id:'barrel',emoji:'🛢️',color:'#92400e',label:'Barrel'},
-    {id:'torch',emoji:'🔥',color:'#f97316',label:'Torch'},
-    {id:'crystal',emoji:'💎',color:'#818cf8',label:'Crystal'},
-    {id:'sign',emoji:'📋',color:'#fbbf24',label:'Sign'},
-    {id:'skull',emoji:'💀',color:'#9ca3af',label:'Skull'},
-];
-const ENTITY_TILES = [
-    {id:'spawn',emoji:'🚩',color:'#10b981',label:'Spawn'},
-    {id:'enemy',emoji:'👾',color:'#ef4444',label:'Enemy'},
-    {id:'boss',emoji:'🐲',color:'#8b5cf6',label:'Boss'},
-    {id:'npc',emoji:'🧙',color:'#06b6d4',label:'NPC'},
-];
-const ALL_TILES = [...TERRAIN_TILES, ...STRUCT_TILES, ...OBJECT_TILES, ...ENTITY_TILES];
+// ══════════════════════════════════════════════════════════════
+//  CANVAS OF KINGS — CORE ENGINE STATE & THEMES
+// ══════════════════════════════════════════════════════════════
+const MAP_ID = {{ map.id }};
+const RAW_MAP_DATA = {{ map_data_json|safe }};
+const MAP_TYPE = "{{ map.map_type|default:'dungeon' }}";
+const USER_ASSETS = {{ user_assets_json|safe }};
 
-// ═══════════════════════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════════════════════
-const PROJECT_ID = {{ map.pk }};
-let savedData    = {{ map_data_json|safe }};
-let gridSize     = 32;
-let cols         = parseInt(document.getElementById('mapW').value);
-let rows         = parseInt(document.getElementById('mapH').value);
-let zoom         = 1;
-let tool         = 'draw';
-let selectedTile = TERRAIN_TILES[2];  // stone default
-let activeLayer  = 0;
-let showGrid     = true;
-let unsaved      = false;
-
-// Layer data: array of {name, visible, locked, cells: {}}
-// cells key = "col,row" -> tile id
-let layers = [];
-
-// History
-const MAX_HIST = 40;
-let historyArr = [], histIdx = -1;
-
-const canvas = document.getElementById('mapCanvas');
-const ctx    = canvas.getContext('2d');
-
-let isDrawing = false, shapeStart = null, shapeSnapshot = null;
-let lastTileX = -1, lastTileY = -1;
-
-// ═══════════════════════════════════════════════════════════
-//  INIT
-// ═══════════════════════════════════════════════════════════
-function init() {
-    buildPalette();
-    if (savedData && savedData.layers && savedData.layers.length > 0) {
-        layers = savedData.layers;
-        layers.forEach(l => {
-            if (!l.cells) l.cells = {};
-        });
-        cols = savedData.cols || cols;
-        rows = savedData.rows || rows;
-        gridSize = savedData.gridSize || gridSize;
-        document.getElementById('mapW').value = cols;
-        document.getElementById('mapH').value = rows;
-        const select = document.getElementById('gridSizeSelect');
-        if (select) select.value = gridSize;
-    } else {
-        addLayer('Ground', false);
-        addLayer('Structures', false);
-        addLayer('Objects', false);
+/* Procedural Texture & Material Catalogs by Environment */
+const THEME_PRESETS = {
+    dungeon: {
+        name: "Dark Dungeon & Crypt",
+        icon: "⚔️",
+        paper: "dark_slate",
+        bgColor: "#0a0c12",
+        gridColor: "rgba(245, 158, 11, 0.12)",
+        ambientLight: "torch",
+        palette: [
+            { id: "d_floor_stone", name: "Tosh pol (Flagstone)", category: "Pollar", icon: "🧱", color: "#374151", type: "brush" },
+            { id: "d_wall_hewn", name: "Qal'a devori (Hewn)", category: "Devorlar", icon: "🏛️", color: "#1f2937", stroke: "#4b5563", type: "wall", height: 18 },
+            { id: "d_wall_moss", name: "Zax devor (Mossy)", category: "Devorlar", icon: "🪨", color: "#1c2b22", stroke: "#10b981", type: "wall", height: 16 },
+            { id: "d_door_wood", name: "Temir qoplangan eshik", category: "Eshiklar", icon: "🚪", color: "#78350f", type: "stamp", w: 32, h: 16 },
+            { id: "d_torch", name: "Devor mash'alasi", category: "Yorug'lik", icon: "🔥", color: "#f97316", type: "light", radius: 140, intensity: 0.9 },
+            { id: "d_chest_gold", name: "Qadimiy sandiq", category: "Mulklar", icon: "📦", color: "#d97706", type: "stamp", w: 26, h: 22 },
+            { id: "d_pillar_round", name: "Dumaloq ustun", category: "Devorlar", icon: "🔘", color: "#4b5563", type: "stamp", w: 24, h: 24, height: 22 },
+            { id: "d_spikes", name: "Qopqon / Nayzalar", category: "Xavflar", icon: "⚙️", color: "#9ca3af", type: "stamp", w: 28, h: 28 },
+            { id: "d_altar", name: "Qurbonlik mehrobi", category: "Mulklar", icon: "🪦", color: "#7c3aed", type: "stamp", w: 42, h: 26 },
+            { id: "d_blood_stain", name: "Qon / Zax dog'i", category: "Detallar", icon: "🩸", color: "#7f1d1d", type: "stamp", w: 30, h: 30 }
+        ]
+    },
+    village: {
+        name: "Medieval Village & Town",
+        icon: "🏘️",
+        paper: "vintage_cream",
+        bgColor: "#f7f2e7",
+        gridColor: "rgba(34, 197, 94, 0.15)",
+        ambientLight: "daylight",
+        palette: [
+            { id: "v_grass_lush", name: "Yam-yashil o'tloq", category: "Tabiat", icon: "🌱", color: "#4ade80", type: "brush" },
+            { id: "v_dirt_road", name: "Tuproq yo'l (Gravel)", category: "Yo'llar", icon: "🟫", color: "#b45309", type: "path", width: 28 },
+            { id: "v_water_stream", name: "Shildiragan soy", category: "Suv", icon: "💧", color: "#38bdf8", type: "path", width: 24 },
+            { id: "v_house_thatch", name: "Somonli qishloq uyi", category: "Binolar", icon: "🏠", color: "#d97706", stroke: "#78350f", type: "stamp", w: 70, h: 50, height: 35 },
+            { id: "v_house_timber", name: "Yog'och imorat", category: "Binolar", icon: "🏡", color: "#92400e", stroke: "#451a03", type: "stamp", w: 85, h: 60, height: 40 },
+            { id: "v_tree_oak", name: "Baland dub daraxti", category: "Tabiat", icon: "🌳", color: "#15803d", type: "stamp", w: 55, h: 55, height: 30 },
+            { id: "v_tree_pine", name: "Qarag'ay daraxti", category: "Tabiat", icon: "🌲", color: "#166534", type: "stamp", w: 42, h: 42, height: 38 },
+            { id: "v_well", name: "Shahar qudug'i", category: "Detallar", icon: "🪣", color: "#6b7280", type: "stamp", w: 26, h: 26, height: 15 },
+            { id: "v_fence_wood", name: "Yog'och panjara", category: "To'siqlar", icon: "🚧", color: "#a16207", type: "wall", height: 10 },
+            { id: "v_cart", name: "Ot arava", category: "Mulklar", icon: "🛒", color: "#854d0e", type: "stamp", w: 36, h: 22 }
+        ]
+    },
+    castle: {
+        name: "Royal Fortress & Citadel",
+        icon: "🏰",
+        paper: "blueprint",
+        bgColor: "#111b2b",
+        gridColor: "rgba(59, 130, 246, 0.2)",
+        ambientLight: "sunset",
+        palette: [
+            { id: "c_stone_pave", name: "Qal'a tosh hovlisi", category: "Pollar", icon: "⬛", color: "#1e293b", type: "brush" },
+            { id: "c_rampart", name: "Mustahkam qal'a devori", category: "Devorlar", icon: "🧱", color: "#334155", stroke: "#64748b", type: "wall", height: 35 },
+            { id: "c_tower_round", name: "Qorovul minorasi (Katta)", category: "Minoralar", icon: "🗼", color: "#475569", stroke: "#94a3b8", type: "stamp", w: 60, h: 60, height: 50 },
+            { id: "c_gatehouse", name: "Darvozaxona (Portcullis)", category: "Minoralar", icon: "⛩️", color: "#1e293b", stroke: "#f59e0b", type: "stamp", w: 80, h: 45, height: 42 },
+            { id: "c_throne", name: "Qirollik taxti", category: "Mulklar", icon: "👑", color: "#eab308", type: "stamp", w: 32, h: 32 },
+            { id: "c_carpet_red", name: "Qizil baxmal gilam", category: "Detallar", icon: "🧣", color: "#dc2626", type: "brush" },
+            { id: "c_brazier", name: "Oltin mangal / Olov", category: "Yorug'lik", icon: "🔥", color: "#f59e0b", type: "light", radius: 180, intensity: 1.0 },
+            { id: "c_cannon", name: "Qal'a to'pi", category: "Harbiy", icon: "💣", color: "#0f172a", type: "stamp", w: 34, h: 20 }
+        ]
+    },
+    wilderness: {
+        name: "Wilderness & Primeval Forest",
+        icon: "🌲",
+        paper: "forest_bark",
+        bgColor: "#0f1710",
+        gridColor: "rgba(16, 185, 129, 0.15)",
+        ambientLight: "daylight",
+        palette: [
+            { id: "w_moss_ground", name: "Zax o'rmon zamin", category: "Tabiat", icon: "🌿", color: "#14532d", type: "brush" },
+            { id: "w_river", name: "O'rmon daryosi", category: "Suv", icon: "🌊", color: "#0284c7", type: "path", width: 34 },
+            { id: "w_ancient_tree", name: "Asriy daraxt (Giant)", category: "Tabiat", icon: "🌳", color: "#166534", stroke: "#14532d", type: "stamp", w: 75, h: 75, height: 45 },
+            { id: "w_boulder", name: "Qoyatosh (Granit)", category: "Tabiat", icon: "🪨", color: "#475569", type: "stamp", w: 45, h: 40, height: 26 },
+            { id: "w_camp_fire", name: "Sayyoh gulxani", category: "Yorug'lik", icon: "⛺", color: "#ea580c", type: "light", radius: 150, intensity: 0.95 },
+            { id: "w_tent", name: "Sayyoh chodiri", category: "Mulklar", icon: "⛺", color: "#78350f", type: "stamp", w: 40, h: 36, height: 18 },
+            { id: "w_ruins", name: "O'rmon xarobalari", category: "Qadimiy", icon: "🏛️", color: "#334155", type: "stamp", w: 55, h: 45, height: 22 }
+        ]
+    },
+    overworld: {
+        name: "Overworld & Realms Map",
+        icon: "🗺️",
+        paper: "antique_atlas",
+        bgColor: "#241e17",
+        gridColor: "rgba(217, 119, 6, 0.15)",
+        ambientLight: "daylight",
+        palette: [
+            { id: "o_ocean", name: "Buyuk Ummon", category: "Hudud", icon: "🌊", color: "#1e3a8a", type: "brush" },
+            { id: "o_mountain", name: "Tog'lar tizmasi", category: "Relyef", icon: "⛰️", color: "#78716c", type: "stamp", w: 55, h: 45, height: 35 },
+            { id: "o_city_icon", name: "Bosh shahar", category: "Belgilar", icon: "🏰", color: "#f59e0b", type: "stamp", w: 40, h: 40 },
+            { id: "o_forest_biome", name: "Qalin o'rmon hududi", category: "Relyef", icon: "🌲", color: "#15803d", type: "stamp", w: 45, h: 40 },
+            { id: "o_ship", name: "Yelkanli kema", category: "Belgilar", icon: "⛵", color: "#fde047", type: "stamp", w: 35, h: 30 }
+        ]
+    },
+    desert: {
+        name: "Desert & Lost Pyramids",
+        icon: "🏜️",
+        paper: "sandstone",
+        bgColor: "#291e10",
+        gridColor: "rgba(234, 179, 8, 0.18)",
+        ambientLight: "golden_hour",
+        palette: [
+            { id: "ds_dune", name: "Oltin barxan qumi", category: "Relyef", icon: "🏖️", color: "#b45309", type: "brush" },
+            { id: "ds_pyramid", name: "Qadimiy piramida", category: "Xarobalar", icon: "🔺", color: "#d97706", stroke: "#78350f", type: "stamp", w: 90, h: 90, height: 60 },
+            { id: "ds_oasis", name: "Chul vohasi / Suv havzasi", category: "Tabiat", icon: "🌴", color: "#0d9488", type: "stamp", w: 60, h: 50 },
+            { id: "ds_palm", name: "Finik palmasi", category: "Tabiat", icon: "🌴", color: "#15803d", type: "stamp", w: 38, h: 38, height: 28 },
+            { id: "ds_temple", name: "Qum ostidagi ibodatxona", category: "Xarobalar", icon: "🏛️", color: "#92400e", type: "stamp", w: 75, h: 50, height: 30 }
+        ]
+    },
+    coastal: {
+        name: "Coastal Haven & Pirate Bay",
+        icon: "⛵",
+        paper: "nautical_chart",
+        bgColor: "#0c1a24",
+        gridColor: "rgba(14, 165, 233, 0.18)",
+        ambientLight: "daylight",
+        palette: [
+            { id: "cs_deep_water", name: "Chuqur dengiz", category: "Suv", icon: "🌊", color: "#0369a1", type: "brush" },
+            { id: "cs_sand_beach", name: "Qumli qirg'oq", category: "Relyef", icon: "🏖️", color: "#d97706", type: "brush" },
+            { id: "cs_pier", name: "Yog'och kema prichali", category: "Inshootlar", icon: "🪵", color: "#78350f", type: "wall", height: 12 },
+            { id: "cs_lighthouse", name: "Dengiz mayog'i", category: "Inshootlar", icon: "🚨", color: "#e2e8f0", stroke: "#ef4444", type: "stamp", w: 42, h: 42, height: 55 },
+            { id: "cs_shipwreck", name: "Cho'kkan qaroqchi kemasi", category: "Mulklar", icon: "🏴‍☠️", color: "#451a03", type: "stamp", w: 65, h: 35 }
+        ]
     }
-    activeLayer = 0;
-    resizeCanvas();
-    redraw();
-    pushHistory();
-    fitCanvas();
-    renderLayersList();
-    updateStats();
-}
+};
 
-function resizeCanvas() {
-    canvas.width  = cols * gridSize;
-    canvas.height = rows * gridSize;
-}
+/* Resolve current theme configuration */
+const currentThemeKey = THEME_PRESETS[MAP_TYPE] ? MAP_TYPE : "dungeon";
+const currentTheme = THEME_PRESETS[currentThemeKey];
 
-function buildPalette() {
-    buildGrid('tileGrid', TERRAIN_TILES);
-    buildGrid('structGrid', STRUCT_TILES);
-    buildGrid('objectGrid', OBJECT_TILES);
-    buildGrid('entityGrid', ENTITY_TILES);
-}
+/* Main Canvas State */
+const state = {
+    mapId: MAP_ID,
+    title: "{{ map.title|escapejs }}",
+    themeKey: currentThemeKey,
+    paper: RAW_MAP_DATA.paperTheme || currentTheme.paper,
+    lighting: RAW_MAP_DATA.lighting || currentTheme.ambientLight,
+    shadowAngle: RAW_MAP_DATA.shadowAngle || 45,
+    shadowIntensity: RAW_MAP_DATA.shadowIntensity !== undefined ? RAW_MAP_DATA.shadowIntensity : 0.65,
+    shadowDistance: RAW_MAP_DATA.shadowDistance || 12,
+    vignette: RAW_MAP_DATA.vignette !== false,
+    fogOfWar: RAW_MAP_DATA.fogOfWar || false,
+    weather: RAW_MAP_DATA.weather || "none", // 'none', 'rain', 'snow', 'embers'
+    showGrid: true,
+    showShadows: true,
+    gridSize: RAW_MAP_DATA.gridSize || 32,
+    
+    // Viewport transform (Infinite canvas panning & zooming)
+    panX: 0,
+    panY: 0,
+    zoom: 1.0,
+    
+    // Active tool & material
+    activeTool: "brush",
+    activeMaterial: currentTheme.palette[0],
+    brushSize: 32,
+    activeLayerId: "ly_structures",
+    
+    // Layers & Entities data
+    layers: RAW_MAP_DATA.layers || [
+        { id: 'ly_terrain', name: 'Terrain & Ground', visible: true, locked: false, color: '#22c55e' },
+        { id: 'ly_water', name: 'Water & Roads', visible: true, locked: false, color: '#38bdf8' },
+        { id: 'ly_structures', name: 'Walls & Buildings', visible: true, locked: false, color: '#f59e0b' },
+        { id: 'ly_nature', name: 'Trees & Foliage', visible: true, locked: false, color: '#10b981' },
+        { id: 'ly_props', name: 'Props & Furniture', visible: true, locked: false, color: '#ec4899' },
+        { id: 'ly_lights', name: 'Lights & Shadows', visible: true, locked: false, color: '#eab308' },
+        { id: 'ly_labels', name: 'Notes & Markers', visible: true, locked: false, color: '#a855f7' }
+    ],
+    
+    // Canvas Elements placed
+    elements: RAW_MAP_DATA.elements || [],
+    paths: RAW_MAP_DATA.paths || [],
+    lights: RAW_MAP_DATA.lights || [],
+    
+    // Selection state
+    selectedElementId: null,
+    isDirty: false
+};
 
-function buildGrid(containerId, tiles) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = tiles.map(t => `
-        <div class="tile-btn ${t.id === selectedTile.id ? 'selected' : ''}" id="tile_${t.id}"
-            onclick="selectTile('${t.id}')" title="${t.label}"
-            style="background:${t.color}44;">
-            <span style="font-size:1.2rem;">${t.emoji}</span>
-        </div>
-    `).join('');
-}
+// History stack
+const historyStack = [];
+let historyIndex = -1;
 
-function selectTile(id) {
-    selectedTile = ALL_TILES.find(t => t.id === id);
-    document.querySelectorAll('.tile-btn').forEach(b => b.classList.remove('selected'));
-    const btn = document.getElementById('tile_' + id);
-    if (btn) btn.classList.add('selected');
-}
+/* Canvas Context */
+const canvas = document.getElementById("mainCanvas");
+const ctx = canvas.getContext("2d");
+let isDraggingViewport = false;
+let isInteracting = false;
+let lastPointerPos = { x: 0, y: 0 };
+let currentPathPoints = [];
 
-// ═══════════════════════════════════════════════════════════
-//  DRAW
-// ═══════════════════════════════════════════════════════════
-function redraw() {
-    const bg = document.getElementById('mapBg').value;
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Ambient overlay
-    const ambient = document.getElementById('ambientLight').value;
-    if (ambient !== 'day') {
-        const overlays = { night:'rgba(0,0,50,.5)', cave:'rgba(0,0,0,.6)', dungeon:'rgba(20,0,0,.5)' };
-        ctx.fillStyle = overlays[ambient] || 'transparent';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-
-    // Draw layers
-    layers.forEach(layer => {
-        if (!layer.visible) return;
-        Object.entries(layer.cells || {}).forEach(([key, tileId]) => {
-            const [col, row] = key.split(',').map(Number);
-            const tile = ALL_TILES.find(t => t.id === tileId);
-            if (!tile) return;
-            const x = col * gridSize, y = row * gridSize;
-            ctx.fillStyle = tile.color;
-            ctx.fillRect(x, y, gridSize, gridSize);
-            ctx.font = `${gridSize * 0.7}px serif`;
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(tile.emoji, x + gridSize/2, y + gridSize/2 + 1);
-        });
+// ══════════════════════════════════════════════════════════════
+//  INITIALIZATION
+// ══════════════════════════════════════════════════════════════
+function initEngine() {
+    setupViewportResize();
+    buildMaterialPalette();
+    buildLayersPanel();
+    buildInspectorControls();
+    
+    // Initial center positioning
+    state.panX = canvas.width / 2;
+    state.panY = canvas.height / 2;
+    
+    // Attach Pointer Listeners
+    setupCanvasEvents();
+    
+    // Initial History Record
+    saveHistoryState();
+    
+    // Render loop
+    requestAnimationFrame(renderLoop);
+    
+    // Setup title autosave listener
+    document.getElementById("mapTitleInput").addEventListener("input", (e) => {
+        state.title = e.target.value.trim();
+        markDirty();
     });
-
-    // Grid
-    if (document.getElementById('showGrid').checked) {
-        const gc = document.getElementById('gridColor')?.value || '#1a2a1a';
-        const go = (document.getElementById('gridOpacity')?.value || 30) / 100;
-        ctx.strokeStyle = gc; ctx.globalAlpha = go; ctx.lineWidth = 0.5;
-        for (let c = 0; c <= cols; c++) { ctx.beginPath(); ctx.moveTo(c*gridSize,0); ctx.lineTo(c*gridSize,canvas.height); ctx.stroke(); }
-        for (let r = 0; r <= rows; r++) { ctx.beginPath(); ctx.moveTo(0,r*gridSize); ctx.lineTo(canvas.width,r*gridSize); ctx.stroke(); }
-        ctx.globalAlpha = 1;
-        document.getElementById('gridOpVal').textContent = Math.round(go*100) + '%';
-    }
-
-    updateMinimap();
 }
 
-// ═══════════════════════════════════════════════════════════
-//  MOUSE EVENTS
-// ═══════════════════════════════════════════════════════════
-canvas.addEventListener('mousedown', e => {
-    isDrawing = true;
-    const {tc, tr} = getTile(e);
-    if (tool === 'select') { selectObjectAt(tc, tr); return; }
-    if (tool === 'fill') { floodFill(tc, tr); return; }
-    if (tool === 'rect' || tool === 'ellipse' || tool === 'line') {
-        shapeStart = {tc, tr};
-        shapeSnapshot = JSON.parse(JSON.stringify(layers[activeLayer].cells));
+function setupViewportResize() {
+    function resize() {
+        const container = document.getElementById("viewportContainer");
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        requestRender();
+    }
+    window.addEventListener("resize", resize);
+    resize();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PALETTE & TOOLBAR BUILDER
+// ══════════════════════════════════════════════════════════════
+function buildMaterialPalette() {
+    const container = document.getElementById("paletteListContainer");
+    container.innerHTML = "";
+    
+    // Group palette by category
+    const categories = {};
+    currentTheme.palette.forEach(item => {
+        if (!categories[item.category]) categories[item.category] = [];
+        categories[item.category].push(item);
+    });
+    
+    // If user uploaded 2D assets, add them to palette
+    if (USER_ASSETS && USER_ASSETS.length > 0) {
+        categories["Mening Assetlarim"] = USER_ASSETS.map(a => ({
+            id: "u_asset_" + a.id,
+            name: a.title,
+            category: "Mening Assetlarim",
+            icon: "🖼️",
+            color: "#38bdf8",
+            type: "stamp",
+            w: 48,
+            h: 48,
+            userAssetUrl: a.file
+        }));
+    }
+    
+    Object.entries(categories).forEach(([catName, items]) => {
+        const section = document.createElement("div");
+        section.className = "palette-group-section";
+        
+        const catHeader = document.createElement("div");
+        catHeader.className = "category-header";
+        catHeader.innerHTML = `<span>${catName}</span><span class="category-count">${items.length}</span>`;
+        section.appendChild(catHeader);
+        
+        const grid = document.createElement("div");
+        grid.className = "materials-grid";
+        
+        items.forEach(mat => {
+            const card = document.createElement("div");
+            card.className = "material-card" + (state.activeMaterial && state.activeMaterial.id === mat.id ? " active" : "");
+            card.onclick = () => selectMaterial(mat);
+            
+            card.innerHTML = `
+                <div class="material-preview-box" style="border-color:${mat.color}44;">
+                    ${mat.icon}
+                </div>
+                <div class="material-name" title="${mat.name}">${mat.name}</div>
+            `;
+            grid.appendChild(card);
+        });
+        
+        section.appendChild(grid);
+        container.appendChild(section);
+    });
+}
+
+function selectMaterial(mat) {
+    state.activeMaterial = mat;
+    if (mat.type === "wall") state.activeTool = "wall";
+    else if (mat.type === "path") state.activeTool = "path";
+    else if (mat.type === "light") state.activeTool = "light";
+    else if (mat.type === "stamp") state.activeTool = "stamp";
+    else if (mat.type === "brush") state.activeTool = "brush";
+    
+    updateToolActiveUI();
+    document.querySelectorAll(".material-card").forEach(c => c.classList.remove("active"));
+    buildMaterialPalette();
+    showToast(`${mat.name} tanlandi`);
+}
+
+function setTool(toolName) {
+    state.activeTool = toolName;
+    updateToolActiveUI();
+    showToast(`Asbob: ${toolName.toUpperCase()}`);
+}
+
+function updateToolActiveUI() {
+    document.querySelectorAll(".tool-icon-btn").forEach(b => b.classList.remove("active"));
+    const activeBtn = document.getElementById("tool_" + state.activeTool);
+    if (activeBtn) activeBtn.classList.add("active");
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CANVAS DRAWING & PROCEDURAL RENDERING
+// ══════════════════════════════════════════════════════════════
+let renderPending = false;
+function requestRender() {
+    if (!renderPending) {
+        renderPending = true;
+        requestAnimationFrame(() => {
+            renderCanvas();
+            renderPending = false;
+        });
+    }
+}
+
+function renderLoop() {
+    if (state.weather !== "none") {
+        renderCanvas();
+    }
+    requestAnimationFrame(renderLoop);
+}
+
+function renderCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.save();
+    // Apply Viewport Pan & Zoom
+    ctx.translate(state.panX, state.panY);
+    ctx.scale(state.zoom, state.zoom);
+    
+    // 1. Draw Paper Texture Background
+    drawParchmentBackground();
+    
+    // 2. Draw Subtle Grid
+    if (state.showGrid) {
+        drawGridPattern();
+    }
+    
+    // 3. Render Paths (Water, Dirt Roads)
+    renderPathsLayer();
+    
+    // 4. Render Structures, Objects & Dynamic Shadows
+    renderElementsLayer();
+    
+    // 5. Render Interactive Path in Progress
+    if (isInteracting && currentPathPoints.length > 1) {
+        renderActiveStroke();
+    }
+    
+    // 6. Render Lighting & Torches Overlay
+    renderLightingPass();
+    
+    ctx.restore();
+    
+    // 7. Post-Processing: Weather Particles & Vignette
+    if (state.weather !== "none") {
+        renderWeatherParticles();
+    }
+    if (state.vignette) {
+        renderVignetteOverlay();
+    }
+}
+
+/* Parchment / Paper Theme Generator */
+function drawParchmentBackground() {
+    const size = 3000;
+    const x = -size / 2;
+    const y = -size / 2;
+    
+    // Base Color based on theme
+    const paperThemes = {
+        parchment_dark: { base: "#171410", edge: "#0d0b08" },
+        vintage_cream:  { base: "#f5edd6", edge: "#d8c7a2" },
+        blueprint:      { base: "#0d1b2a", edge: "#070d14" },
+        forest_bark:    { base: "#162015", edge: "#0c130b" },
+        antique_atlas:  { base: "#292117", edge: "#17120a" },
+        sandstone:      { base: "#2d2013", edge: "#1a1208" },
+        nautical_chart: { base: "#0f1f2c", edge: "#070f17" },
+        dark_slate:     { base: "#0d0f14", edge: "#06070a" }
+    };
+    const pTheme = paperThemes[state.paper] || paperThemes.parchment_dark;
+    
+    // Radial parchment glow
+    const grad = ctx.createRadialGradient(0, 0, size * 0.1, 0, 0, size * 0.7);
+    grad.addColorStop(0, pTheme.base);
+    grad.addColorStop(1, pTheme.edge);
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, size, size);
+    
+    // Border frame for paper
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 20, y + 20, size - 40, size - 40);
+    
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.1)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 26, y + 26, size - 52, size - 52);
+}
+
+/* Coordinate Grid */
+function drawGridPattern() {
+    const step = state.gridSize;
+    const size = 3000;
+    const start = -size / 2;
+    const end = size / 2;
+    
+    ctx.beginPath();
+    ctx.strokeStyle = currentTheme.gridColor;
+    ctx.lineWidth = 0.6;
+    
+    for (let pos = start; pos <= end; pos += step) {
+        ctx.moveTo(pos, start);
+        ctx.lineTo(pos, end);
+        ctx.moveTo(start, pos);
+        ctx.lineTo(end, pos);
+    }
+    ctx.stroke();
+    
+    // Center origin crosshair
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(-20, 0); ctx.lineTo(20, 0);
+    ctx.moveTo(0, -20); ctx.lineTo(0, 20);
+    ctx.stroke();
+}
+
+/* Paths (Roads, Rivers, Walls with Width) */
+function renderPathsLayer() {
+    state.paths.forEach(p => {
+        if (p.points.length < 2) return;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(p.points[0].x, p.points[0].y);
+        for (let i = 1; i < p.points.length; i++) {
+            ctx.lineTo(p.points[i].x, p.points[i].y);
+        }
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = p.width || 24;
+        ctx.strokeStyle = p.color || "#854d0e";
+        ctx.stroke();
+        
+        // Inner edge highlight for rivers or roads
+        if (p.type === "river") {
+            ctx.lineWidth = (p.width || 24) * 0.4;
+            ctx.strokeStyle = "rgba(255,255,255,0.4)";
+            ctx.stroke();
+        }
+        ctx.restore();
+    });
+}
+
+/* Render Placed Objects with Canvas of Kings dynamic top-down shadows */
+function renderElementsLayer() {
+    const angleRad = (state.shadowAngle * Math.PI) / 180;
+    const shadowOffsetX = Math.cos(angleRad) * state.shadowDistance;
+    const shadowOffsetY = Math.sin(angleRad) * state.shadowDistance;
+    
+    // First pass: Cast shadows if enabled
+    if (state.showShadows && state.shadowIntensity > 0) {
+        state.elements.forEach(el => {
+            const h = el.height || 20;
+            const sX = shadowOffsetX * (h / 20);
+            const sY = shadowOffsetY * (h / 20);
+            
+            ctx.save();
+            ctx.translate(el.x + sX, el.y + sY);
+            ctx.rotate(el.rotation || 0);
+            ctx.fillStyle = `rgba(0, 0, 0, ${state.shadowIntensity})`;
+            ctx.filter = `blur(${Math.max(2, h * 0.2)}px)`;
+            
+            // Draw projected silhouette
+            if (el.w && el.h) {
+                ctx.fillRect(-el.w / 2, -el.h / 2, el.w, el.h);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, (el.radius || 16), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        });
+    }
+    
+    // Second pass: Draw Actual Elements
+    state.elements.forEach(el => {
+        ctx.save();
+        ctx.translate(el.x, el.y);
+        ctx.rotate(el.rotation || 0);
+        
+        // Selection Box
+        if (state.selectedElementId === el.id) {
+            ctx.strokeStyle = "var(--cyan)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-el.w / 2 - 4, -el.h / 2 - 4, el.w + 8, el.h + 8);
+        }
+        
+        // Custom Image Stamp (if User Asset)
+        if (el.userAssetUrl) {
+            ctx.fillStyle = el.color || "#38bdf8";
+            ctx.fillRect(-el.w / 2, -el.h / 2, el.w, el.h);
+        }
+        // Procedural Vector / Hand-drawn Style
+        else {
+            ctx.fillStyle = el.color || "#4b5563";
+            ctx.strokeStyle = el.stroke || "#1f2937";
+            ctx.lineWidth = 2;
+            
+            if (el.w && el.h) {
+                ctx.fillRect(-el.w / 2, -el.h / 2, el.w, el.h);
+                ctx.strokeRect(-el.w / 2, -el.h / 2, el.w, el.h);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, el.radius || 16, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+            
+            // Draw Iconic Glyph in center
+            if (el.icon) {
+                ctx.font = `${Math.min(el.w || 32, el.h || 32) * 0.65}px serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(el.icon, 0, 1);
+            }
+        }
+        ctx.restore();
+    });
+}
+
+function renderActiveStroke() {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(currentPathPoints[0].x, currentPathPoints[0].y);
+    for (let i = 1; i < currentPathPoints.length; i++) {
+        ctx.lineTo(currentPathPoints[i].x, currentPathPoints[i].y);
+    }
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = (state.activeTool === "wall" ? 14 : (state.activeMaterial?.width || 24));
+    ctx.strokeStyle = state.activeMaterial?.color || "#f59e0b";
+    ctx.stroke();
+    ctx.restore();
+}
+
+/* Dynamic 2D Torchlight & Radial Lighting Pass */
+function renderLightingPass() {
+    if (state.lighting === "daylight") return;
+    
+    // Ambient darkness layer
+    const darknessAlpha = state.lighting === "torch" ? 0.72 : (state.lighting === "sunset" ? 0.35 : 0.5);
+    ctx.save();
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = `rgba(10, 14, 24, ${darknessAlpha})`;
+    ctx.fillRect(-2000, -2000, 4000, 4000);
+    ctx.restore();
+    
+    // Punch warm light circles for torches & lights
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    state.lights.forEach(l => {
+        const rad = l.radius || 160;
+        const grad = ctx.createRadialGradient(l.x, l.y, 4, l.x, l.y, rad);
+        grad.addColorStop(0, "rgba(251, 191, 36, 0.9)");
+        grad.addColorStop(0.3, "rgba(245, 158, 11, 0.5)");
+        grad.addColorStop(0.7, "rgba(217, 119, 6, 0.15)");
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(l.x, l.y, rad, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.restore();
+}
+
+/* Post-process Vignette */
+function renderVignetteOverlay() {
+    ctx.save();
+    const w = canvas.width;
+    const h = canvas.height;
+    const vGrad = ctx.createRadialGradient(w/2, h/2, Math.min(w,h) * 0.35, w/2, h/2, Math.max(w,h) * 0.7);
+    vGrad.addColorStop(0, "rgba(0,0,0,0)");
+    vGrad.addColorStop(1, "rgba(0,0,0,0.65)");
+    ctx.fillStyle = vGrad;
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+}
+
+/* Ambient Weather Particles */
+const particles = [];
+for (let i = 0; i < 90; i++) {
+    particles.push({
+        x: Math.random() * 2000,
+        y: Math.random() * 2000,
+        speed: 1 + Math.random() * 3,
+        size: 1 + Math.random() * 2.5
+    });
+}
+function renderWeatherParticles() {
+    ctx.save();
+    if (state.weather === "rain") {
+        ctx.strokeStyle = "rgba(186, 230, 253, 0.4)";
+        ctx.lineWidth = 1.2;
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x - 4, p.y + 12);
+            ctx.stroke();
+            p.y += p.speed * 4;
+            p.x -= p.speed * 1.2;
+            if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+        });
+    } else if (state.weather === "embers") {
+        ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            p.y -= p.speed * 0.8;
+            p.x += Math.sin(p.y * 0.05) * 0.8;
+            if (p.y < 0) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
+        });
+    }
+    ctx.restore();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INTERACTIVE POINTER / MOUSE EVENTS
+// ══════════════════════════════════════════════════════════════
+function setupCanvasEvents() {
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("wheel", onCanvasWheel, { passive: false });
+}
+
+function getCanvasCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const screenX = e.clientX - rect.left;
+    const screenY = e.clientY - rect.top;
+    
+    // Invert viewport pan & zoom
+    const worldX = (screenX - state.panX) / state.zoom;
+    const worldY = (screenY - state.panY) / state.zoom;
+    
+    // Update HUD
+    document.getElementById("hudX").textContent = Math.round(worldX);
+    document.getElementById("hudY").textContent = Math.round(worldY);
+    
+    return { worldX, worldY, screenX, screenY };
+}
+
+function onPointerDown(e) {
+    // Middle click OR Space+Click = Pan Viewport
+    if (e.button === 1 || e.spaceKey || state.activeTool === "select" && e.altKey) {
+        isDraggingViewport = true;
+        lastPointerPos = { x: e.clientX, y: e.clientY };
+        canvas.style.cursor = "grabbing";
         return;
     }
-    paintAt(tc, tr);
-    lastTileX = tc; lastTileY = tr;
-});
-
-canvas.addEventListener('mousemove', e => {
-    const {tx, ty, tc, tr} = getTile(e);
-    document.getElementById('canvasInfo').textContent = `x: ${tx}, y: ${ty} | Tile: (${tc},${tr})`;
-    if (!isDrawing) return;
-    if (tool === 'select') { selectObjectAt(tc, tr); return; }
-    if (tool === 'rect' || tool === 'ellipse' || tool === 'line') {
-        if (!shapeStart) return;
-        layers[activeLayer].cells = JSON.parse(JSON.stringify(shapeSnapshot));
-        drawShape(shapeStart.tc, shapeStart.tr, tc, tr);
-        redraw(); return;
+    
+    const { worldX, worldY } = getCanvasCoords(e);
+    isInteracting = true;
+    lastPointerPos = { x: e.clientX, y: e.clientY };
+    
+    if (state.activeTool === "stamp") {
+        placeStampElement(worldX, worldY);
+    } else if (state.activeTool === "light") {
+        placeLightSource(worldX, worldY);
+    } else if (state.activeTool === "brush" || state.activeTool === "wall" || state.activeTool === "path") {
+        currentPathPoints = [{ x: worldX, y: worldY }];
+    } else if (state.activeTool === "select") {
+        selectElementAt(worldX, worldY);
+    } else if (state.activeTool === "erase") {
+        eraseAt(worldX, worldY);
     }
-    if (tc !== lastTileX || tr !== lastTileY) { paintAt(tc, tr); lastTileX = tc; lastTileY = tr; }
-});
-
-canvas.addEventListener('mouseup', e => {
-    isDrawing = false; shapeStart = null; shapeSnapshot = null;
-    redraw(); pushHistory(); updateStats();
-});
-
-canvas.addEventListener('mouseleave', () => { isDrawing = false; });
-canvas.addEventListener('wheel', e => { if(e.ctrlKey) { e.preventDefault(); setZoom(zoom*(e.deltaY<0?1.15:0.85)); } }, {passive:false});
-
-function getTile(e) {
-    const rect = canvas.getBoundingClientRect();
-    const tx = (e.clientX - rect.left) / zoom;
-    const ty = (e.clientY - rect.top) / zoom;
-    return { tx: Math.round(tx), ty: Math.round(ty), tc: Math.floor(tx/gridSize), tr: Math.floor(ty/gridSize) };
+    requestRender();
 }
 
-function selectObjectAt(tc, tr) {
-    if (tc < 0 || tc >= cols || tr < 0 || tr >= rows) return;
-    let foundTile = null;
-    let foundLayer = null;
-    for (let i = layers.length - 1; i >= 0; i--) {
-        const layer = layers[i];
-        if (layer.visible && layer.cells && layer.cells[tc + ',' + tr]) {
-            const tileId = layer.cells[tc + ',' + tr];
-            foundTile = ALL_TILES.find(t => t.id === tileId);
-            foundLayer = layer;
+function onPointerMove(e) {
+    if (isDraggingViewport) {
+        const dx = e.clientX - lastPointerPos.x;
+        const dy = e.clientY - lastPointerPos.y;
+        state.panX += dx;
+        state.panY += dy;
+        lastPointerPos = { x: e.clientX, y: e.clientY };
+        requestRender();
+        return;
+    }
+    
+    const { worldX, worldY } = getCanvasCoords(e);
+    
+    if (isInteracting && (state.activeTool === "brush" || state.activeTool === "wall" || state.activeTool === "path")) {
+        currentPathPoints.push({ x: worldX, y: worldY });
+        requestRender();
+    } else if (isInteracting && state.activeTool === "erase") {
+        eraseAt(worldX, worldY);
+    }
+}
+
+function onPointerUp(e) {
+    if (isDraggingViewport) {
+        isDraggingViewport = false;
+        canvas.style.cursor = "crosshair";
+    }
+    
+    if (isInteracting && currentPathPoints.length > 1) {
+        finishPathStroke();
+    }
+    
+    isInteracting = false;
+    currentPathPoints = [];
+    requestRender();
+}
+
+function onCanvasWheel(e) {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
+    zoomCanvasAt(e.clientX, e.clientY, zoomFactor);
+}
+
+function zoomCanvas(delta) {
+    const factor = delta > 0 ? 1.15 : 0.85;
+    zoomCanvasAt(canvas.width / 2, canvas.height / 2, factor);
+}
+
+function zoomCanvasAt(screenX, screenY, factor) {
+    const newZoom = Math.min(Math.max(state.zoom * factor, 0.2), 4.0);
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = screenX - rect.left;
+    const mouseY = screenY - rect.top;
+    
+    // Zoom toward pointer
+    state.panX = mouseX - (mouseX - state.panX) * (newZoom / state.zoom);
+    state.panY = mouseY - (mouseY - state.panY) * (newZoom / state.zoom);
+    state.zoom = newZoom;
+    
+    document.getElementById("zoomValDisplay").textContent = Math.round(state.zoom * 100) + "%";
+    requestRender();
+}
+
+function resetCanvasTransform() {
+    state.panX = canvas.width / 2;
+    state.panY = canvas.height / 2;
+    state.zoom = 1.0;
+    document.getElementById("zoomValDisplay").textContent = "100%";
+    requestRender();
+    showToast("Markazga keltirildi");
+}
+
+function fitCanvasView() {
+    state.panX = canvas.width / 2;
+    state.panY = canvas.height / 2;
+    state.zoom = 0.85;
+    document.getElementById("zoomValDisplay").textContent = "85%";
+    requestRender();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ELEMENT CREATION & MANIPULATION
+// ══════════════════════════════════════════════════════════════
+function placeStampElement(x, y) {
+    const mat = state.activeMaterial || currentTheme.palette[0];
+    const el = {
+        id: "el_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+        name: mat.name,
+        x: Math.round(x),
+        y: Math.round(y),
+        w: mat.w || 36,
+        h: mat.h || 36,
+        radius: mat.radius || 18,
+        color: mat.color || "#4b5563",
+        stroke: mat.stroke || "#1f2937",
+        icon: mat.icon || "🏛️",
+        height: mat.height || 20,
+        rotation: 0,
+        layerId: state.activeLayerId,
+        userAssetUrl: mat.userAssetUrl || null
+    };
+    
+    state.elements.push(el);
+    state.selectedElementId = el.id;
+    saveHistoryState();
+    updateHudStats();
+    markDirty();
+    showToast(`${mat.name} joylashtirildi`);
+}
+
+function placeLightSource(x, y) {
+    const l = {
+        id: "lt_" + Date.now(),
+        x: Math.round(x),
+        y: Math.round(y),
+        radius: 170,
+        color: "#f59e0b",
+        intensity: 0.95
+    };
+    state.lights.push(l);
+    saveHistoryState();
+    markDirty();
+    showToast("🔥 Yangi mash'ala o'rnatildi");
+}
+
+function finishPathStroke() {
+    const mat = state.activeMaterial || currentTheme.palette[0];
+    const pathObj = {
+        id: "pt_" + Date.now(),
+        name: mat.name,
+        type: state.activeTool === "wall" ? "wall" : "river",
+        width: state.activeTool === "wall" ? 16 : (mat.width || 26),
+        color: mat.color || "#f59e0b",
+        layerId: state.activeLayerId,
+        points: [...currentPathPoints]
+    };
+    state.paths.push(pathObj);
+    saveHistoryState();
+    markDirty();
+}
+
+function selectElementAt(x, y) {
+    let found = null;
+    for (let i = state.elements.length - 1; i >= 0; i--) {
+        const el = state.elements[i];
+        const halfW = (el.w || 32) / 2;
+        const halfH = (el.h || 32) / 2;
+        if (x >= el.x - halfW && x <= el.x + halfW && y >= el.y - halfH && y <= el.y + halfH) {
+            found = el;
             break;
         }
     }
-
-    const objInfo = document.getElementById('objInfo');
-    if (foundTile) {
-        objInfo.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                <span style="font-size:2rem;background:rgba(255,255,255,0.05);padding:6px;border-radius:6px;">${foundTile.emoji}</span>
-                <div>
-                    <div style="font-weight:bold;color:var(--text-primary);font-size:0.85rem;">${foundTile.label}</div>
-                    <div style="color:var(--text-muted);font-size:0.68rem;text-transform:uppercase;">ID: ${foundTile.id}</div>
-                </div>
-            </div>
-            <div style="border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;margin-top:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;color:var(--text-secondary);font-size:0.7rem;">
-                <span style="color:var(--text-muted);">Katak:</span> <span>(${tc}, ${tr})</span>
-                <span style="color:var(--text-muted);">Layer:</span> <span>${foundLayer.name}</span>
-                <span style="color:var(--text-muted);">Rang:</span> <span style="display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${foundTile.color}"></span>${foundTile.color}</span>
-            </div>
-        `;
-    } else {
-        objInfo.innerHTML = `<span style="color:var(--text-muted);">Bo'sh katak (${tc}, ${tr})</span>`;
-    }
+    state.selectedElementId = found ? found.id : null;
+    buildInspectorControls();
+    requestRender();
 }
 
-function paintAt(tc, tr) {
-    if (tool === 'select') return;
-    if (tc < 0 || tc >= cols || tr < 0 || tr >= rows) return;
-    const layer = layers[activeLayer];
-    if (!layer || layer.locked) return;
-    const key = tc + ',' + tr;
-    if (tool === 'erase') { delete layer.cells[key]; }
-    else { layer.cells[key] = selectedTile.id; }
-    redraw();
-    markUnsaved();
-}
-
-function drawShape(c1, r1, c2, r2) {
-    const layer = layers[activeLayer];
-    if (!layer || layer.locked) return;
-    const minC = Math.min(c1,c2), maxC = Math.max(c1,c2);
-    const minR = Math.min(r1,r2), maxR = Math.max(r1,r2);
-    if (tool === 'rect') {
-        for (let c = minC; c <= maxC; c++) for (let r = minR; r <= maxR; r++) {
-            if (c===minC||c===maxC||r===minR||r===maxR) layer.cells[c+','+r] = selectedTile.id;
-        }
-    } else if (tool === 'line') {
-        let dc = Math.abs(c2-c1), dr = Math.abs(r2-r1), sc = c1<c2?1:-1, sr = r1<r2?1:-1, err = dc-dr;
-        let cc = c1, rr = r1;
-        while (true) {
-            layer.cells[cc+','+rr] = selectedTile.id;
-            if (cc===c2 && rr===r2) break;
-            const e2 = 2*err;
-            if (e2 > -dr) { err -= dr; cc += sc; }
-            if (e2 < dc)  { err += dc; rr += sr; }
-        }
-    } else if (tool === 'ellipse') {
-        const cx = (c1+c2)/2, cy = (r1+r2)/2, rx = Math.abs(c2-c1)/2, ry = Math.abs(r2-r1)/2;
-        for (let c = minC; c <= maxC; c++) for (let r = minR; r <= maxR; r++) {
-            if (rx === 0 || ry === 0) continue;
-            const norm = Math.pow((c-cx)/rx,2) + Math.pow((r-cy)/ry,2);
-            if (norm >= 0.7 && norm <= 1.3) layer.cells[c+','+r] = selectedTile.id;
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════
-//  FLOOD FILL
-// ═══════════════════════════════════════════════════════════
-function floodFill(startC, startR) {
-    const layer = layers[activeLayer];
-    if (!layer || layer.locked) return;
-    const key = startC + ',' + startR;
-    const target = layer.cells[key] || null;
-    if (target === selectedTile.id) return;
-    const stack = [[startC, startR]];
-    const visited = new Set();
-    while (stack.length) {
-        const [c, r] = stack.pop();
-        if (c < 0 || c >= cols || r < 0 || r >= rows) continue;
-        const k = c + ',' + r;
-        if (visited.has(k)) continue;
-        if ((layer.cells[k] || null) !== target) continue;
-        visited.add(k);
-        layer.cells[k] = selectedTile.id;
-        stack.push([c+1,r],[c-1,r],[c,r+1],[c,r-1]);
-    }
-    redraw(); pushHistory(); markUnsaved(); updateStats();
-}
-
-// ═══════════════════════════════════════════════════════════
-//  LAYERS
-// ═══════════════════════════════════════════════════════════
-function addLayer(name, push = true) {
-    layers.push({ name: name || 'Layer ' + (layers.length+1), visible: true, locked: false, cells: {} });
-    activeLayer = layers.length - 1;
-    renderLayersList();
-    if (push) { pushHistory(); markUnsaved(); }
-}
-
-function deleteActiveLayer() {
-    if (layers.length <= 1) { showToast('Kamida 1 layer kerak', 'error'); return; }
-    layers.splice(activeLayer, 1);
-    activeLayer = Math.min(activeLayer, layers.length-1);
-    renderLayersList(); redraw(); pushHistory(); markUnsaved();
-}
-
-function renderLayersList() {
-    const list = document.getElementById('layersList');
-    const LAYER_COLORS = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444'];
-    list.innerHTML = [...layers].reverse().map((l, ri) => {
-        const i = layers.length - 1 - ri;
-        return `
-        <div class="layer-item ${i===activeLayer?'active':''}" onclick="setActiveLayer(${i})">
-            <div class="layer-color" style="background:${LAYER_COLORS[i%LAYER_COLORS.length]}"></div>
-            <span class="layer-name" style="${l.locked?'text-decoration:line-through;opacity:0.5;':''}">${l.name}</span>
-            <button class="layer-vis" onclick="event.stopPropagation();toggleLayerVis(${i})" title="${l.visible?'Yashirish':'Ko\'rsatish'}">${l.visible?'👁':'🙈'}</button>
-            <button class="layer-vis" onclick="event.stopPropagation();toggleLayerLock(${i})" title="${l.locked?'Qulfdan chiqarish':'Qulflash'}">${l.locked?'🔒':'🔓'}</button>
-        </div>`;
-    }).join('');
-}
-
-function setActiveLayer(i) { activeLayer = i; renderLayersList(); }
-function toggleLayerVis(i) { layers[i].visible = !layers[i].visible; redraw(); renderLayersList(); }
-function toggleLayerLock(i) { layers[i].locked = !layers[i].locked; renderLayersList(); }
-
-// ═══════════════════════════════════════════════════════════
-//  TOOLS
-// ═══════════════════════════════════════════════════════════
-const TOOL_CURSORS = { draw:'crosshair', erase:'cell', fill:'cell', select:'default', rect:'crosshair', ellipse:'crosshair', line:'crosshair', spawn:'crosshair', enemy:'crosshair', item:'crosshair', trigger:'crosshair' };
-function setTool(t) {
-    tool = t;
-    document.querySelectorAll('.wb-tool').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('tool-' + t);
-    if (btn) btn.classList.add('active');
-    canvas.style.cursor = TOOL_CURSORS[t] || 'crosshair';
-    // Auto-select matching tile
-    const entityMap = { spawn:'spawn', enemy:'enemy', item:'crystal', trigger:'torch' };
-    if (entityMap[t]) selectTile(entityMap[t]);
-}
-
-// ═══════════════════════════════════════════════════════════
-//  ZOOM & VIEW
-// ═══════════════════════════════════════════════════════════
-function setZoom(z) {
-    zoom = Math.max(0.1, Math.min(8, z));
-    canvas.style.transform = `scale(${zoom})`; canvas.style.transformOrigin = 'top left';
-    document.getElementById('zoomLabel').textContent = Math.round(zoom*100) + '%';
-}
-function zoomIn() { setZoom(zoom*1.25); }
-function zoomOut() { setZoom(zoom/1.25); }
-function resetView() { setZoom(1); }
-function fitCanvas() {
-    const scroll = document.getElementById('canvasScroll');
-    const sx = (scroll.clientWidth - 40) / canvas.width;
-    const sy = (scroll.clientHeight - 40) / canvas.height;
-    setZoom(Math.min(sx, sy, 2));
-}
-
-// ═══════════════════════════════════════════════════════════
-//  RESIZE MAP
-// ═══════════════════════════════════════════════════════════
-function resizeMap() {
-    cols = parseInt(document.getElementById('mapW').value) || 40;
-    rows = parseInt(document.getElementById('mapH').value) || 25;
-    resizeCanvas(); redraw(); markUnsaved();
-}
-function changeGridSize(sz) { gridSize = sz; resizeCanvas(); redraw(); }
-
-// ═══════════════════════════════════════════════════════════
-//  HISTORY
-// ═══════════════════════════════════════════════════════════
-function pushHistory() {
-    historyArr = historyArr.slice(0, histIdx+1);
-    historyArr.push({ layers: JSON.parse(JSON.stringify(layers)), cols, rows });
-    if (historyArr.length > MAX_HIST) historyArr.shift();
-    histIdx = historyArr.length - 1;
-}
-function undo() { if (histIdx <= 0) return; histIdx--; restoreHistory(); }
-function redo() { if (histIdx >= historyArr.length-1) return; histIdx++; restoreHistory(); }
-function restoreHistory() {
-    const snap = historyArr[histIdx];
-    layers = JSON.parse(JSON.stringify(snap.layers));
-    cols = snap.cols; rows = snap.rows;
-    document.getElementById('mapW').value = cols;
-    document.getElementById('mapH').value = rows;
-    resizeCanvas(); redraw(); renderLayersList(); updateStats();
-}
-
-// ═══════════════════════════════════════════════════════════
-//  MINIMAP
-// ═══════════════════════════════════════════════════════════
-function updateMinimap() {
-    const mm = document.getElementById('minimapCanvas');
-    if (!mm) return;
-    const mc = mm.getContext('2d');
-    const tw = mm.width / cols, th = mm.height / rows;
-    mc.fillStyle = document.getElementById('mapBg').value;
-    mc.fillRect(0, 0, mm.width, mm.height);
-    layers.forEach(layer => {
-        if (!layer.visible) return;
-        Object.entries(layer.cells || {}).forEach(([key, tileId]) => {
-            const [c, r] = key.split(',').map(Number);
-            const tile = ALL_TILES.find(t => t.id === tileId);
-            if (!tile) return;
-            mc.fillStyle = tile.color;
-            mc.fillRect(c*tw, r*th, Math.max(tw,1), Math.max(th,1));
-        });
+function eraseAt(x, y) {
+    const eraseRadius = 24;
+    const initialCount = state.elements.length;
+    state.elements = state.elements.filter(el => {
+        const dist = Math.hypot(el.x - x, el.y - y);
+        return dist > eraseRadius;
     });
-    // Viewport indicator
-    mc.strokeStyle = '#f59e0b'; mc.lineWidth = 1;
-    mc.strokeRect(0, 0, mm.width, mm.height);
+    if (state.elements.length !== initialCount) {
+        saveHistoryState();
+        updateHudStats();
+        markDirty();
+    }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  STATS
-// ═══════════════════════════════════════════════════════════
-function updateStats() {
-    let total = 0;
-    layers.forEach(l => total += Object.keys(l.cells||{}).length);
-    document.getElementById('mapStats').innerHTML = `
-        Kataklar: <b>${cols} × ${rows}</b><br>
-        Jami tile: <b>${total}</b><br>
-        Layerlar: <b>${layers.length}</b><br>
-        Xarita turi: <b>{{ map.get_map_type_display }}</b>
+function updateHudStats() {
+    document.getElementById("hudObjCount").textContent = state.elements.length + state.paths.length;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INSPECTOR & ATMOSPHERE CONTROLS
+// ══════════════════════════════════════════════════════════════
+function buildInspectorControls() {
+    const container = document.getElementById("inspectorContent");
+    container.innerHTML = "";
+    
+    // If an element is selected, show its properties
+    if (state.selectedElementId) {
+        const el = state.elements.find(e => e.id === state.selectedElementId);
+        if (el) {
+            const sec = document.createElement("div");
+            sec.className = "insp-section";
+            sec.innerHTML = `
+                <div class="insp-section-title">
+                    <span>📍 Tanlangan Obyekt</span>
+                    <button onclick="deleteSelectedElement()" style="background:none;border:none;color:var(--crimson);cursor:pointer;font-size:0.8rem;">🗑 O'chirish</button>
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Nomi:</span>
+                    <span class="control-val">${el.name}</span>
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Balandlik / Soya:</span>
+                    <input type="range" class="ck-range" min="5" max="80" value="${el.height || 20}" oninput="updateSelectedHeight(this.value)">
+                </div>
+                <div class="control-row">
+                    <span class="control-label">Aylantirish:</span>
+                    <input type="range" class="ck-range" min="0" max="360" value="${Math.round((el.rotation||0) * 180 / Math.PI)}" oninput="updateSelectedRotation(this.value)">
+                </div>
+            `;
+            container.appendChild(sec);
+        }
+    }
+    
+    // General Map Atmosphere Section
+    const envSec = document.createElement("div");
+    envSec.className = "insp-section";
+    envSec.innerHTML = `
+        <div class="insp-section-title">
+            <span>🏰 Muhit & Yorug'lik</span>
+            <span style="font-size:0.7rem;color:var(--gold-bright);">${currentTheme.name}</span>
+        </div>
+        <div class="control-row">
+            <span class="control-label">Yorug'lik rejimi:</span>
+            <select class="ck-select" onchange="changeLightingMode(this.value)">
+                <option value="daylight" ${state.lighting==='daylight'?'selected':''}>Kunduzgi ☀️</option>
+                <option value="torch" ${state.lighting==='torch'?'selected':''}>Mash'ala / Torches 🔥</option>
+                <option value="sunset" ${state.lighting==='sunset'?'selected':''}>Shom / Qizg'ish 🌅</option>
+                <option value="flat" ${state.lighting==='flat'?'selected':''}>Tekis / Chizma 📐</option>
+            </select>
+        </div>
+        <div class="control-row">
+            <span class="control-label">Grid o'lchami:</span>
+            <select class="ck-select" onchange="changeGridSize(+this.value)">
+                <option value="16" ${state.gridSize===16?'selected':''}>16 px</option>
+                <option value="32" ${state.gridSize===32?'selected':''}>32 px (Standart)</option>
+                <option value="48" ${state.gridSize===48?'selected':''}>48 px</option>
+                <option value="64" ${state.gridSize===64?'selected':''}>64 px</option>
+            </select>
+        </div>
     `;
+    container.appendChild(envSec);
 }
 
-// ═══════════════════════════════════════════════════════════
-//  CLEAR
-// ═══════════════════════════════════════════════════════════
-function clearMap() {
-    if (!confirm('Barcha layerlarni tozalashni tasdiqlaysizmi?')) return;
-    layers.forEach(l => l.cells = {});
-    redraw(); pushHistory(); markUnsaved(); updateStats();
+function updateSelectedHeight(val) {
+    const el = state.elements.find(e => e.id === state.selectedElementId);
+    if (el) {
+        el.height = +val;
+        markDirty();
+        requestRender();
+    }
+}
+function updateSelectedRotation(deg) {
+    const el = state.elements.find(e => e.id === state.selectedElementId);
+    if (el) {
+        el.rotation = (+deg * Math.PI) / 180;
+        markDirty();
+        requestRender();
+    }
+}
+function deleteSelectedElement() {
+    if (!state.selectedElementId) return;
+    state.elements = state.elements.filter(e => e.id !== state.selectedElementId);
+    state.selectedElementId = null;
+    saveHistoryState();
+    buildInspectorControls();
+    updateHudStats();
+    markDirty();
+    requestRender();
+    showToast("Obyekt o'chirildi");
 }
 
-// ═══════════════════════════════════════════════════════════
-//  EXPORT
-// ═══════════════════════════════════════════════════════════
-function exportJSON() {
-    const data = { cols, rows, gridSize, layers: layers.map(l => ({name:l.name,cells:l.cells})) };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = '{{ map.title|escapejs }}.json'; a.click();
-    showToast('📄 JSON eksport qilindi', 'success');
+function buildLayersPanel() {
+    // Built inside Inspector when switched to 'layers'
 }
 
-function exportPNG() {
-    const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
-    a.download = '{{ map.title|escapejs }}.png'; a.click();
-    showToast('🖼️ PNG eksport qilindi', 'success');
+function switchInspectorTab(tab) {
+    document.querySelectorAll(".insp-tab").forEach(t => t.classList.remove("active"));
+    document.getElementById("tab_" + tab).classList.add("active");
+    if (tab === "props" || tab === "lighting") {
+        buildInspectorControls();
+    } else if (tab === "layers") {
+        renderLayersTab();
+    }
 }
 
-// ═══════════════════════════════════════════════════════════
-//  SAVE
-// ═══════════════════════════════════════════════════════════
-async function saveMap() {
-    const payload = {
-        title: document.getElementById('mapTitle').value,
-        data: { cols, rows, gridSize, layers }
+function renderLayersTab() {
+    const container = document.getElementById("inspectorContent");
+    container.innerHTML = `
+        <div class="insp-section">
+            <div class="insp-section-title">
+                <span>📑 Qatlamlar (Layers)</span>
+            </div>
+            <div id="layersListGroup"></div>
+        </div>
+    `;
+    const list = document.getElementById("layersListGroup");
+    state.layers.forEach(l => {
+        const row = document.createElement("div");
+        row.className = "layer-row" + (state.activeLayerId === l.id ? " active" : "");
+        row.onclick = () => {
+            state.activeLayerId = l.id;
+            renderLayersTab();
+            showToast(`Qatlam: ${l.name}`);
+        };
+        row.innerHTML = `
+            <div class="layer-color-dot" style="background:${l.color};"></div>
+            <span class="layer-name-text">${l.name}</span>
+            <button class="layer-action-btn" onclick="event.stopPropagation(); toggleLayerVisibility('${l.id}')">${l.visible ? '👁️' : '🕶️'}</button>
+        `;
+        list.appendChild(row);
+    });
+}
+
+function toggleLayerVisibility(id) {
+    const l = state.layers.find(x => x.id === id);
+    if (l) {
+        l.visible = !l.visible;
+        renderLayersTab();
+        requestRender();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TOPBAR & ENVIRONMENT MODAL ACTIONS
+// ══════════════════════════════════════════════════════════════
+function toggleGridDisplay() {
+    state.showGrid = !state.showGrid;
+    document.getElementById("gridBtnText").textContent = "Grid: " + (state.showGrid ? "On" : "Off");
+    requestRender();
+}
+
+function toggleShadowsDisplay() {
+    state.showShadows = !state.showShadows;
+    document.getElementById("shadowBtnText").textContent = "Soyalar: " + (state.showShadows ? "On" : "Off");
+    requestRender();
+}
+
+function cycleWeatherEffect() {
+    const weathers = ["none", "rain", "embers"];
+    const idx = weathers.indexOf(state.weather);
+    state.weather = weathers[(idx + 1) % weathers.length];
+    document.getElementById("weatherBtnText").textContent = "Ob-havo: " + state.weather.toUpperCase();
+    showToast(`Ob-havo: ${state.weather}`);
+    requestRender();
+}
+
+function openEnvironmentModal() {
+    document.getElementById("paperThemeSelect").value = state.paper;
+    document.getElementById("shadowAngleRange").value = state.shadowAngle;
+    document.getElementById("shadowIntRange").value = Math.round(state.shadowIntensity * 100);
+    document.getElementById("shadowDistRange").value = state.shadowDistance;
+    document.getElementById("vignetteCheckbox").checked = state.vignette;
+    document.getElementById("fogCheckbox").checked = state.fogOfWar;
+    document.getElementById("envModal").classList.add("show");
+}
+
+function closeEnvironmentModal() {
+    document.getElementById("envModal").classList.remove("show");
+}
+
+function changePaperTheme(val) {
+    state.paper = val;
+    markDirty();
+    requestRender();
+}
+
+function updateShadowParams() {
+    state.shadowAngle = +document.getElementById("shadowAngleRange").value;
+    state.shadowIntensity = +document.getElementById("shadowIntRange").value / 100;
+    state.shadowDistance = +document.getElementById("shadowDistRange").value;
+    markDirty();
+    requestRender();
+}
+
+function toggleVignette(val) {
+    state.vignette = val;
+    markDirty();
+    requestRender();
+}
+
+function toggleFog(val) {
+    state.fogOfWar = val;
+    markDirty();
+    requestRender();
+}
+
+function changeLightingMode(val) {
+    state.lighting = val;
+    markDirty();
+    requestRender();
+}
+
+function changeGridSize(val) {
+    state.gridSize = val;
+    markDirty();
+    requestRender();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  HISTORY (UNDO / REDO)
+// ══════════════════════════════════════════════════════════════
+function saveHistoryState() {
+    if (historyIndex < historyStack.length - 1) {
+        historyStack.splice(historyIndex + 1);
+    }
+    const snapshot = {
+        elements: JSON.parse(JSON.stringify(state.elements)),
+        paths: JSON.parse(JSON.stringify(state.paths)),
+        lights: JSON.parse(JSON.stringify(state.lights))
     };
+    historyStack.push(snapshot);
+    if (historyStack.length > 30) historyStack.shift();
+    historyIndex = historyStack.length - 1;
+}
+
+function undo() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        restoreHistorySnapshot(historyStack[historyIndex]);
+        showToast("Bekor qilindi (Undo)");
+    }
+}
+
+function redo() {
+    if (historyIndex < historyStack.length - 1) {
+        historyIndex++;
+        restoreHistorySnapshot(historyStack[historyIndex]);
+        showToast("Qaytarildi (Redo)");
+    }
+}
+
+function restoreHistorySnapshot(s) {
+    state.elements = JSON.parse(JSON.stringify(s.elements));
+    state.paths = JSON.parse(JSON.stringify(s.paths));
+    state.lights = JSON.parse(JSON.stringify(s.lights));
+    updateHudStats();
+    markDirty();
+    requestRender();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PERSISTENCE & EXPORT
+// ══════════════════════════════════════════════════════════════
+function markDirty() {
+    state.isDirty = true;
+    document.getElementById("saveDot").classList.add("dirty");
+    document.getElementById("saveText").textContent = "Saqlanmagan";
+}
+
+function markSaved() {
+    state.isDirty = false;
+    document.getElementById("saveDot").classList.remove("dirty");
+    document.getElementById("saveText").textContent = "Saqlangan";
+}
+
+async function saveMapData() {
+    const payload = {
+        title: state.title,
+        data: {
+            version: 2,
+            mapType: state.themeKey,
+            paperTheme: state.paper,
+            lighting: state.lighting,
+            shadowAngle: state.shadowAngle,
+            shadowIntensity: state.shadowIntensity,
+            shadowDistance: state.shadowDistance,
+            vignette: state.vignette,
+            fogOfWar: state.fogOfWar,
+            weather: state.weather,
+            gridSize: state.gridSize,
+            layers: state.layers,
+            elements: state.elements,
+            paths: state.paths,
+            lights: state.lights,
+            objects: state.elements // backward compatibility
+        }
+    };
+    
     try {
-        const res = await fetch(`/studio/world-builder/save/${PROJECT_ID}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        const res = await fetch(`/studio/world-builder/save/${state.mapId}/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
             body: JSON.stringify(payload)
         });
-        if (res.ok) { markSaved(); showToast('💾 Saqlandi', 'success'); }
-    } catch(e) { showToast('Saqlashda xato', 'error'); }
+        const json = await res.json();
+        if (json.status === "success") {
+            markSaved();
+            showToast("🏰 Xarita muvaffaqiyatli saqlandi!");
+        } else {
+            showToast("Saqlashda xato: " + json.message);
+        }
+    } catch(err) {
+        showToast("Server bilan aloqa xatosi");
+    }
 }
 
-function markUnsaved() { unsaved=true; document.getElementById('saveDot').classList.add('unsaved'); document.getElementById('saveLabel').textContent='Saqlanmagan'; }
-function markSaved()   { unsaved=false; document.getElementById('saveDot').classList.remove('unsaved'); document.getElementById('saveLabel').textContent='Saqlangan'; }
-
-// ═══════════════════════════════════════════════════════════
-//  RIGHT TAB SWITCH
-// ═══════════════════════════════════════════════════════════
-function switchRightTab(t) {
-    ['layers','props','minimap'].forEach(p => {
-        document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).style.display = p===t?'':'none';
-        document.getElementById('rt' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p===t);
-    });
-    if (t === 'minimap') updateMinimap();
+function exportMapPNG() {
+    // Render full canvas at high quality
+    const link = document.createElement("a");
+    link.download = `${state.title.replace(/\s+/g, "_")}_Map.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    showToast("🖼️ PNG xaritasi yuklab olindi");
 }
 
-// ═══════════════════════════════════════════════════════════
-//  KEYBOARD
-// ═══════════════════════════════════════════════════════════
-document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveMap(); }
-    if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
-    if (e.ctrlKey && (e.key === 'y' || e.key === 'Z')) { e.preventDefault(); redo(); }
-    const map2 = { b:'draw', e:'erase', g:'fill', v:'select', r:'rect', c:'ellipse', l:'line' };
-    if (map2[e.key]) setTool(map2[e.key]);
-    if (e.key === '+' && e.ctrlKey) { e.preventDefault(); zoomIn(); }
-    if (e.key === '-' && e.ctrlKey) { e.preventDefault(); setZoom(zoom/1.25); }
+function exportMapJSON() {
+    const exportData = {
+        title: state.title,
+        theme: state.themeKey,
+        elements: state.elements,
+        paths: state.paths,
+        lights: state.lights
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.download = `${state.title.replace(/\s+/g, "_")}_data.json`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    showToast("📄 JSON fayl yuklab olindi");
+}
+
+function showToast(msg) {
+    const t = document.getElementById("ckToast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    if (e.ctrlKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        saveMapData();
+    } else if (e.ctrlKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+    } else if (e.ctrlKey && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
+    } else if (e.key.toLowerCase() === "v") {
+        setTool("select");
+    } else if (e.key.toLowerCase() === "b") {
+        setTool("brush");
+    } else if (e.key.toLowerCase() === "s") {
+        setTool("stamp");
+    } else if (e.key.toLowerCase() === "w") {
+        setTool("wall");
+    } else if (e.key.toLowerCase() === "p") {
+        setTool("path");
+    } else if (e.key.toLowerCase() === "l") {
+        setTool("light");
+    } else if (e.key.toLowerCase() === "e") {
+        setTool("erase");
+    } else if (e.key === "Delete" || e.key === "Backspace") {
+        deleteSelectedElement();
+    }
 });
 
-// Auto-save every 40s
-setInterval(() => { if (unsaved) saveMap(); }, 40000);
+// Auto-save every 45 seconds if dirty
+setInterval(() => {
+    if (state.isDirty) {
+        saveMapData();
+    }
+}, 45000);
 
-// Init
-window.addEventListener('resize', () => { fitCanvas(); });
-init();
+// Run initialization on load
+window.addEventListener("DOMContentLoaded", initEngine);
 </script>
-{% endblock %}
+</body>
+</html>

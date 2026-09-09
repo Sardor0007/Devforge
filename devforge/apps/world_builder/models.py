@@ -9,6 +9,10 @@ class WorldMap(models.Model):
         ('castle', 'Castle Layout'),
         ('level', 'Level Design'),
         ('architecture', 'Architecture Sketch'),
+        ('overworld', 'Overworld & Kingdoms'),
+        ('wilderness', 'Wilderness & Forest'),
+        ('desert', 'Desert & Ruins'),
+        ('coastal', 'Coastal & Islands'),
     ]
     title = models.CharField(max_length=200)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='world_maps')
