@@ -82,6 +82,7 @@ def create_map(request):
             ],
             'elements': [],
             'paths': [],
+            'plots': [],
             'regions': [],
             'objects': [],
             'groups': [],

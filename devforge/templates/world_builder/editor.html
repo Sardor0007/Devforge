@@ -7,17 +7,20 @@
 <meta name="csrf-token" content="{{ csrf_token }}">
 <title>{{ map.title|default:"Canvas of Kings — 2D Map Maker" }} — DevForge World Builder</title>
 
-<!-- Fonts: Medieval/Fantasy display + Clean modern UI + Monospace stats -->
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=MedievalSharp&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- Konva.js 9.3 (Full 2D High-Performance Canvas Library) -->
+<script src="https://unpkg.com/konva@9.3.16/konva.min.js"></script>
 
 <style>
 :root {
-    --bg-dark: #07090e;
-    --bg-panel: #0d111a;
-    --bg-panel-alt: #131926;
-    --bg-hover: rgba(255, 255, 255, 0.06);
+    --bg-dark: #06080d;
+    --bg-panel: #0b0f17;
+    --bg-panel-alt: #111724;
+    --bg-hover: rgba(255, 255, 255, 0.07);
     --border: rgba(255, 255, 255, 0.08);
     --border-gold: rgba(245, 158, 11, 0.4);
     --gold: #f59e0b;
@@ -27,7 +30,7 @@
     --emerald: #10b981;
     --crimson: #ef4444;
     --purple: #a855f7;
-    --text-main: #f3f4f6;
+    --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --text-dim: #64748b;
     --font-fantasy: 'Cinzel', serif;
@@ -64,7 +67,7 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   TOP HEADER (Canvas of Kings Medieval Header)
+   TOP HEADER
    ══════════════════════════════════════════════════════════════ */
 .ck-header {
     height: 52px;
@@ -97,10 +100,6 @@ html, body {
     justify-content: center;
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
     font-size: 1.1rem;
-}
-.ck-brand-text {
-    display: flex;
-    flex-direction: column;
 }
 .ck-brand-title {
     font-family: var(--font-fantasy);
@@ -225,7 +224,7 @@ html, body {
    ══════════════════════════════════════════════════════════════ */
 .ck-workspace {
     display: grid;
-    grid-template-columns: 54px 280px 1fr 290px;
+    grid-template-columns: 54px 285px 1fr 295px;
     flex: 1;
     overflow: hidden;
     position: relative;
@@ -316,7 +315,7 @@ html, body {
     opacity: 1;
 }
 
-/* 2. MATERIAL & ASSET PALETTE (Canvas of Kings style) */
+/* 2. LEFT PALETTE (Aktivlar & Uchastkalar) */
 .ck-palette-panel {
     background: #0c1018;
     border-right: 1px solid var(--border);
@@ -467,20 +466,30 @@ html, body {
     font-weight: 700;
 }
 
-/* 3. CENTER VIEWPORT (Infinite Parchment Canvas) */
+/* 3. CENTER VIEWPORT (KONVA.JS CONTAINER) */
 .ck-viewport {
     background: #06070a;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+#konvaContainer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    cursor: default;
 }
 
 .canvas-floating-toolbar {
     position: absolute;
     top: 12px;
     left: 14px;
-    background: rgba(13, 17, 26, 0.85);
+    background: rgba(13, 17, 26, 0.88);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -508,6 +517,10 @@ html, body {
     background: rgba(255,255,255,0.08);
     color: var(--text-main);
 }
+.vp-btn.active {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--gold-bright);
+}
 .vp-sep {
     width: 1px;
     height: 16px;
@@ -521,7 +534,7 @@ html, body {
     font-family: var(--font-mono);
     font-size: 0.68rem;
     color: var(--text-dim);
-    background: rgba(13, 17, 26, 0.8);
+    background: rgba(13, 17, 26, 0.85);
     backdrop-filter: blur(8px);
     padding: 4px 10px;
     border-radius: 6px;
@@ -538,7 +551,7 @@ html, body {
     right: 14px;
     display: flex;
     align-items: center;
-    background: rgba(13, 17, 26, 0.85);
+    background: rgba(13, 17, 26, 0.88);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -570,14 +583,6 @@ html, body {
     min-width: 44px;
     text-align: center;
     font-weight: 600;
-}
-
-/* Canvas element */
-#mainCanvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: crosshair;
 }
 
 /* 4. RIGHT PROPERTIES & ATMOSPHERE PANEL */
@@ -683,7 +688,7 @@ html, body {
     color: var(--text-main);
     font-size: 0.75rem;
     outline: none;
-    width: 120px;
+    width: 130px;
 }
 .ck-select:focus, .ck-input:focus {
     border-color: var(--gold);
@@ -754,7 +759,7 @@ html, body {
     border: 1px solid var(--border-gold);
     border-radius: 12px;
     width: 90%;
-    max-width: 540px;
+    max-width: 520px;
     padding: 22px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.7);
     display: flex;
@@ -763,7 +768,7 @@ html, body {
 }
 .ck-modal-title {
     font-family: var(--font-fantasy);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--gold-bright);
     display: flex;
@@ -802,7 +807,7 @@ html, body {
     <!-- ════ TOP HEADER ════ -->
     <header class="ck-header">
         <a href="{% url 'world_builder:dashboard' %}" class="ck-brand" title="Dashboardga qaytish">
-            <div class="ck-logo-badge">⚔️</div>
+            <div class="ck-logo-badge">👑</div>
             <div class="ck-brand-text">
                 <span class="ck-brand-title">Canvas of Kings</span>
                 <span class="ck-brand-sub">2D Map Maker</span>
@@ -830,7 +835,7 @@ html, body {
             </button>
 
             <button class="btn-header" onclick="openEnvironmentModal()" title="Muhit va Ob-havoni sozlash">
-                🕯️ <span>Muhit</span>
+                🕯️ <span>Yorug'lik & Muhit</span>
             </button>
 
             <button class="btn-header" onclick="exportMapPNG()" title="Yuqori sifatli rasm sifatida saqlash">
@@ -854,53 +859,55 @@ html, body {
                 <svg viewBox="0 0 24 24"><path d="M3 3l7 18 3-7 7-3L3 3z"/></svg>
                 <span class="tool-shortcut-tag">V</span>
             </button>
-            <button class="tool-icon-btn" id="tool_brush" onclick="setTool('brush')" data-tooltip="Sehrli Cho'tka / Qo'lda chizish (B)">
-                <svg viewBox="0 0 24 24"><path d="M18 13.5l-8.5-8.5-4 4 8.5 8.5m-5 5l-4-4 2.5-2.5 4 4z"/></svg>
+
+            <button class="tool-icon-btn" id="tool_bezier" onclick="setTool('bezier')" data-tooltip="Bezier Curve Yo'l & Daryo (B)">
+                <svg viewBox="0 0 24 24"><circle cx="4" cy="19" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="20" cy="19" r="2"/><path d="M4 19c4-12 12-12 16 0"/></svg>
                 <span class="tool-shortcut-tag">B</span>
             </button>
-            <button class="tool-icon-btn" id="tool_stamp" onclick="setTool('stamp')" data-tooltip="Obyekt / Element Shtampi (S)">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 9v6m-3-3h6"/></svg>
-                <span class="tool-shortcut-tag">S</span>
-            </button>
-            <button class="tool-icon-btn" id="tool_wall" onclick="setTool('wall')" data-tooltip="Devor & Bino chizig'i (W)">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v6M15 9v6M9 15v6"/></svg>
-                <span class="tool-shortcut-tag">W</span>
-            </button>
-            <button class="tool-icon-btn" id="tool_path" onclick="setTool('path')" data-tooltip="Yo'l & Daryo / Suv o'zani (P)">
-                <svg viewBox="0 0 24 24"><path d="M4 19c4-4 4-8 8-8s4 4 8 0"/></svg>
+
+            <button class="tool-icon-btn" id="tool_plot" onclick="setTool('plot')" data-tooltip="Uchastka (Plot) Hudud chizish (P)">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                 <span class="tool-shortcut-tag">P</span>
             </button>
-            <button class="tool-icon-btn" id="tool_polygon" onclick="setTool('polygon')" data-tooltip="Ko'pburchak hudud (Hudud belgilash)">
-                <svg viewBox="0 0 24 24"><path d="M12 2l8 5-3 12H7L4 7z"/></svg>
-                <span class="tool-shortcut-tag">G</span>
+
+            <button class="tool-icon-btn" id="tool_scatter" onclick="setTool('scatter')" data-tooltip="Avtomatik Sepish (Procedural Scatter) (A)">
+                <svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2"/><circle cx="15" cy="5" r="1.5"/><circle cx="12" cy="13" r="2.5"/><circle cx="18" cy="17" r="2"/><circle cx="6" cy="18" r="1.5"/></svg>
+                <span class="tool-shortcut-tag">A</span>
+            </button>
+
+            <button class="tool-icon-btn" id="tool_stamp" onclick="setTool('stamp')" data-tooltip="Aktiv / Obyekt Shtampi (S)">
+                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span class="tool-shortcut-tag">S</span>
             </button>
 
             <div class="tool-divider"></div>
 
-            <button class="tool-icon-btn" id="tool_light" onclick="setTool('light')" data-tooltip="Yorug'lik manbai (Mash'ala/Lampa) (L)">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m14.14-14.14l-1.41 1.41"/></svg>
-                <span class="tool-shortcut-tag">L</span>
+            <button class="tool-icon-btn" id="tool_circle" onclick="setTool('circle')" data-tooltip="Dumaloq Hudud / Ko'l (C)">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+                <span class="tool-shortcut-tag">C</span>
             </button>
-            <button class="tool-icon-btn" id="tool_text" onclick="setTool('text')" data-tooltip="Xarita yozuvi / Matn (T)">
-                <svg viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-                <span class="tool-shortcut-tag">T</span>
+
+            <button class="tool-icon-btn" id="tool_rect" onclick="setTool('rect')" data-tooltip="To'rtburchak Hudud / Kvartal (R)">
+                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                <span class="tool-shortcut-tag">R</span>
             </button>
+
             <button class="tool-icon-btn" id="tool_erase" onclick="setTool('erase')" data-tooltip="O'chirg'ich (E)">
                 <svg viewBox="0 0 24 24"><path d="M19 20H5M18 10l-8.5 8.5a2.12 2.12 0 01-3-3L15 7l4 4z"/></svg>
                 <span class="tool-shortcut-tag">E</span>
             </button>
         </aside>
 
-        <!-- 2. MATERIAL & THEME PALETTE -->
+        <!-- 2. LEFT PALETTE -->
         <aside class="ck-palette-panel">
             <div class="palette-tabs">
-                <div class="pal-tab active" id="tab_materials" onclick="switchPaletteTab('materials')">Elementlar</div>
-                <div class="pal-tab" id="tab_biomes" onclick="switchPaletteTab('biomes')">Muhitlar</div>
+                <div class="pal-tab active" id="tab_assets" onclick="switchPaletteTab('assets')">Aktivlar</div>
+                <div class="pal-tab" id="tab_plots" onclick="switchPaletteTab('plots')">Uchastkalar</div>
                 <div class="pal-tab" id="tab_paths" onclick="switchPaletteTab('paths')">Yo'llar</div>
             </div>
 
             <div class="palette-filter-bar">
-                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (daraxt, devor, tosh...)" oninput="filterPalette(this.value)">
+                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (daraxt, bino, relyef...)" oninput="filterPalette(this.value)">
             </div>
 
             <div class="palette-content" id="paletteListContainer">
@@ -908,7 +915,7 @@ html, body {
             </div>
         </aside>
 
-        <!-- 3. CENTER VIEWPORT -->
+        <!-- 3. CENTER VIEWPORT (KONVA.JS CONTAINER) -->
         <section class="ck-viewport" id="viewportContainer">
             <div class="canvas-floating-toolbar">
                 <button class="vp-btn" onclick="resetCanvasTransform()" title="Markazga keltirish">
@@ -924,24 +931,25 @@ html, body {
                 <button class="vp-btn" id="shadowToggleBtn" onclick="toggleShadowsDisplay()">
                     🌑 <span id="shadowBtnText">Soyalar: On</span>
                 </button>
-                <div class="vp-sep"></div>
-                <button class="vp-btn" id="weatherToggleBtn" onclick="cycleWeatherEffect()">
-                    🌧️ <span id="weatherBtnText">Ob-havo: None</span>
+                <button class="vp-btn" id="scatterQuickBtn" onclick="triggerScatterSelected()" title="Tanlangan uchastkaga daraxt sepish">
+                    🌲 <span>Sepish (Scatter)</span>
                 </button>
             </div>
 
-            <canvas id="mainCanvas"></canvas>
+            <!-- Konva Container -->
+            <div id="konvaContainer"></div>
 
             <div class="canvas-hud-stats" id="hudStats">
                 <span>X: <strong id="hudX">0</strong> Y: <strong id="hudY">0</strong></span>
                 <span>Obyektlar: <strong id="hudObjCount">0</strong></span>
+                <span>Uchastkalar: <strong id="hudPlotCount">0</strong></span>
                 <span>Muhit: <strong id="hudTheme">{{ map.map_type|title }}</strong></span>
             </div>
 
             <div class="zoom-widget">
-                <button class="zoom-btn" onclick="zoomCanvas(-0.15)" title="Kichiklashtirish">−</button>
+                <button class="zoom-btn" onclick="zoomStage(-0.15)" title="Kichiklashtirish">−</button>
                 <span class="zoom-display" id="zoomValDisplay">100%</span>
-                <button class="zoom-btn" onclick="zoomCanvas(0.15)" title="Kattalashtirish">+</button>
+                <button class="zoom-btn" onclick="zoomStage(0.15)" title="Kattalashtirish">+</button>
             </div>
         </section>
 
@@ -949,8 +957,8 @@ html, body {
         <aside class="ck-inspector-panel">
             <div class="inspector-tabs">
                 <div class="insp-tab active" id="tab_props" onclick="switchInspectorTab('props')">Xossalar</div>
+                <div class="insp-tab" id="tab_scatter" onclick="switchInspectorTab('scatter')">Sepish</div>
                 <div class="insp-tab" id="tab_layers" onclick="switchInspectorTab('layers')">Qatlamlar</div>
-                <div class="insp-tab" id="tab_lighting" onclick="switchInspectorTab('lighting')">Yorug'lik</div>
             </div>
 
             <div class="inspector-body" id="inspectorContent">
@@ -963,83 +971,76 @@ html, body {
 <!-- Toast notification -->
 <div class="ck-toast" id="ckToast">Bildirishnoma</div>
 
-<!-- Environment / Weather Settings Modal -->
+<!-- Environment / Lighting Settings Modal -->
 <div class="ck-modal" id="envModal">
     <div class="ck-modal-card">
         <div class="ck-modal-title">
-            <span>🕯️ Muhit va Vizual Effetlar</span>
+            <span>🕯️ 2D Yorug'lik va Ob-Havo Qatlami</span>
             <button onclick="closeEnvironmentModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;">✕</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
             <div class="control-row">
-                <span class="control-label">Qog'oz / Tekstura foni:</span>
+                <span class="control-label">Yorug'lik Muhiti:</span>
+                <select id="envLightingSelect" class="ck-select" onchange="changeLightingOverlay(this.value)">
+                    <option value="daylight">Kunduzgi (Daylight ☀️)</option>
+                    <option value="sunset">Shom / Oltin soat (Sunset 🌅)</option>
+                    <option value="night">Tungi rejim (Night Blue 🌙)</option>
+                    <option value="cloudy">Bulutli tuman (Overcast ☁️)</option>
+                    <option value="torch">Mash'alali zulmat (Dungeon 🕯️)</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Qog'oz / Pergament Foni:</span>
                 <select id="paperThemeSelect" class="ck-select" onchange="changePaperTheme(this.value)">
-                    <option value="parchment_dark">Qadimiy Pergament (Qorong'i)</option>
+                    <option value="parchment_dark">Qorong'i Pergament</option>
                     <option value="vintage_cream">Vintage Qaymoqrang</option>
                     <option value="blueprint">Sehrgar Chizmasi (Blueprint)</option>
                     <option value="forest_bark">O'rmon Po'stlog'i</option>
                     <option value="antique_atlas">Qadimiy Atlas</option>
                     <option value="sandstone">Sahro Qumtoshi</option>
-                    <option value="nautical_chart">Dengiz Xaritasi</option>
                     <option value="dark_slate">Qora Slants (Dungeon)</option>
                 </select>
             </div>
             <div class="control-row">
-                <span class="control-label">Soya yo'nalishi (Burchak):</span>
-                <input type="range" class="ck-range" id="shadowAngleRange" min="0" max="360" value="45" oninput="updateShadowParams()">
+                <span class="control-label">2D Soya intensivligi:</span>
+                <input type="range" class="ck-range" id="shadowIntRange" min="0" max="100" value="60" oninput="updateShadowSetting(this.value)">
             </div>
             <div class="control-row">
-                <span class="control-label">Soya intensivligi:</span>
-                <input type="range" class="ck-range" id="shadowIntRange" min="0" max="100" value="65" oninput="updateShadowParams()">
-            </div>
-            <div class="control-row">
-                <span class="control-label">Soya masofasi (Balandlik):</span>
-                <input type="range" class="ck-range" id="shadowDistRange" min="2" max="30" value="12" oninput="updateShadowParams()">
-            </div>
-            <div class="control-row">
-                <span class="control-label">Vinyetka (Burchaklar xiraligi):</span>
-                <input type="checkbox" id="vignetteCheckbox" checked onchange="toggleVignette(this.checked)" style="accent-color:var(--gold);">
-            </div>
-            <div class="control-row">
-                <span class="control-label">Tuman / Zulum qatlami (Fog of War):</span>
-                <input type="checkbox" id="fogCheckbox" onchange="toggleFog(this.checked)" style="accent-color:var(--gold);">
+                <span class="control-label">Vinyetka (Burchaklar zulmati):</span>
+                <input type="checkbox" id="vignetteCheck" checked onchange="toggleVignette(this.checked)" style="accent-color:var(--gold);">
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-            <button class="btn-header gold" onclick="closeEnvironmentModal()">Tayyor</button>
+            <button class="btn-header gold" onclick="closeEnvironmentModal()">Saqlash va Yopish</button>
         </div>
     </div>
 </div>
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  CANVAS OF KINGS — CORE ENGINE STATE & THEMES
+//  KONVA.JS 2D MAP MAKER ENGINE
 // ══════════════════════════════════════════════════════════════
 const MAP_ID = {{ map.id }};
 const RAW_MAP_DATA = {{ map_data_json|safe }};
-const MAP_TYPE = "{{ map.map_type|default:'dungeon' }}";
+const MAP_TYPE = "{{ map.map_type|default:'level' }}";
 const USER_ASSETS = {{ user_assets_json|safe }};
 
-/* Procedural Texture & Material Catalogs by Environment */
+/* Procedural Assets & Plots Catalog based on Map Theme */
 const THEME_PRESETS = {
     dungeon: {
         name: "Dark Dungeon & Crypt",
         icon: "⚔️",
         paper: "dark_slate",
         bgColor: "#0a0c12",
-        gridColor: "rgba(245, 158, 11, 0.12)",
-        ambientLight: "torch",
+        lighting: "torch",
         palette: [
-            { id: "d_floor_stone", name: "Tosh pol (Flagstone)", category: "Pollar", icon: "🧱", color: "#374151", type: "brush" },
-            { id: "d_wall_hewn", name: "Qal'a devori (Hewn)", category: "Devorlar", icon: "🏛️", color: "#1f2937", stroke: "#4b5563", type: "wall", height: 18 },
-            { id: "d_wall_moss", name: "Zax devor (Mossy)", category: "Devorlar", icon: "🪨", color: "#1c2b22", stroke: "#10b981", type: "wall", height: 16 },
-            { id: "d_door_wood", name: "Temir qoplangan eshik", category: "Eshiklar", icon: "🚪", color: "#78350f", type: "stamp", w: 32, h: 16 },
-            { id: "d_torch", name: "Devor mash'alasi", category: "Yorug'lik", icon: "🔥", color: "#f97316", type: "light", radius: 140, intensity: 0.9 },
-            { id: "d_chest_gold", name: "Qadimiy sandiq", category: "Mulklar", icon: "📦", color: "#d97706", type: "stamp", w: 26, h: 22 },
-            { id: "d_pillar_round", name: "Dumaloq ustun", category: "Devorlar", icon: "🔘", color: "#4b5563", type: "stamp", w: 24, h: 24, height: 22 },
-            { id: "d_spikes", name: "Qopqon / Nayzalar", category: "Xavflar", icon: "⚙️", color: "#9ca3af", type: "stamp", w: 28, h: 28 },
-            { id: "d_altar", name: "Qurbonlik mehrobi", category: "Mulklar", icon: "🪦", color: "#7c3aed", type: "stamp", w: 42, h: 26 },
-            { id: "d_blood_stain", name: "Qon / Zax dog'i", category: "Detallar", icon: "🩸", color: "#7f1d1d", type: "stamp", w: 30, h: 30 }
+            { id: "d_stone_wall", name: "Tosh Devor", category: "Bino & Inshoot", icon: "🏛️", color: "#374151", type: "asset", w: 40, h: 40 },
+            { id: "d_pillar", name: "Ustun (Pillar)", category: "Bino & Inshoot", icon: "🔘", color: "#4b5563", type: "asset", w: 28, h: 28 },
+            { id: "d_iron_door", name: "Temir Eshik", category: "Bino & Inshoot", icon: "🚪", color: "#78350f", type: "asset", w: 36, h: 20 },
+            { id: "d_chest", name: "Xazina Sandig'i", category: "Relyef & Detal", icon: "📦", color: "#d97706", type: "asset", w: 30, h: 24 },
+            { id: "d_torch", name: "Devor Mash'alasi", category: "Yorug'lik", icon: "🔥", color: "#f97316", type: "asset", w: 24, h: 24, lightRadius: 160 },
+            { id: "d_crypt_plot", name: "Zindon Xonasi (Plot)", category: "Uchastkalar", icon: "🔲", color: "#1f2937", type: "plot", fill: "rgba(31, 41, 55, 0.65)" },
+            { id: "d_lava_plot", name: "Lava / Xavfli Hudud", category: "Uchastkalar", icon: "🌋", color: "#991b1b", type: "plot", fill: "rgba(153, 27, 27, 0.45)" }
         ]
     },
     village: {
@@ -1047,19 +1048,15 @@ const THEME_PRESETS = {
         icon: "🏘️",
         paper: "vintage_cream",
         bgColor: "#f7f2e7",
-        gridColor: "rgba(34, 197, 94, 0.15)",
-        ambientLight: "daylight",
+        lighting: "daylight",
         palette: [
-            { id: "v_grass_lush", name: "Yam-yashil o'tloq", category: "Tabiat", icon: "🌱", color: "#4ade80", type: "brush" },
-            { id: "v_dirt_road", name: "Tuproq yo'l (Gravel)", category: "Yo'llar", icon: "🟫", color: "#b45309", type: "path", width: 28 },
-            { id: "v_water_stream", name: "Shildiragan soy", category: "Suv", icon: "💧", color: "#38bdf8", type: "path", width: 24 },
-            { id: "v_house_thatch", name: "Somonli qishloq uyi", category: "Binolar", icon: "🏠", color: "#d97706", stroke: "#78350f", type: "stamp", w: 70, h: 50, height: 35 },
-            { id: "v_house_timber", name: "Yog'och imorat", category: "Binolar", icon: "🏡", color: "#92400e", stroke: "#451a03", type: "stamp", w: 85, h: 60, height: 40 },
-            { id: "v_tree_oak", name: "Baland dub daraxti", category: "Tabiat", icon: "🌳", color: "#15803d", type: "stamp", w: 55, h: 55, height: 30 },
-            { id: "v_tree_pine", name: "Qarag'ay daraxti", category: "Tabiat", icon: "🌲", color: "#166534", type: "stamp", w: 42, h: 42, height: 38 },
-            { id: "v_well", name: "Shahar qudug'i", category: "Detallar", icon: "🪣", color: "#6b7280", type: "stamp", w: 26, h: 26, height: 15 },
-            { id: "v_fence_wood", name: "Yog'och panjara", category: "To'siqlar", icon: "🚧", color: "#a16207", type: "wall", height: 10 },
-            { id: "v_cart", name: "Ot arava", category: "Mulklar", icon: "🛒", color: "#854d0e", type: "stamp", w: 36, h: 22 }
+            { id: "v_house_wood", name: "Yog'och Uy", category: "Bino & Inshoot", icon: "🏠", color: "#b45309", type: "asset", w: 65, h: 50 },
+            { id: "v_house_large", name: "Katta Shahar Uyi", category: "Bino & Inshoot", icon: "🏡", color: "#78350f", type: "asset", w: 85, h: 60 },
+            { id: "v_tree_oak", name: "Dub Daraxti", category: "Tabiat", icon: "🌳", color: "#15803d", type: "asset", w: 46, h: 46, scatterWeight: 1.0 },
+            { id: "v_tree_pine", name: "Qarag'ay", category: "Tabiat", icon: "🌲", color: "#166534", type: "asset", w: 38, h: 38, scatterWeight: 0.8 },
+            { id: "v_well", name: "Shahar Qudug'i", category: "Relyef & Detal", icon: "🪣", color: "#6b7280", type: "asset", w: 28, h: 28 },
+            { id: "v_forest_plot", name: "O'rmon Hududi (Plot)", category: "Uchastkalar", icon: "🌲", color: "#166534", type: "plot", fill: "rgba(22, 101, 52, 0.35)", defaultScatterAsset: "v_tree_oak" },
+            { id: "v_lake_plot", name: "Ko'l / Suv Havzasi", category: "Uchastkalar", icon: "💧", color: "#0284c7", type: "plot", fill: "rgba(2, 132, 199, 0.35)" }
         ]
     },
     castle: {
@@ -1067,218 +1064,996 @@ const THEME_PRESETS = {
         icon: "🏰",
         paper: "blueprint",
         bgColor: "#111b2b",
-        gridColor: "rgba(59, 130, 246, 0.2)",
-        ambientLight: "sunset",
+        lighting: "sunset",
         palette: [
-            { id: "c_stone_pave", name: "Qal'a tosh hovlisi", category: "Pollar", icon: "⬛", color: "#1e293b", type: "brush" },
-            { id: "c_rampart", name: "Mustahkam qal'a devori", category: "Devorlar", icon: "🧱", color: "#334155", stroke: "#64748b", type: "wall", height: 35 },
-            { id: "c_tower_round", name: "Qorovul minorasi (Katta)", category: "Minoralar", icon: "🗼", color: "#475569", stroke: "#94a3b8", type: "stamp", w: 60, h: 60, height: 50 },
-            { id: "c_gatehouse", name: "Darvozaxona (Portcullis)", category: "Minoralar", icon: "⛩️", color: "#1e293b", stroke: "#f59e0b", type: "stamp", w: 80, h: 45, height: 42 },
-            { id: "c_throne", name: "Qirollik taxti", category: "Mulklar", icon: "👑", color: "#eab308", type: "stamp", w: 32, h: 32 },
-            { id: "c_carpet_red", name: "Qizil baxmal gilam", category: "Detallar", icon: "🧣", color: "#dc2626", type: "brush" },
-            { id: "c_brazier", name: "Oltin mangal / Olov", category: "Yorug'lik", icon: "🔥", color: "#f59e0b", type: "light", radius: 180, intensity: 1.0 },
-            { id: "c_cannon", name: "Qal'a to'pi", category: "Harbiy", icon: "💣", color: "#0f172a", type: "stamp", w: 34, h: 20 }
+            { id: "c_tower", name: "Qorovul Minorasi", category: "Bino & Inshoot", icon: "🗼", color: "#475569", type: "asset", w: 55, h: 55 },
+            { id: "c_gate", name: "Darvozaxona", category: "Bino & Inshoot", icon: "⛩️", color: "#1e293b", type: "asset", w: 75, h: 40 },
+            { id: "c_throne", name: "Qirollik Taxti", category: "Relyef & Detal", icon: "👑", color: "#eab308", type: "asset", w: 32, h: 32 },
+            { id: "c_brazier", name: "Oltin Mangal", category: "Yorug'lik", icon: "🔥", color: "#f59e0b", type: "asset", w: 26, h: 26, lightRadius: 180 },
+            { id: "c_courtyard_plot", name: "Qal'a Hovlisi (Plot)", category: "Uchastkalar", icon: "🏛️", color: "#334155", type: "plot", fill: "rgba(51, 65, 85, 0.45)" }
         ]
     },
     wilderness: {
-        name: "Wilderness & Primeval Forest",
+        name: "Wilderness & Forest",
         icon: "🌲",
         paper: "forest_bark",
         bgColor: "#0f1710",
-        gridColor: "rgba(16, 185, 129, 0.15)",
-        ambientLight: "daylight",
+        lighting: "daylight",
         palette: [
-            { id: "w_moss_ground", name: "Zax o'rmon zamin", category: "Tabiat", icon: "🌿", color: "#14532d", type: "brush" },
-            { id: "w_river", name: "O'rmon daryosi", category: "Suv", icon: "🌊", color: "#0284c7", type: "path", width: 34 },
-            { id: "w_ancient_tree", name: "Asriy daraxt (Giant)", category: "Tabiat", icon: "🌳", color: "#166534", stroke: "#14532d", type: "stamp", w: 75, h: 75, height: 45 },
-            { id: "w_boulder", name: "Qoyatosh (Granit)", category: "Tabiat", icon: "🪨", color: "#475569", type: "stamp", w: 45, h: 40, height: 26 },
-            { id: "w_camp_fire", name: "Sayyoh gulxani", category: "Yorug'lik", icon: "⛺", color: "#ea580c", type: "light", radius: 150, intensity: 0.95 },
-            { id: "w_tent", name: "Sayyoh chodiri", category: "Mulklar", icon: "⛺", color: "#78350f", type: "stamp", w: 40, h: 36, height: 18 },
-            { id: "w_ruins", name: "O'rmon xarobalari", category: "Qadimiy", icon: "🏛️", color: "#334155", type: "stamp", w: 55, h: 45, height: 22 }
-        ]
-    },
-    overworld: {
-        name: "Overworld & Realms Map",
-        icon: "🗺️",
-        paper: "antique_atlas",
-        bgColor: "#241e17",
-        gridColor: "rgba(217, 119, 6, 0.15)",
-        ambientLight: "daylight",
-        palette: [
-            { id: "o_ocean", name: "Buyuk Ummon", category: "Hudud", icon: "🌊", color: "#1e3a8a", type: "brush" },
-            { id: "o_mountain", name: "Tog'lar tizmasi", category: "Relyef", icon: "⛰️", color: "#78716c", type: "stamp", w: 55, h: 45, height: 35 },
-            { id: "o_city_icon", name: "Bosh shahar", category: "Belgilar", icon: "🏰", color: "#f59e0b", type: "stamp", w: 40, h: 40 },
-            { id: "o_forest_biome", name: "Qalin o'rmon hududi", category: "Relyef", icon: "🌲", color: "#15803d", type: "stamp", w: 45, h: 40 },
-            { id: "o_ship", name: "Yelkanli kema", category: "Belgilar", icon: "⛵", color: "#fde047", type: "stamp", w: 35, h: 30 }
-        ]
-    },
-    desert: {
-        name: "Desert & Lost Pyramids",
-        icon: "🏜️",
-        paper: "sandstone",
-        bgColor: "#291e10",
-        gridColor: "rgba(234, 179, 8, 0.18)",
-        ambientLight: "golden_hour",
-        palette: [
-            { id: "ds_dune", name: "Oltin barxan qumi", category: "Relyef", icon: "🏖️", color: "#b45309", type: "brush" },
-            { id: "ds_pyramid", name: "Qadimiy piramida", category: "Xarobalar", icon: "🔺", color: "#d97706", stroke: "#78350f", type: "stamp", w: 90, h: 90, height: 60 },
-            { id: "ds_oasis", name: "Chul vohasi / Suv havzasi", category: "Tabiat", icon: "🌴", color: "#0d9488", type: "stamp", w: 60, h: 50 },
-            { id: "ds_palm", name: "Finik palmasi", category: "Tabiat", icon: "🌴", color: "#15803d", type: "stamp", w: 38, h: 38, height: 28 },
-            { id: "ds_temple", name: "Qum ostidagi ibodatxona", category: "Xarobalar", icon: "🏛️", color: "#92400e", type: "stamp", w: 75, h: 50, height: 30 }
-        ]
-    },
-    coastal: {
-        name: "Coastal Haven & Pirate Bay",
-        icon: "⛵",
-        paper: "nautical_chart",
-        bgColor: "#0c1a24",
-        gridColor: "rgba(14, 165, 233, 0.18)",
-        ambientLight: "daylight",
-        palette: [
-            { id: "cs_deep_water", name: "Chuqur dengiz", category: "Suv", icon: "🌊", color: "#0369a1", type: "brush" },
-            { id: "cs_sand_beach", name: "Qumli qirg'oq", category: "Relyef", icon: "🏖️", color: "#d97706", type: "brush" },
-            { id: "cs_pier", name: "Yog'och kema prichali", category: "Inshootlar", icon: "🪵", color: "#78350f", type: "wall", height: 12 },
-            { id: "cs_lighthouse", name: "Dengiz mayog'i", category: "Inshootlar", icon: "🚨", color: "#e2e8f0", stroke: "#ef4444", type: "stamp", w: 42, h: 42, height: 55 },
-            { id: "cs_shipwreck", name: "Cho'kkan qaroqchi kemasi", category: "Mulklar", icon: "🏴‍☠️", color: "#451a03", type: "stamp", w: 65, h: 35 }
+            { id: "w_ancient_tree", name: "Ulkan Asriy Daraxt", category: "Tabiat", icon: "🌳", color: "#14532d", type: "asset", w: 70, h: 70, scatterWeight: 1.0 },
+            { id: "w_pine", name: "Zich Qarag'ay", category: "Tabiat", icon: "🌲", color: "#166534", type: "asset", w: 42, h: 42, scatterWeight: 1.2 },
+            { id: "w_boulder", name: "Qoyatosh (Granit)", category: "Relyef & Detal", icon: "🪨", color: "#475569", type: "asset", w: 45, h: 38, scatterWeight: 0.5 },
+            { id: "w_camp_fire", name: "Sayyoh Gulxani", category: "Yorug'lik", icon: "⛺", color: "#ea580c", type: "asset", w: 28, h: 28, lightRadius: 150 },
+            { id: "w_dense_forest", name: "Qalin O'rmon (Plot)", category: "Uchastkalar", icon: "🌲", color: "#14532d", type: "plot", fill: "rgba(20, 83, 45, 0.4)", defaultScatterAsset: "w_ancient_tree" }
         ]
     }
 };
 
 /* Resolve current theme configuration */
-const currentThemeKey = THEME_PRESETS[MAP_TYPE] ? MAP_TYPE : "dungeon";
+const currentThemeKey = THEME_PRESETS[MAP_TYPE] ? MAP_TYPE : "village";
 const currentTheme = THEME_PRESETS[currentThemeKey];
 
-/* Main Canvas State */
+/* Application State */
 const state = {
     mapId: MAP_ID,
     title: "{{ map.title|escapejs }}",
     themeKey: currentThemeKey,
     paper: RAW_MAP_DATA.paperTheme || currentTheme.paper,
-    lighting: RAW_MAP_DATA.lighting || currentTheme.ambientLight,
-    shadowAngle: RAW_MAP_DATA.shadowAngle || 45,
-    shadowIntensity: RAW_MAP_DATA.shadowIntensity !== undefined ? RAW_MAP_DATA.shadowIntensity : 0.65,
-    shadowDistance: RAW_MAP_DATA.shadowDistance || 12,
+    lighting: RAW_MAP_DATA.lighting || currentTheme.lighting,
+    shadowIntensity: RAW_MAP_DATA.shadowIntensity !== undefined ? RAW_MAP_DATA.shadowIntensity : 0.6,
     vignette: RAW_MAP_DATA.vignette !== false,
-    fogOfWar: RAW_MAP_DATA.fogOfWar || false,
-    weather: RAW_MAP_DATA.weather || "none", // 'none', 'rain', 'snow', 'embers'
     showGrid: true,
     showShadows: true,
     gridSize: RAW_MAP_DATA.gridSize || 32,
     
-    // Viewport transform (Infinite canvas panning & zooming)
-    panX: 0,
-    panY: 0,
-    zoom: 1.0,
+    // Tools
+    activeTool: "select",
+    activePaletteTab: "assets",
+    selectedAsset: currentTheme.palette[0],
     
-    // Active tool & material
-    activeTool: "brush",
-    activeMaterial: currentTheme.palette[0],
-    brushSize: 32,
-    activeLayerId: "ly_structures",
-    
-    // Layers & Entities data
-    layers: RAW_MAP_DATA.layers || [
-        { id: 'ly_terrain', name: 'Terrain & Ground', visible: true, locked: false, color: '#22c55e' },
-        { id: 'ly_water', name: 'Water & Roads', visible: true, locked: false, color: '#38bdf8' },
-        { id: 'ly_structures', name: 'Walls & Buildings', visible: true, locked: false, color: '#f59e0b' },
-        { id: 'ly_nature', name: 'Trees & Foliage', visible: true, locked: false, color: '#10b981' },
-        { id: 'ly_props', name: 'Props & Furniture', visible: true, locked: false, color: '#ec4899' },
-        { id: 'ly_lights', name: 'Lights & Shadows', visible: true, locked: false, color: '#eab308' },
-        { id: 'ly_labels', name: 'Notes & Markers', visible: true, locked: false, color: '#a855f7' }
-    ],
-    
-    // Canvas Elements placed
-    elements: RAW_MAP_DATA.elements || [],
+    // Data collections (JSON structure)
     paths: RAW_MAP_DATA.paths || [],
-    lights: RAW_MAP_DATA.lights || [],
+    plots: RAW_MAP_DATA.plots || [],
+    objects: RAW_MAP_DATA.objects || RAW_MAP_DATA.elements || [],
     
-    // Selection state
-    selectedElementId: null,
+    // Procedural Scatter config
+    scatterDensity: 0.65,
+    scatterScaleMin: 0.8,
+    scatterScaleMax: 1.3,
+    scatterRandomRotation: true,
+    
+    // Active Drawing buffer
+    activeCurvePoints: [],
+    activePlotPoints: [],
+    selectedNode: null,
     isDirty: false
 };
 
-// History stack
+// History Undo/Redo stack
 const historyStack = [];
 let historyIndex = -1;
 
-/* Canvas Context */
-const canvas = document.getElementById("mainCanvas");
-const ctx = canvas.getContext("2d");
-let isDraggingViewport = false;
-let isInteracting = false;
-let lastPointerPos = { x: 0, y: 0 };
-let currentPathPoints = [];
+/* Konva Stage & Layers */
+let stage = null;
+let bgLayer = null;       // Paper & Grid
+let plotsLayer = null;    // Geometric Plots (Forests, Lakes, Town Zones)
+let pathsLayer = null;    // Bezier Curves (Rivers, Roads)
+let objectsLayer = null;  // Sprites / Placed Assets
+let lightingLayer = null; // 2D Lighting & Weather overlay
+let tempLayer = null;     // Current drawing guides
+let transformer = null;   // Konva selection transformer
 
 // ══════════════════════════════════════════════════════════════
-//  INITIALIZATION
+//  INITIALIZE KONVA STAGE & LAYERS
 // ══════════════════════════════════════════════════════════════
-function initEngine() {
-    setupViewportResize();
+function initKonvaApp() {
+    const container = document.getElementById("konvaContainer");
+    
+    stage = new Konva.Stage({
+        container: "konvaContainer",
+        width: container.clientWidth,
+        height: container.clientHeight,
+        draggable: false // handled via pointer
+    });
+    
+    bgLayer = new Konva.Layer();
+    plotsLayer = new Konva.Layer();
+    pathsLayer = new Konva.Layer();
+    objectsLayer = new Konva.Layer();
+    lightingLayer = new Konva.Layer();
+    tempLayer = new Konva.Layer();
+    
+    stage.add(bgLayer);
+    stage.add(plotsLayer);
+    stage.add(pathsLayer);
+    stage.add(objectsLayer);
+    stage.add(tempLayer);
+    stage.add(lightingLayer);
+    
+    // Setup Transformer for Object Manipulation
+    transformer = new Konva.Transformer({
+        borderStroke: "#00f5ff",
+        borderStrokeWidth: 1.5,
+        anchorStroke: "#00f5ff",
+        anchorFill: "#ffffff",
+        anchorSize: 7,
+        rotateAnchorOffset: 20,
+        enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+    });
+    objectsLayer.add(transformer);
+    
+    // Build initial background
+    renderPaperBackground();
+    
+    // Build and attach event listeners
+    setupStageEvents();
     buildMaterialPalette();
-    buildLayersPanel();
     buildInspectorControls();
     
-    // Initial center positioning
-    state.panX = canvas.width / 2;
-    state.panY = canvas.height / 2;
+    // Render existing state from JSON
+    renderAllFromState();
     
-    // Attach Pointer Listeners
-    setupCanvasEvents();
+    // Save Initial History
+    pushHistoryState();
     
-    // Initial History Record
-    saveHistoryState();
+    // Responsive Resize
+    window.addEventListener("resize", onWindowResize);
     
-    // Render loop
-    requestAnimationFrame(renderLoop);
-    
-    // Setup title autosave listener
+    // Map Title listener
     document.getElementById("mapTitleInput").addEventListener("input", (e) => {
         state.title = e.target.value.trim();
         markDirty();
     });
 }
 
-function setupViewportResize() {
-    function resize() {
-        const container = document.getElementById("viewportContainer");
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        requestRender();
-    }
-    window.addEventListener("resize", resize);
-    resize();
+function onWindowResize() {
+    const container = document.getElementById("viewportContainer");
+    if (!stage || !container) return;
+    stage.width(container.clientWidth);
+    stage.height(container.clientHeight);
+    renderPaperBackground();
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PALETTE & TOOLBAR BUILDER
+//  PAPER BACKGROUND & GRID
+// ══════════════════════════════════════════════════════════════
+function renderPaperBackground() {
+    bgLayer.destroyChildren();
+    
+    const size = 5000;
+    const paperColors = {
+        parchment_dark: { fill: "#151310", stroke: "#241f18" },
+        vintage_cream:  { fill: "#f5eedb", stroke: "#dfd2b5" },
+        blueprint:      { fill: "#0c1828", stroke: "#14253d" },
+        forest_bark:    { fill: "#131c12", stroke: "#1c2b1b" },
+        antique_atlas:  { fill: "#241e16", stroke: "#382f23" },
+        sandstone:      { fill: "#2b1f13", stroke: "#3d2d1c" },
+        dark_slate:     { fill: "#0a0c10", stroke: "#161b24" }
+    };
+    const pCfg = paperColors[state.paper] || paperColors.vintage_cream;
+    
+    // Giant Parchment Base
+    const parchmentRect = new Konva.Rect({
+        x: -size / 2,
+        y: -size / 2,
+        width: size,
+        height: size,
+        fill: pCfg.fill,
+        stroke: "rgba(245, 158, 11, 0.3)",
+        strokeWidth: 4,
+        listening: false
+    });
+    bgLayer.add(parchmentRect);
+    
+    // Coordinate Grid
+    if (state.showGrid) {
+        const step = state.gridSize;
+        for (let x = -size / 2; x <= size / 2; x += step) {
+            bgLayer.add(new Konva.Line({
+                points: [x, -size / 2, x, size / 2],
+                stroke: "rgba(255, 255, 255, 0.04)",
+                strokeWidth: 0.7,
+                listening: false
+            }));
+        }
+        for (let y = -size / 2; y <= size / 2; y += step) {
+            bgLayer.add(new Konva.Line({
+                points: [-size / 2, y, size / 2, y],
+                stroke: "rgba(255, 255, 255, 0.04)",
+                strokeWidth: 0.7,
+                listening: false
+            }));
+        }
+    }
+    bgLayer.batchDraw();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BEZIER CURVES & PATH SYSTEM (Yo'l & Daryolar)
+// ══════════════════════════════════════════════════════════════
+function createBezierPath(pathData) {
+    const isRiver = pathData.type === "river";
+    const strokeColor = pathData.color || (isRiver ? "#0284c7" : "#854d0e");
+    const strokeWidth = pathData.width || (isRiver ? 26 : 18);
+    
+    // Flatten points array for Konva.Line
+    const flatPoints = [];
+    pathData.points.forEach(pt => {
+        flatPoints.push(pt[0], pt[1]);
+    });
+    
+    // Konva Line with Bezier Tension (tension = 0.5 creates smooth Bezier Curves)
+    const line = new Konva.Line({
+        points: flatPoints,
+        stroke: strokeColor,
+        strokeWidth: strokeWidth,
+        lineCap: "round",
+        lineJoin: "round",
+        tension: 0.45, // Bezier Spline
+        bezier: true,
+        shadowColor: "rgba(0, 0, 0, 0.5)",
+        shadowBlur: state.showShadows ? 6 : 0,
+        shadowOffset: { x: 3, y: 5 },
+        shadowOpacity: state.shadowIntensity,
+        draggable: false
+    });
+    
+    line.setAttr("pathData", pathData);
+    
+    line.on("click tap", () => {
+        if (state.activeTool === "select") {
+            selectItem(line, "path");
+        } else if (state.activeTool === "erase") {
+            removePath(pathData);
+        }
+    });
+    
+    pathsLayer.add(line);
+    
+    // If river, add internal lighter flow line
+    if (isRiver) {
+        const flowLine = new Konva.Line({
+            points: flatPoints,
+            stroke: "rgba(255, 255, 255, 0.4)",
+            strokeWidth: strokeWidth * 0.35,
+            lineCap: "round",
+            lineJoin: "round",
+            tension: 0.45,
+            bezier: true,
+            listening: false
+        });
+        pathsLayer.add(flowLine);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PLOTS & UCHASTKALAR (Polygon, Circle, Rect Zones)
+// ══════════════════════════════════════════════════════════════
+function createPlotShape(plotData) {
+    let shape = null;
+    const fillColor = plotData.fill || "rgba(22, 101, 52, 0.35)";
+    const strokeColor = plotData.color || "#166534";
+    
+    if (plotData.shape === "circle") {
+        shape = new Konva.Circle({
+            x: plotData.x,
+            y: plotData.y,
+            radius: plotData.radius || 70,
+            fill: fillColor,
+            stroke: strokeColor,
+            strokeWidth: 2,
+            dash: [6, 4]
+        });
+    } else if (plotData.shape === "rect") {
+        shape = new Konva.Rect({
+            x: plotData.x,
+            y: plotData.y,
+            width: plotData.w || 140,
+            height: plotData.h || 100,
+            fill: fillColor,
+            stroke: strokeColor,
+            strokeWidth: 2,
+            dash: [6, 4],
+            cornerRadius: 8
+        });
+    } else {
+        // Freeform Polygon plot
+        const flatPoints = [];
+        (plotData.points || []).forEach(pt => flatPoints.push(pt[0], pt[1]));
+        shape = new Konva.Line({
+            points: flatPoints,
+            fill: fillColor,
+            stroke: strokeColor,
+            strokeWidth: 2,
+            closed: true,
+            dash: [6, 4]
+        });
+    }
+    
+    shape.setAttr("plotData", plotData);
+    
+    shape.on("click tap", () => {
+        if (state.activeTool === "select") {
+            selectItem(shape, "plot");
+        } else if (state.activeTool === "scatter") {
+            proceduralScatterIntoPlot(plotData);
+        } else if (state.activeTool === "erase") {
+            removePlot(plotData);
+        }
+    });
+    
+    plotsLayer.add(shape);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PROCEDURAL SCATTER ALGORITHM (Tasodifiy joylashtirish)
+// ══════════════════════════════════════════════════════════════
+/**
+ * Uchastka (Plot) ichiga daraxt/aktivlarni tasodifiy sepish algoritmi
+ * 1. Hududning chegaraviy qutisini (Bounding Box) hisoblaydi
+ * 2. Zichlikka ko'ra tasodifiy nuqtalar (x, y) generatsiya qiladi
+ * 3. Point-in-Polygon (yoki circle/rect tekshiruv) orqali ichida ekanligini tasdiqlaydi
+ * 4. Min-masofa (collision avoidance) tekshiradi
+ * 5. Tasodifiy masshtab va aylanish burchagi bilan aktiv obyektlarini qo'shadi
+ */
+function proceduralScatterIntoPlot(plot) {
+    const assetId = plot.defaultScatterAsset || (state.selectedAsset ? state.selectedAsset.id : "v_tree_oak");
+    const assetDef = findAssetById(assetId);
+    if (!assetDef) return;
+    
+    const density = state.scatterDensity; // 0.1 dan 1.0 gacha
+    let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    
+    if (plot.shape === "circle") {
+        bounds = {
+            minX: plot.x - plot.radius,
+            maxX: plot.x + plot.radius,
+            minY: plot.y - plot.radius,
+            maxY: plot.y + plot.radius
+        };
+    } else if (plot.shape === "rect") {
+        bounds = {
+            minX: plot.x,
+            maxX: plot.x + plot.w,
+            minY: plot.y,
+            maxY: plot.y + plot.h
+        };
+    } else if (plot.points && plot.points.length > 2) {
+        bounds.minX = Math.min(...plot.points.map(p => p[0]));
+        bounds.maxX = Math.max(...plot.points.map(p => p[0]));
+        bounds.minY = Math.min(...plot.points.map(p => p[1]));
+        bounds.maxY = Math.max(...plot.points.map(p => p[1]));
+    }
+    
+    const areaWidth = bounds.maxX - bounds.minX;
+    const areaHeight = bounds.maxY - bounds.minY;
+    const area = areaWidth * areaHeight;
+    
+    // Zichlik bo'yicha aktivlar soni
+    const targetCount = Math.floor((area / 1800) * density);
+    let addedCount = 0;
+    const placedPoints = [];
+    const minDistance = 24 * (1.1 - density * 0.4);
+    
+    for (let attempts = 0; attempts < targetCount * 5 && addedCount < targetCount; attempts++) {
+        const randX = bounds.minX + Math.random() * areaWidth;
+        const randY = bounds.minY + Math.random() * areaHeight;
+        
+        // Check if inside plot geometry
+        if (!isPointInsidePlot(randX, randY, plot)) continue;
+        
+        // Avoid overlapping existing points
+        const tooClose = placedPoints.some(pt => Math.hypot(pt.x - randX, pt.y - randY) < minDistance);
+        if (tooClose) continue;
+        
+        // Add Procedural Asset
+        placedPoints.push({ x: randX, y: randY });
+        
+        const scaleVariation = state.scatterScaleMin + Math.random() * (state.scatterScaleMax - state.scatterScaleMin);
+        const rotationVal = state.scatterRandomRotation ? Math.floor(Math.random() * 360) : 0;
+        
+        const newObj = {
+            id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+            asset: assetDef.id,
+            name: assetDef.name,
+            icon: assetDef.icon,
+            color: assetDef.color,
+            x: Math.round(randX),
+            y: Math.round(randY),
+            rotation: rotationVal,
+            scale: parseFloat(scaleVariation.toFixed(2)),
+            w: assetDef.w || 38,
+            h: assetDef.h || 38
+        };
+        
+        state.objects.push(newObj);
+        createObjectNode(newObj);
+        addedCount++;
+    }
+    
+    objectsLayer.batchDraw();
+    updateHudCounts();
+    markDirty();
+    pushHistoryState();
+    showToast(`🌲 ${addedCount} ta aktiv avtomatik joylashtirildi!`);
+}
+
+function isPointInsidePlot(px, py, plot) {
+    if (plot.shape === "circle") {
+        return Math.hypot(px - plot.x, py - plot.y) <= plot.radius;
+    } else if (plot.shape === "rect") {
+        return px >= plot.x && px <= plot.x + plot.w && py >= plot.y && py <= plot.y + plot.h;
+    } else if (plot.points && plot.points.length > 2) {
+        // Ray-casting algorithm for Polygon
+        let inside = false;
+        const pts = plot.points;
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+            const xi = pts[i][0], yi = pts[i][1];
+            const xj = pts[j][0], yj = pts[j][1];
+            const intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
+    }
+    return false;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  OBJECT / ASSET PLACEMENT (Konva.Group + 2D Shadow)
+// ══════════════════════════════════════════════════════════════
+function createObjectNode(objData) {
+    const group = new Konva.Group({
+        x: objData.x,
+        y: objData.y,
+        rotation: objData.rotation || 0,
+        scaleX: objData.scale || 1.0,
+        scaleY: objData.scale || 1.0,
+        draggable: true
+    });
+    
+    const w = objData.w || 38;
+    const h = objData.h || 38;
+    
+    // 1. Dynamic 2D Drop Shadow
+    if (state.showShadows && state.shadowIntensity > 0) {
+        const shadow = new Konva.Ellipse({
+            x: 4,
+            y: 8,
+            radiusX: w * 0.45,
+            radiusY: h * 0.28,
+            fill: `rgba(0, 0, 0, ${state.shadowIntensity * 0.6})`,
+            listening: false
+        });
+        group.add(shadow);
+    }
+    
+    // 2. Base Graphic
+    const baseRect = new Konva.Rect({
+        x: -w / 2,
+        y: -h / 2,
+        width: w,
+        height: h,
+        fill: objData.color || "#475569",
+        stroke: "rgba(0,0,0,0.4)",
+        strokeWidth: 1.5,
+        cornerRadius: 6
+    });
+    group.add(baseRect);
+    
+    // 3. Asset Emoji / Icon Glyph
+    if (objData.icon) {
+        const textGlyph = new Konva.Text({
+            x: -w / 2,
+            y: -h / 2 + 1,
+            width: w,
+            height: h,
+            text: objData.icon,
+            fontSize: Math.min(w, h) * 0.65,
+            align: "center",
+            verticalAlign: "middle",
+            listening: false
+        });
+        group.add(textGlyph);
+    }
+    
+    group.setAttr("objData", objData);
+    
+    // Drag events
+    group.on("dragend", () => {
+        objData.x = Math.round(group.x());
+        objData.y = Math.round(group.y());
+        markDirty();
+    });
+    
+    group.on("transformend", () => {
+        objData.x = Math.round(group.x());
+        objData.y = Math.round(group.y());
+        objData.rotation = Math.round(group.rotation());
+        objData.scale = parseFloat(group.scaleX().toFixed(2));
+        markDirty();
+    });
+    
+    group.on("click tap", () => {
+        if (state.activeTool === "select") {
+            selectItem(group, "object");
+        } else if (state.activeTool === "erase") {
+            removeObject(objData, group);
+        }
+    });
+    
+    objectsLayer.add(group);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  2D LIGHTING & WEATHER OVERLAY (Day, Sunset, Night, Cloudy)
+// ══════════════════════════════════════════════════════════════
+function renderLightingOverlay() {
+    lightingLayer.destroyChildren();
+    
+    if (state.lighting === "daylight") {
+        lightingLayer.batchDraw();
+        return;
+    }
+    
+    const size = 5000;
+    const x = -size / 2;
+    const y = -size / 2;
+    
+    let overlayColor = "rgba(0,0,0,0)";
+    if (state.lighting === "night") {
+        overlayColor = "rgba(10, 18, 45, 0.65)"; // Night dark blue overlay
+    } else if (state.lighting === "sunset") {
+        overlayColor = "rgba(194, 65, 12, 0.28)"; // Sunset orange glow
+    } else if (state.lighting === "cloudy") {
+        overlayColor = "rgba(148, 163, 184, 0.35)"; // Overcast light grey
+    } else if (state.lighting === "torch") {
+        overlayColor = "rgba(7, 10, 18, 0.75)"; // Dungeon darkness
+    }
+    
+    const overlay = new Konva.Rect({
+        x: x,
+        y: y,
+        width: size,
+        height: size,
+        fill: overlayColor,
+        listening: false
+    });
+    lightingLayer.add(overlay);
+    
+    // If torch or night, punch radial warm lights for torches
+    if (state.lighting === "torch" || state.lighting === "night") {
+        state.objects.forEach(obj => {
+            const def = findAssetById(obj.asset);
+            if (def && def.lightRadius) {
+                const lightCircle = new Konva.Circle({
+                    x: obj.x,
+                    y: obj.y,
+                    radius: def.lightRadius,
+                    fillRadialGradientStartPoint: { x: 0, y: 0 },
+                    fillRadialGradientStartRadius: 0,
+                    fillRadialGradientEndPoint: { x: 0, y: 0 },
+                    fillRadialGradientEndRadius: def.lightRadius,
+                    fillRadialGradientColorStops: [
+                        0, "rgba(251, 191, 36, 0.85)",
+                        0.4, "rgba(245, 158, 11, 0.4)",
+                        1, "rgba(0, 0, 0, 0)"
+                    ],
+                    globalCompositeOperation: "screen",
+                    listening: false
+                });
+                lightingLayer.add(lightCircle);
+            }
+        });
+    }
+    
+    lightingLayer.batchDraw();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INTERACTION & STAGE EVENT HANDLING
+// ══════════════════════════════════════════════════════════════
+let isDrawingBezier = false;
+let isDrawingPlot = false;
+let startDragPointer = null;
+
+function setupStageEvents() {
+    stage.on("pointerdown", onStagePointerDown);
+    stage.on("pointermove", onStagePointerMove);
+    stage.on("pointerup", onStagePointerUp);
+    stage.on("wheel", onStageWheel);
+}
+
+function getPointerWorldPos() {
+    const transform = stage.getAbsoluteTransform().copy().invert();
+    const pos = stage.getPointerPosition();
+    return transform.point(pos);
+}
+
+function onStagePointerDown(e) {
+    const worldPos = getPointerWorldPos();
+    updateHudCoordinates(worldPos.x, worldPos.y);
+    
+    // Middle Click OR Space+Click = Pan Stage
+    if (e.evt.button === 1 || e.evt.altKey || (state.activeTool === "select" && e.target === stage)) {
+        startDragPointer = { x: e.evt.clientX, y: e.evt.clientY, stageX: stage.x(), stageY: stage.y() };
+        stage.container().style.cursor = "grabbing";
+        return;
+    }
+    
+    // Clicked on empty space with Select tool
+    if (state.activeTool === "select" && e.target === stage) {
+        transformer.nodes([]);
+        state.selectedNode = null;
+        buildInspectorControls();
+        return;
+    }
+    
+    // Bezier Path Drawing
+    if (state.activeTool === "bezier") {
+        isDrawingBezier = true;
+        state.activeCurvePoints.push([Math.round(worldPos.x), Math.round(worldPos.y)]);
+        renderTemporaryBezierPreview();
+        return;
+    }
+    
+    // Plot Polygon Drawing
+    if (state.activeTool === "plot") {
+        isDrawingPlot = true;
+        state.activePlotPoints.push([Math.round(worldPos.x), Math.round(worldPos.y)]);
+        renderTemporaryPlotPreview();
+        return;
+    }
+    
+    // Circle Plot
+    if (state.activeTool === "circle") {
+        const newPlot = {
+            id: "plot_" + Date.now(),
+            shape: "circle",
+            x: Math.round(worldPos.x),
+            y: Math.round(worldPos.y),
+            radius: 80,
+            fill: "rgba(2, 132, 199, 0.35)",
+            color: "#0284c7"
+        };
+        state.plots.push(newPlot);
+        createPlotShape(newPlot);
+        plotsLayer.batchDraw();
+        updateHudCounts();
+        markDirty();
+        pushHistoryState();
+        showToast("Ko'l / Doira uchastkasi yaratildi");
+        return;
+    }
+    
+    // Rect Plot
+    if (state.activeTool === "rect") {
+        const newPlot = {
+            id: "plot_" + Date.now(),
+            shape: "rect",
+            x: Math.round(worldPos.x),
+            y: Math.round(worldPos.y),
+            w: 160,
+            h: 110,
+            fill: "rgba(245, 158, 11, 0.25)",
+            color: "#f59e0b"
+        };
+        state.plots.push(newPlot);
+        createPlotShape(newPlot);
+        plotsLayer.batchDraw();
+        updateHudCounts();
+        markDirty();
+        pushHistoryState();
+        showToast("To'rtburchak uchastka yaratildi");
+        return;
+    }
+    
+    // Stamp Single Asset
+    if (state.activeTool === "stamp") {
+        const asset = state.selectedAsset || currentTheme.palette[0];
+        const newObj = {
+            id: "obj_" + Date.now(),
+            asset: asset.id,
+            name: asset.name,
+            icon: asset.icon,
+            color: asset.color,
+            x: Math.round(worldPos.x),
+            y: Math.round(worldPos.y),
+            rotation: 0,
+            scale: 1.0,
+            w: asset.w || 38,
+            h: asset.h || 38
+        };
+        state.objects.push(newObj);
+        createObjectNode(newObj);
+        objectsLayer.batchDraw();
+        updateHudCounts();
+        markDirty();
+        pushHistoryState();
+        showToast(`${asset.name} joylashtirildi`);
+    }
+}
+
+function onStagePointerMove(e) {
+    if (startDragPointer) {
+        const dx = e.evt.clientX - startDragPointer.x;
+        const dy = e.evt.clientY - startDragPointer.y;
+        stage.position({
+            x: startDragPointer.stageX + dx,
+            y: startDragPointer.stageY + dy
+        });
+        stage.batchDraw();
+        return;
+    }
+    
+    const worldPos = getPointerWorldPos();
+    updateHudCoordinates(worldPos.x, worldPos.y);
+    
+    if (isDrawingBezier && state.activeCurvePoints.length > 0) {
+        renderTemporaryBezierPreview(worldPos);
+    } else if (isDrawingPlot && state.activePlotPoints.length > 0) {
+        renderTemporaryPlotPreview(worldPos);
+    }
+}
+
+function onStagePointerUp(e) {
+    if (startDragPointer) {
+        startDragPointer = null;
+        stage.container().style.cursor = "default";
+    }
+}
+
+function onStageWheel(e) {
+    e.evt.preventDefault();
+    const scaleBy = 1.12;
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    
+    const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+    };
+    
+    let direction = e.evt.deltaY < 0 ? 1 : -1;
+    let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    newScale = Math.max(0.2, Math.min(4.0, newScale));
+    
+    stage.scale({ x: newScale, y: newScale });
+    
+    const newPos = {
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+    };
+    stage.position(newPos);
+    stage.batchDraw();
+    
+    document.getElementById("zoomValDisplay").textContent = Math.round(newScale * 100) + "%";
+}
+
+function zoomStage(delta) {
+    const factor = delta > 0 ? 1.15 : 0.85;
+    const oldScale = stage.scaleX();
+    const newScale = Math.max(0.2, Math.min(4.0, oldScale * factor));
+    stage.scale({ x: newScale, y: newScale });
+    stage.batchDraw();
+    document.getElementById("zoomValDisplay").textContent = Math.round(newScale * 100) + "%";
+}
+
+function resetCanvasTransform() {
+    stage.position({ x: stage.width() / 2, y: stage.height() / 2 });
+    stage.scale({ x: 1.0, y: 1.0 });
+    stage.batchDraw();
+    document.getElementById("zoomValDisplay").textContent = "100%";
+    showToast("Markazga keltirildi");
+}
+
+function fitCanvasView() {
+    stage.position({ x: stage.width() / 2, y: stage.height() / 2 });
+    stage.scale({ x: 0.8, y: 0.8 });
+    stage.batchDraw();
+    document.getElementById("zoomValDisplay").textContent = "80%";
+}
+
+// ══════════════════════════════════════════════════════════════
+//  BEZIER & PLOT DRAWING FINISHERS
+// ══════════════════════════════════════════════════════════════
+function renderTemporaryBezierPreview(movingPos) {
+    tempLayer.destroyChildren();
+    const pts = [...state.activeCurvePoints];
+    if (movingPos) pts.push([Math.round(movingPos.x), Math.round(movingPos.y)]);
+    
+    const flat = [];
+    pts.forEach(p => flat.push(p[0], p[1]));
+    
+    const preview = new Konva.Line({
+        points: flat,
+        stroke: "#fbbf24",
+        strokeWidth: 4,
+        dash: [8, 4],
+        tension: 0.45,
+        bezier: true
+    });
+    tempLayer.add(preview);
+    tempLayer.batchDraw();
+}
+
+function renderTemporaryPlotPreview(movingPos) {
+    tempLayer.destroyChildren();
+    const pts = [...state.activePlotPoints];
+    if (movingPos) pts.push([Math.round(movingPos.x), Math.round(movingPos.y)]);
+    
+    const flat = [];
+    pts.forEach(p => flat.push(p[0], p[1]));
+    
+    const preview = new Konva.Line({
+        points: flat,
+        stroke: "#10b981",
+        strokeWidth: 2,
+        fill: "rgba(16, 185, 129, 0.2)",
+        dash: [6, 4],
+        closed: true
+    });
+    tempLayer.add(preview);
+    tempLayer.batchDraw();
+}
+
+// Double click to finish Bezier line or Plot
+window.addEventListener("dblclick", () => {
+    if (isDrawingBezier && state.activeCurvePoints.length > 1) {
+        const newPath = {
+            id: "path_" + Date.now(),
+            type: "river",
+            width: 24,
+            color: "#0284c7",
+            points: [...state.activeCurvePoints]
+        };
+        state.paths.push(newPath);
+        createBezierPath(newPath);
+        pathsLayer.batchDraw();
+        
+        state.activeCurvePoints = [];
+        isDrawingBezier = false;
+        tempLayer.destroyChildren();
+        tempLayer.batchDraw();
+        markDirty();
+        pushHistoryState();
+        showToast("Bezier daryo/yo'li yakunlandi!");
+    } else if (isDrawingPlot && state.activePlotPoints.length > 2) {
+        const newPlot = {
+            id: "plot_" + Date.now(),
+            shape: "polygon",
+            points: [...state.activePlotPoints],
+            fill: "rgba(22, 101, 52, 0.35)",
+            color: "#166534",
+            defaultScatterAsset: "v_tree_oak"
+        };
+        state.plots.push(newPlot);
+        createPlotShape(newPlot);
+        plotsLayer.batchDraw();
+        
+        state.activePlotPoints = [];
+        isDrawingPlot = false;
+        tempLayer.destroyChildren();
+        tempLayer.batchDraw();
+        markDirty();
+        pushHistoryState();
+        showToast("O'rmon uchastkasi tayyor!");
+    }
+});
+
+// ══════════════════════════════════════════════════════════════
+//  SELECT & TRANSFORM
+// ══════════════════════════════════════════════════════════════
+function selectItem(node, type) {
+    state.selectedNode = node;
+    if (type === "object") {
+        transformer.nodes([node]);
+    } else {
+        transformer.nodes([]);
+    }
+    buildInspectorControls();
+    stage.batchDraw();
+}
+
+function removeObject(objData, groupNode) {
+    state.objects = state.objects.filter(o => o.id !== objData.id);
+    groupNode.destroy();
+    transformer.nodes([]);
+    objectsLayer.batchDraw();
+    updateHudCounts();
+    markDirty();
+    pushHistoryState();
+    showToast("Aktiv o'chirildi");
+}
+
+function removePlot(plotData) {
+    state.plots = state.plots.filter(p => p.id !== plotData.id);
+    renderAllFromState();
+    markDirty();
+    pushHistoryState();
+    showToast("Uchastka o'chirildi");
+}
+
+function removePath(pathData) {
+    state.paths = state.paths.filter(p => p.id !== pathData.id);
+    renderAllFromState();
+    markDirty();
+    pushHistoryState();
+    showToast("Yo'l o'chirildi");
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER ALL FROM STATE
+// ══════════════════════════════════════════════════════════════
+function renderAllFromState() {
+    plotsLayer.destroyChildren();
+    pathsLayer.destroyChildren();
+    objectsLayer.destroyChildren();
+    
+    objectsLayer.add(transformer);
+    
+    // Plots
+    state.plots.forEach(plot => createPlotShape(plot));
+    
+    // Paths
+    state.paths.forEach(path => createBezierPath(path));
+    
+    // Objects
+    state.objects.forEach(obj => createObjectNode(obj));
+    
+    plotsLayer.batchDraw();
+    pathsLayer.batchDraw();
+    objectsLayer.batchDraw();
+    
+    renderLightingOverlay();
+    updateHudCounts();
+}
+
+function updateHudCoordinates(x, y) {
+    document.getElementById("hudX").textContent = Math.round(x);
+    document.getElementById("hudY").textContent = Math.round(y);
+}
+
+function updateHudCounts() {
+    document.getElementById("hudObjCount").textContent = state.objects.length;
+    document.getElementById("hudPlotCount").textContent = state.plots.length;
+}
+
+function findAssetById(id) {
+    for (let key in THEME_PRESETS) {
+        const found = THEME_PRESETS[key].palette.find(p => p.id === id);
+        if (found) return found;
+    }
+    return currentTheme.palette[0];
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PALETTE & INSPECTOR BUILDERS
 // ══════════════════════════════════════════════════════════════
 function buildMaterialPalette() {
     const container = document.getElementById("paletteListContainer");
     container.innerHTML = "";
     
-    // Group palette by category
-    const categories = {};
+    const categories = {
+        "Uchastkalar (Plots)": [],
+        "Tabiat & Daraxtlar": [],
+        "Bino & Inshoot": [],
+        "Relyef & Detallar": []
+    };
+    
     currentTheme.palette.forEach(item => {
-        if (!categories[item.category]) categories[item.category] = [];
-        categories[item.category].push(item);
+        if (item.type === "plot") {
+            categories["Uchastkalar (Plots)"].push(item);
+        } else if (item.category === "Tabiat") {
+            categories["Tabiat & Daraxtlar"].push(item);
+        } else if (item.category.includes("Bino")) {
+            categories["Bino & Inshoot"].push(item);
+        } else {
+            categories["Relyef & Detallar"].push(item);
+        }
     });
     
-    // If user uploaded 2D assets, add them to palette
-    if (USER_ASSETS && USER_ASSETS.length > 0) {
-        categories["Mening Assetlarim"] = USER_ASSETS.map(a => ({
-            id: "u_asset_" + a.id,
-            name: a.title,
-            category: "Mening Assetlarim",
-            icon: "🖼️",
-            color: "#38bdf8",
-            type: "stamp",
-            w: 48,
-            h: 48,
-            userAssetUrl: a.file
-        }));
-    }
-    
     Object.entries(categories).forEach(([catName, items]) => {
+        if (items.length === 0) return;
         const section = document.createElement("div");
         section.className = "palette-group-section";
         
@@ -1292,9 +2067,8 @@ function buildMaterialPalette() {
         
         items.forEach(mat => {
             const card = document.createElement("div");
-            card.className = "material-card" + (state.activeMaterial && state.activeMaterial.id === mat.id ? " active" : "");
-            card.onclick = () => selectMaterial(mat);
-            
+            card.className = "material-card" + (state.selectedAsset && state.selectedAsset.id === mat.id ? " active" : "");
+            card.onclick = () => selectPaletteAsset(mat);
             card.innerHTML = `
                 <div class="material-preview-box" style="border-color:${mat.color}44;">
                     ${mat.icon}
@@ -1309,761 +2083,113 @@ function buildMaterialPalette() {
     });
 }
 
-function selectMaterial(mat) {
-    state.activeMaterial = mat;
-    if (mat.type === "wall") state.activeTool = "wall";
-    else if (mat.type === "path") state.activeTool = "path";
-    else if (mat.type === "light") state.activeTool = "light";
-    else if (mat.type === "stamp") state.activeTool = "stamp";
-    else if (mat.type === "brush") state.activeTool = "brush";
-    
-    updateToolActiveUI();
-    document.querySelectorAll(".material-card").forEach(c => c.classList.remove("active"));
+function selectPaletteAsset(mat) {
+    state.selectedAsset = mat;
+    if (mat.type === "plot") {
+        setTool("plot");
+    } else {
+        setTool("stamp");
+    }
     buildMaterialPalette();
     showToast(`${mat.name} tanlandi`);
 }
 
 function setTool(toolName) {
     state.activeTool = toolName;
-    updateToolActiveUI();
+    document.querySelectorAll(".tool-icon-btn").forEach(b => b.classList.remove("active"));
+    const activeBtn = document.getElementById("tool_" + toolName);
+    if (activeBtn) activeBtn.classList.add("active");
+    
+    if (toolName !== "select") {
+        transformer.nodes([]);
+    }
     showToast(`Asbob: ${toolName.toUpperCase()}`);
 }
 
-function updateToolActiveUI() {
-    document.querySelectorAll(".tool-icon-btn").forEach(b => b.classList.remove("active"));
-    const activeBtn = document.getElementById("tool_" + state.activeTool);
-    if (activeBtn) activeBtn.classList.add("active");
-}
-
-// ══════════════════════════════════════════════════════════════
-//  CANVAS DRAWING & PROCEDURAL RENDERING
-// ══════════════════════════════════════════════════════════════
-let renderPending = false;
-function requestRender() {
-    if (!renderPending) {
-        renderPending = true;
-        requestAnimationFrame(() => {
-            renderCanvas();
-            renderPending = false;
-        });
-    }
-}
-
-function renderLoop() {
-    if (state.weather !== "none") {
-        renderCanvas();
-    }
-    requestAnimationFrame(renderLoop);
-}
-
-function renderCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.save();
-    // Apply Viewport Pan & Zoom
-    ctx.translate(state.panX, state.panY);
-    ctx.scale(state.zoom, state.zoom);
-    
-    // 1. Draw Paper Texture Background
-    drawParchmentBackground();
-    
-    // 2. Draw Subtle Grid
-    if (state.showGrid) {
-        drawGridPattern();
-    }
-    
-    // 3. Render Paths (Water, Dirt Roads)
-    renderPathsLayer();
-    
-    // 4. Render Structures, Objects & Dynamic Shadows
-    renderElementsLayer();
-    
-    // 5. Render Interactive Path in Progress
-    if (isInteracting && currentPathPoints.length > 1) {
-        renderActiveStroke();
-    }
-    
-    // 6. Render Lighting & Torches Overlay
-    renderLightingPass();
-    
-    ctx.restore();
-    
-    // 7. Post-Processing: Weather Particles & Vignette
-    if (state.weather !== "none") {
-        renderWeatherParticles();
-    }
-    if (state.vignette) {
-        renderVignetteOverlay();
-    }
-}
-
-/* Parchment / Paper Theme Generator */
-function drawParchmentBackground() {
-    const size = 3000;
-    const x = -size / 2;
-    const y = -size / 2;
-    
-    // Base Color based on theme
-    const paperThemes = {
-        parchment_dark: { base: "#171410", edge: "#0d0b08" },
-        vintage_cream:  { base: "#f5edd6", edge: "#d8c7a2" },
-        blueprint:      { base: "#0d1b2a", edge: "#070d14" },
-        forest_bark:    { base: "#162015", edge: "#0c130b" },
-        antique_atlas:  { base: "#292117", edge: "#17120a" },
-        sandstone:      { base: "#2d2013", edge: "#1a1208" },
-        nautical_chart: { base: "#0f1f2c", edge: "#070f17" },
-        dark_slate:     { base: "#0d0f14", edge: "#06070a" }
-    };
-    const pTheme = paperThemes[state.paper] || paperThemes.parchment_dark;
-    
-    // Radial parchment glow
-    const grad = ctx.createRadialGradient(0, 0, size * 0.1, 0, 0, size * 0.7);
-    grad.addColorStop(0, pTheme.base);
-    grad.addColorStop(1, pTheme.edge);
-    
-    ctx.fillStyle = grad;
-    ctx.fillRect(x, y, size, size);
-    
-    // Border frame for paper
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x + 20, y + 20, size - 40, size - 40);
-    
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.1)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + 26, y + 26, size - 52, size - 52);
-}
-
-/* Coordinate Grid */
-function drawGridPattern() {
-    const step = state.gridSize;
-    const size = 3000;
-    const start = -size / 2;
-    const end = size / 2;
-    
-    ctx.beginPath();
-    ctx.strokeStyle = currentTheme.gridColor;
-    ctx.lineWidth = 0.6;
-    
-    for (let pos = start; pos <= end; pos += step) {
-        ctx.moveTo(pos, start);
-        ctx.lineTo(pos, end);
-        ctx.moveTo(start, pos);
-        ctx.lineTo(end, pos);
-    }
-    ctx.stroke();
-    
-    // Center origin crosshair
-    ctx.beginPath();
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
-    ctx.lineWidth = 1.5;
-    ctx.moveTo(-20, 0); ctx.lineTo(20, 0);
-    ctx.moveTo(0, -20); ctx.lineTo(0, 20);
-    ctx.stroke();
-}
-
-/* Paths (Roads, Rivers, Walls with Width) */
-function renderPathsLayer() {
-    state.paths.forEach(p => {
-        if (p.points.length < 2) return;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(p.points[0].x, p.points[0].y);
-        for (let i = 1; i < p.points.length; i++) {
-            ctx.lineTo(p.points[i].x, p.points[i].y);
-        }
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineWidth = p.width || 24;
-        ctx.strokeStyle = p.color || "#854d0e";
-        ctx.stroke();
-        
-        // Inner edge highlight for rivers or roads
-        if (p.type === "river") {
-            ctx.lineWidth = (p.width || 24) * 0.4;
-            ctx.strokeStyle = "rgba(255,255,255,0.4)";
-            ctx.stroke();
-        }
-        ctx.restore();
-    });
-}
-
-/* Render Placed Objects with Canvas of Kings dynamic top-down shadows */
-function renderElementsLayer() {
-    const angleRad = (state.shadowAngle * Math.PI) / 180;
-    const shadowOffsetX = Math.cos(angleRad) * state.shadowDistance;
-    const shadowOffsetY = Math.sin(angleRad) * state.shadowDistance;
-    
-    // First pass: Cast shadows if enabled
-    if (state.showShadows && state.shadowIntensity > 0) {
-        state.elements.forEach(el => {
-            const h = el.height || 20;
-            const sX = shadowOffsetX * (h / 20);
-            const sY = shadowOffsetY * (h / 20);
-            
-            ctx.save();
-            ctx.translate(el.x + sX, el.y + sY);
-            ctx.rotate(el.rotation || 0);
-            ctx.fillStyle = `rgba(0, 0, 0, ${state.shadowIntensity})`;
-            ctx.filter = `blur(${Math.max(2, h * 0.2)}px)`;
-            
-            // Draw projected silhouette
-            if (el.w && el.h) {
-                ctx.fillRect(-el.w / 2, -el.h / 2, el.w, el.h);
-            } else {
-                ctx.beginPath();
-                ctx.arc(0, 0, (el.radius || 16), 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        });
-    }
-    
-    // Second pass: Draw Actual Elements
-    state.elements.forEach(el => {
-        ctx.save();
-        ctx.translate(el.x, el.y);
-        ctx.rotate(el.rotation || 0);
-        
-        // Selection Box
-        if (state.selectedElementId === el.id) {
-            ctx.strokeStyle = "var(--cyan)";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-el.w / 2 - 4, -el.h / 2 - 4, el.w + 8, el.h + 8);
-        }
-        
-        // Custom Image Stamp (if User Asset)
-        if (el.userAssetUrl) {
-            ctx.fillStyle = el.color || "#38bdf8";
-            ctx.fillRect(-el.w / 2, -el.h / 2, el.w, el.h);
-        }
-        // Procedural Vector / Hand-drawn Style
-        else {
-            ctx.fillStyle = el.color || "#4b5563";
-            ctx.strokeStyle = el.stroke || "#1f2937";
-            ctx.lineWidth = 2;
-            
-            if (el.w && el.h) {
-                ctx.fillRect(-el.w / 2, -el.h / 2, el.w, el.h);
-                ctx.strokeRect(-el.w / 2, -el.h / 2, el.w, el.h);
-            } else {
-                ctx.beginPath();
-                ctx.arc(0, 0, el.radius || 16, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-            }
-            
-            // Draw Iconic Glyph in center
-            if (el.icon) {
-                ctx.font = `${Math.min(el.w || 32, el.h || 32) * 0.65}px serif`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(el.icon, 0, 1);
-            }
-        }
-        ctx.restore();
-    });
-}
-
-function renderActiveStroke() {
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(currentPathPoints[0].x, currentPathPoints[0].y);
-    for (let i = 1; i < currentPathPoints.length; i++) {
-        ctx.lineTo(currentPathPoints[i].x, currentPathPoints[i].y);
-    }
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = (state.activeTool === "wall" ? 14 : (state.activeMaterial?.width || 24));
-    ctx.strokeStyle = state.activeMaterial?.color || "#f59e0b";
-    ctx.stroke();
-    ctx.restore();
-}
-
-/* Dynamic 2D Torchlight & Radial Lighting Pass */
-function renderLightingPass() {
-    if (state.lighting === "daylight") return;
-    
-    // Ambient darkness layer
-    const darknessAlpha = state.lighting === "torch" ? 0.72 : (state.lighting === "sunset" ? 0.35 : 0.5);
-    ctx.save();
-    ctx.globalCompositeOperation = "multiply";
-    ctx.fillStyle = `rgba(10, 14, 24, ${darknessAlpha})`;
-    ctx.fillRect(-2000, -2000, 4000, 4000);
-    ctx.restore();
-    
-    // Punch warm light circles for torches & lights
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    state.lights.forEach(l => {
-        const rad = l.radius || 160;
-        const grad = ctx.createRadialGradient(l.x, l.y, 4, l.x, l.y, rad);
-        grad.addColorStop(0, "rgba(251, 191, 36, 0.9)");
-        grad.addColorStop(0.3, "rgba(245, 158, 11, 0.5)");
-        grad.addColorStop(0.7, "rgba(217, 119, 6, 0.15)");
-        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-        
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(l.x, l.y, rad, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    ctx.restore();
-}
-
-/* Post-process Vignette */
-function renderVignetteOverlay() {
-    ctx.save();
-    const w = canvas.width;
-    const h = canvas.height;
-    const vGrad = ctx.createRadialGradient(w/2, h/2, Math.min(w,h) * 0.35, w/2, h/2, Math.max(w,h) * 0.7);
-    vGrad.addColorStop(0, "rgba(0,0,0,0)");
-    vGrad.addColorStop(1, "rgba(0,0,0,0.65)");
-    ctx.fillStyle = vGrad;
-    ctx.fillRect(0, 0, w, h);
-    ctx.restore();
-}
-
-/* Ambient Weather Particles */
-const particles = [];
-for (let i = 0; i < 90; i++) {
-    particles.push({
-        x: Math.random() * 2000,
-        y: Math.random() * 2000,
-        speed: 1 + Math.random() * 3,
-        size: 1 + Math.random() * 2.5
-    });
-}
-function renderWeatherParticles() {
-    ctx.save();
-    if (state.weather === "rain") {
-        ctx.strokeStyle = "rgba(186, 230, 253, 0.4)";
-        ctx.lineWidth = 1.2;
-        particles.forEach(p => {
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - 4, p.y + 12);
-            ctx.stroke();
-            p.y += p.speed * 4;
-            p.x -= p.speed * 1.2;
-            if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
-        });
-    } else if (state.weather === "embers") {
-        ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
-        particles.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
-            p.y -= p.speed * 0.8;
-            p.x += Math.sin(p.y * 0.05) * 0.8;
-            if (p.y < 0) { p.y = canvas.height + 10; p.x = Math.random() * canvas.width; }
-        });
-    }
-    ctx.restore();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  INTERACTIVE POINTER / MOUSE EVENTS
-// ══════════════════════════════════════════════════════════════
-function setupCanvasEvents() {
-    canvas.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    canvas.addEventListener("wheel", onCanvasWheel, { passive: false });
-}
-
-function getCanvasCoords(e) {
-    const rect = canvas.getBoundingClientRect();
-    const screenX = e.clientX - rect.left;
-    const screenY = e.clientY - rect.top;
-    
-    // Invert viewport pan & zoom
-    const worldX = (screenX - state.panX) / state.zoom;
-    const worldY = (screenY - state.panY) / state.zoom;
-    
-    // Update HUD
-    document.getElementById("hudX").textContent = Math.round(worldX);
-    document.getElementById("hudY").textContent = Math.round(worldY);
-    
-    return { worldX, worldY, screenX, screenY };
-}
-
-function onPointerDown(e) {
-    // Middle click OR Space+Click = Pan Viewport
-    if (e.button === 1 || e.spaceKey || state.activeTool === "select" && e.altKey) {
-        isDraggingViewport = true;
-        lastPointerPos = { x: e.clientX, y: e.clientY };
-        canvas.style.cursor = "grabbing";
-        return;
-    }
-    
-    const { worldX, worldY } = getCanvasCoords(e);
-    isInteracting = true;
-    lastPointerPos = { x: e.clientX, y: e.clientY };
-    
-    if (state.activeTool === "stamp") {
-        placeStampElement(worldX, worldY);
-    } else if (state.activeTool === "light") {
-        placeLightSource(worldX, worldY);
-    } else if (state.activeTool === "brush" || state.activeTool === "wall" || state.activeTool === "path") {
-        currentPathPoints = [{ x: worldX, y: worldY }];
-    } else if (state.activeTool === "select") {
-        selectElementAt(worldX, worldY);
-    } else if (state.activeTool === "erase") {
-        eraseAt(worldX, worldY);
-    }
-    requestRender();
-}
-
-function onPointerMove(e) {
-    if (isDraggingViewport) {
-        const dx = e.clientX - lastPointerPos.x;
-        const dy = e.clientY - lastPointerPos.y;
-        state.panX += dx;
-        state.panY += dy;
-        lastPointerPos = { x: e.clientX, y: e.clientY };
-        requestRender();
-        return;
-    }
-    
-    const { worldX, worldY } = getCanvasCoords(e);
-    
-    if (isInteracting && (state.activeTool === "brush" || state.activeTool === "wall" || state.activeTool === "path")) {
-        currentPathPoints.push({ x: worldX, y: worldY });
-        requestRender();
-    } else if (isInteracting && state.activeTool === "erase") {
-        eraseAt(worldX, worldY);
-    }
-}
-
-function onPointerUp(e) {
-    if (isDraggingViewport) {
-        isDraggingViewport = false;
-        canvas.style.cursor = "crosshair";
-    }
-    
-    if (isInteracting && currentPathPoints.length > 1) {
-        finishPathStroke();
-    }
-    
-    isInteracting = false;
-    currentPathPoints = [];
-    requestRender();
-}
-
-function onCanvasWheel(e) {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.12 : 0.88;
-    zoomCanvasAt(e.clientX, e.clientY, zoomFactor);
-}
-
-function zoomCanvas(delta) {
-    const factor = delta > 0 ? 1.15 : 0.85;
-    zoomCanvasAt(canvas.width / 2, canvas.height / 2, factor);
-}
-
-function zoomCanvasAt(screenX, screenY, factor) {
-    const newZoom = Math.min(Math.max(state.zoom * factor, 0.2), 4.0);
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = screenX - rect.left;
-    const mouseY = screenY - rect.top;
-    
-    // Zoom toward pointer
-    state.panX = mouseX - (mouseX - state.panX) * (newZoom / state.zoom);
-    state.panY = mouseY - (mouseY - state.panY) * (newZoom / state.zoom);
-    state.zoom = newZoom;
-    
-    document.getElementById("zoomValDisplay").textContent = Math.round(state.zoom * 100) + "%";
-    requestRender();
-}
-
-function resetCanvasTransform() {
-    state.panX = canvas.width / 2;
-    state.panY = canvas.height / 2;
-    state.zoom = 1.0;
-    document.getElementById("zoomValDisplay").textContent = "100%";
-    requestRender();
-    showToast("Markazga keltirildi");
-}
-
-function fitCanvasView() {
-    state.panX = canvas.width / 2;
-    state.panY = canvas.height / 2;
-    state.zoom = 0.85;
-    document.getElementById("zoomValDisplay").textContent = "85%";
-    requestRender();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  ELEMENT CREATION & MANIPULATION
-// ══════════════════════════════════════════════════════════════
-function placeStampElement(x, y) {
-    const mat = state.activeMaterial || currentTheme.palette[0];
-    const el = {
-        id: "el_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
-        name: mat.name,
-        x: Math.round(x),
-        y: Math.round(y),
-        w: mat.w || 36,
-        h: mat.h || 36,
-        radius: mat.radius || 18,
-        color: mat.color || "#4b5563",
-        stroke: mat.stroke || "#1f2937",
-        icon: mat.icon || "🏛️",
-        height: mat.height || 20,
-        rotation: 0,
-        layerId: state.activeLayerId,
-        userAssetUrl: mat.userAssetUrl || null
-    };
-    
-    state.elements.push(el);
-    state.selectedElementId = el.id;
-    saveHistoryState();
-    updateHudStats();
-    markDirty();
-    showToast(`${mat.name} joylashtirildi`);
-}
-
-function placeLightSource(x, y) {
-    const l = {
-        id: "lt_" + Date.now(),
-        x: Math.round(x),
-        y: Math.round(y),
-        radius: 170,
-        color: "#f59e0b",
-        intensity: 0.95
-    };
-    state.lights.push(l);
-    saveHistoryState();
-    markDirty();
-    showToast("🔥 Yangi mash'ala o'rnatildi");
-}
-
-function finishPathStroke() {
-    const mat = state.activeMaterial || currentTheme.palette[0];
-    const pathObj = {
-        id: "pt_" + Date.now(),
-        name: mat.name,
-        type: state.activeTool === "wall" ? "wall" : "river",
-        width: state.activeTool === "wall" ? 16 : (mat.width || 26),
-        color: mat.color || "#f59e0b",
-        layerId: state.activeLayerId,
-        points: [...currentPathPoints]
-    };
-    state.paths.push(pathObj);
-    saveHistoryState();
-    markDirty();
-}
-
-function selectElementAt(x, y) {
-    let found = null;
-    for (let i = state.elements.length - 1; i >= 0; i--) {
-        const el = state.elements[i];
-        const halfW = (el.w || 32) / 2;
-        const halfH = (el.h || 32) / 2;
-        if (x >= el.x - halfW && x <= el.x + halfW && y >= el.y - halfH && y <= el.y + halfH) {
-            found = el;
-            break;
-        }
-    }
-    state.selectedElementId = found ? found.id : null;
-    buildInspectorControls();
-    requestRender();
-}
-
-function eraseAt(x, y) {
-    const eraseRadius = 24;
-    const initialCount = state.elements.length;
-    state.elements = state.elements.filter(el => {
-        const dist = Math.hypot(el.x - x, el.y - y);
-        return dist > eraseRadius;
-    });
-    if (state.elements.length !== initialCount) {
-        saveHistoryState();
-        updateHudStats();
-        markDirty();
-    }
-}
-
-function updateHudStats() {
-    document.getElementById("hudObjCount").textContent = state.elements.length + state.paths.length;
-}
-
-// ══════════════════════════════════════════════════════════════
-//  INSPECTOR & ATMOSPHERE CONTROLS
-// ══════════════════════════════════════════════════════════════
 function buildInspectorControls() {
     const container = document.getElementById("inspectorContent");
     container.innerHTML = "";
     
-    // If an element is selected, show its properties
-    if (state.selectedElementId) {
-        const el = state.elements.find(e => e.id === state.selectedElementId);
-        if (el) {
-            const sec = document.createElement("div");
-            sec.className = "insp-section";
-            sec.innerHTML = `
-                <div class="insp-section-title">
-                    <span>📍 Tanlangan Obyekt</span>
-                    <button onclick="deleteSelectedElement()" style="background:none;border:none;color:var(--crimson);cursor:pointer;font-size:0.8rem;">🗑 O'chirish</button>
-                </div>
-                <div class="control-row">
-                    <span class="control-label">Nomi:</span>
-                    <span class="control-val">${el.name}</span>
-                </div>
-                <div class="control-row">
-                    <span class="control-label">Balandlik / Soya:</span>
-                    <input type="range" class="ck-range" min="5" max="80" value="${el.height || 20}" oninput="updateSelectedHeight(this.value)">
-                </div>
-                <div class="control-row">
-                    <span class="control-label">Aylantirish:</span>
-                    <input type="range" class="ck-range" min="0" max="360" value="${Math.round((el.rotation||0) * 180 / Math.PI)}" oninput="updateSelectedRotation(this.value)">
-                </div>
-            `;
-            container.appendChild(sec);
-        }
-    }
-    
-    // General Map Atmosphere Section
-    const envSec = document.createElement("div");
-    envSec.className = "insp-section";
-    envSec.innerHTML = `
+    // Scatter Settings section
+    const scatterSec = document.createElement("div");
+    scatterSec.className = "insp-section";
+    scatterSec.innerHTML = `
         <div class="insp-section-title">
-            <span>🏰 Muhit & Yorug'lik</span>
-            <span style="font-size:0.7rem;color:var(--gold-bright);">${currentTheme.name}</span>
+            <span>🌲 Avtomatik Sepish (Scatter)</span>
         </div>
         <div class="control-row">
-            <span class="control-label">Yorug'lik rejimi:</span>
-            <select class="ck-select" onchange="changeLightingMode(this.value)">
-                <option value="daylight" ${state.lighting==='daylight'?'selected':''}>Kunduzgi ☀️</option>
-                <option value="torch" ${state.lighting==='torch'?'selected':''}>Mash'ala / Torches 🔥</option>
-                <option value="sunset" ${state.lighting==='sunset'?'selected':''}>Shom / Qizg'ish 🌅</option>
-                <option value="flat" ${state.lighting==='flat'?'selected':''}>Tekis / Chizma 📐</option>
-            </select>
+            <span class="control-label">Aktiv turi:</span>
+            <span class="control-val">${state.selectedAsset ? state.selectedAsset.name : "Daraxt"}</span>
+        </div>
+        <div class="control-row">
+            <span class="control-label">Zichlik (Density):</span>
+            <input type="range" class="ck-range" min="10" max="100" value="${Math.round(state.scatterDensity * 100)}" oninput="state.scatterDensity = this.value / 100">
+        </div>
+        <div class="control-row">
+            <span class="control-label">Tasodifiy aylanish:</span>
+            <input type="checkbox" ${state.scatterRandomRotation ? 'checked' : ''} onchange="state.scatterRandomRotation = this.checked" style="accent-color:var(--gold);">
+        </div>
+        <button class="btn-header gold" style="width:100%;margin-top:8px;justify-content:center;" onclick="triggerScatterSelected()">
+            ✨ Uchastkaga Sepish
+        </button>
+    `;
+    container.appendChild(scatterSec);
+    
+    // General Map Settings
+    const mapSec = document.createElement("div");
+    mapSec.className = "insp-section";
+    mapSec.innerHTML = `
+        <div class="insp-section-title">
+            <span>🗺 Xarita Sozlamalari</span>
         </div>
         <div class="control-row">
             <span class="control-label">Grid o'lchami:</span>
-            <select class="ck-select" onchange="changeGridSize(+this.value)">
+            <select class="ck-select" onchange="state.gridSize = +this.value; renderPaperBackground();">
                 <option value="16" ${state.gridSize===16?'selected':''}>16 px</option>
                 <option value="32" ${state.gridSize===32?'selected':''}>32 px (Standart)</option>
                 <option value="48" ${state.gridSize===48?'selected':''}>48 px</option>
                 <option value="64" ${state.gridSize===64?'selected':''}>64 px</option>
             </select>
         </div>
-    `;
-    container.appendChild(envSec);
-}
-
-function updateSelectedHeight(val) {
-    const el = state.elements.find(e => e.id === state.selectedElementId);
-    if (el) {
-        el.height = +val;
-        markDirty();
-        requestRender();
-    }
-}
-function updateSelectedRotation(deg) {
-    const el = state.elements.find(e => e.id === state.selectedElementId);
-    if (el) {
-        el.rotation = (+deg * Math.PI) / 180;
-        markDirty();
-        requestRender();
-    }
-}
-function deleteSelectedElement() {
-    if (!state.selectedElementId) return;
-    state.elements = state.elements.filter(e => e.id !== state.selectedElementId);
-    state.selectedElementId = null;
-    saveHistoryState();
-    buildInspectorControls();
-    updateHudStats();
-    markDirty();
-    requestRender();
-    showToast("Obyekt o'chirildi");
-}
-
-function buildLayersPanel() {
-    // Built inside Inspector when switched to 'layers'
-}
-
-function switchInspectorTab(tab) {
-    document.querySelectorAll(".insp-tab").forEach(t => t.classList.remove("active"));
-    document.getElementById("tab_" + tab).classList.add("active");
-    if (tab === "props" || tab === "lighting") {
-        buildInspectorControls();
-    } else if (tab === "layers") {
-        renderLayersTab();
-    }
-}
-
-function renderLayersTab() {
-    const container = document.getElementById("inspectorContent");
-    container.innerHTML = `
-        <div class="insp-section">
-            <div class="insp-section-title">
-                <span>📑 Qatlamlar (Layers)</span>
-            </div>
-            <div id="layersListGroup"></div>
+        <div class="control-row">
+            <span class="control-label">Yorug'lik:</span>
+            <span class="control-val">${state.lighting|title}</span>
         </div>
     `;
-    const list = document.getElementById("layersListGroup");
-    state.layers.forEach(l => {
-        const row = document.createElement("div");
-        row.className = "layer-row" + (state.activeLayerId === l.id ? " active" : "");
-        row.onclick = () => {
-            state.activeLayerId = l.id;
-            renderLayersTab();
-            showToast(`Qatlam: ${l.name}`);
-        };
-        row.innerHTML = `
-            <div class="layer-color-dot" style="background:${l.color};"></div>
-            <span class="layer-name-text">${l.name}</span>
-            <button class="layer-action-btn" onclick="event.stopPropagation(); toggleLayerVisibility('${l.id}')">${l.visible ? '👁️' : '🕶️'}</button>
-        `;
-        list.appendChild(row);
-    });
+    container.appendChild(mapSec);
 }
 
-function toggleLayerVisibility(id) {
-    const l = state.layers.find(x => x.id === id);
-    if (l) {
-        l.visible = !l.visible;
-        renderLayersTab();
-        requestRender();
+function triggerScatterSelected() {
+    if (state.plots.length === 0) {
+        showToast("Avval biror uchastka (o'rmon) chizing!");
+        setTool("plot");
+        return;
     }
+    // Scatter into last plot or selected plot
+    const targetPlot = state.plots[state.plots.length - 1];
+    proceduralScatterIntoPlot(targetPlot);
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TOPBAR & ENVIRONMENT MODAL ACTIONS
+//  TOPBAR ACTIONS & MODALS
 // ══════════════════════════════════════════════════════════════
 function toggleGridDisplay() {
     state.showGrid = !state.showGrid;
     document.getElementById("gridBtnText").textContent = "Grid: " + (state.showGrid ? "On" : "Off");
-    requestRender();
+    renderPaperBackground();
 }
 
 function toggleShadowsDisplay() {
     state.showShadows = !state.showShadows;
     document.getElementById("shadowBtnText").textContent = "Soyalar: " + (state.showShadows ? "On" : "Off");
-    requestRender();
-}
-
-function cycleWeatherEffect() {
-    const weathers = ["none", "rain", "embers"];
-    const idx = weathers.indexOf(state.weather);
-    state.weather = weathers[(idx + 1) % weathers.length];
-    document.getElementById("weatherBtnText").textContent = "Ob-havo: " + state.weather.toUpperCase();
-    showToast(`Ob-havo: ${state.weather}`);
-    requestRender();
+    renderAllFromState();
 }
 
 function openEnvironmentModal() {
+    document.getElementById("envLightingSelect").value = state.lighting;
     document.getElementById("paperThemeSelect").value = state.paper;
-    document.getElementById("shadowAngleRange").value = state.shadowAngle;
     document.getElementById("shadowIntRange").value = Math.round(state.shadowIntensity * 100);
-    document.getElementById("shadowDistRange").value = state.shadowDistance;
-    document.getElementById("vignetteCheckbox").checked = state.vignette;
-    document.getElementById("fogCheckbox").checked = state.fogOfWar;
+    document.getElementById("vignetteCheck").checked = state.vignette;
     document.getElementById("envModal").classList.add("show");
 }
 
@@ -2071,55 +2197,40 @@ function closeEnvironmentModal() {
     document.getElementById("envModal").classList.remove("show");
 }
 
+function changeLightingOverlay(val) {
+    state.lighting = val;
+    renderLightingOverlay();
+    markDirty();
+}
+
 function changePaperTheme(val) {
     state.paper = val;
+    renderPaperBackground();
     markDirty();
-    requestRender();
 }
 
-function updateShadowParams() {
-    state.shadowAngle = +document.getElementById("shadowAngleRange").value;
-    state.shadowIntensity = +document.getElementById("shadowIntRange").value / 100;
-    state.shadowDistance = +document.getElementById("shadowDistRange").value;
+function updateShadowSetting(val) {
+    state.shadowIntensity = val / 100;
+    renderAllFromState();
     markDirty();
-    requestRender();
 }
 
-function toggleVignette(val) {
-    state.vignette = val;
+function toggleVignette(checked) {
+    state.vignette = checked;
     markDirty();
-    requestRender();
-}
-
-function toggleFog(val) {
-    state.fogOfWar = val;
-    markDirty();
-    requestRender();
-}
-
-function changeLightingMode(val) {
-    state.lighting = val;
-    markDirty();
-    requestRender();
-}
-
-function changeGridSize(val) {
-    state.gridSize = val;
-    markDirty();
-    requestRender();
 }
 
 // ══════════════════════════════════════════════════════════════
 //  HISTORY (UNDO / REDO)
 // ══════════════════════════════════════════════════════════════
-function saveHistoryState() {
+function pushHistoryState() {
     if (historyIndex < historyStack.length - 1) {
         historyStack.splice(historyIndex + 1);
     }
     const snapshot = {
-        elements: JSON.parse(JSON.stringify(state.elements)),
         paths: JSON.parse(JSON.stringify(state.paths)),
-        lights: JSON.parse(JSON.stringify(state.lights))
+        plots: JSON.parse(JSON.stringify(state.plots)),
+        objects: JSON.parse(JSON.stringify(state.objects))
     };
     historyStack.push(snapshot);
     if (historyStack.length > 30) historyStack.shift();
@@ -2129,7 +2240,7 @@ function saveHistoryState() {
 function undo() {
     if (historyIndex > 0) {
         historyIndex--;
-        restoreHistorySnapshot(historyStack[historyIndex]);
+        restoreHistoryState(historyStack[historyIndex]);
         showToast("Bekor qilindi (Undo)");
     }
 }
@@ -2137,22 +2248,21 @@ function undo() {
 function redo() {
     if (historyIndex < historyStack.length - 1) {
         historyIndex++;
-        restoreHistorySnapshot(historyStack[historyIndex]);
+        restoreHistoryState(historyStack[historyIndex]);
         showToast("Qaytarildi (Redo)");
     }
 }
 
-function restoreHistorySnapshot(s) {
-    state.elements = JSON.parse(JSON.stringify(s.elements));
+function restoreHistoryState(s) {
     state.paths = JSON.parse(JSON.stringify(s.paths));
-    state.lights = JSON.parse(JSON.stringify(s.lights));
-    updateHudStats();
+    state.plots = JSON.parse(JSON.stringify(s.plots));
+    state.objects = JSON.parse(JSON.stringify(s.objects));
+    renderAllFromState();
     markDirty();
-    requestRender();
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PERSISTENCE & EXPORT
+//  PERSISTENCE & EXPORTS
 // ══════════════════════════════════════════════════════════════
 function markDirty() {
     state.isDirty = true;
@@ -2171,21 +2281,17 @@ async function saveMapData() {
         title: state.title,
         data: {
             version: 2,
+            map_id: state.mapId,
+            name: state.title,
             mapType: state.themeKey,
             paperTheme: state.paper,
             lighting: state.lighting,
-            shadowAngle: state.shadowAngle,
             shadowIntensity: state.shadowIntensity,
-            shadowDistance: state.shadowDistance,
             vignette: state.vignette,
-            fogOfWar: state.fogOfWar,
-            weather: state.weather,
             gridSize: state.gridSize,
-            layers: state.layers,
-            elements: state.elements,
             paths: state.paths,
-            lights: state.lights,
-            objects: state.elements // backward compatibility
+            plots: state.plots,
+            objects: state.objects
         }
     };
     
@@ -2211,35 +2317,37 @@ async function saveMapData() {
 }
 
 function exportMapPNG() {
-    // Render full canvas at high quality
+    transformer.nodes([]);
+    const dataUrl = stage.toDataURL({ pixelRatio: 2 });
     const link = document.createElement("a");
     link.download = `${state.title.replace(/\s+/g, "_")}_Map.png`;
-    link.href = canvas.toDataURL("image/png");
+    link.href = dataUrl;
     link.click();
-    showToast("🖼️ PNG xaritasi yuklab olindi");
+    showToast("🖼️ Yuqori sifatli PNG saqlandi!");
 }
 
 function exportMapJSON() {
     const exportData = {
-        title: state.title,
-        theme: state.themeKey,
-        elements: state.elements,
+        map_id: state.mapId,
+        name: state.title,
         paths: state.paths,
-        lights: state.lights
+        plots: state.plots,
+        objects: state.objects,
+        lighting: state.lighting
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const link = document.createElement("a");
     link.download = `${state.title.replace(/\s+/g, "_")}_data.json`;
     link.href = URL.createObjectURL(blob);
     link.click();
-    showToast("📄 JSON fayl yuklab olindi");
+    showToast("📄 JSON yuklab olindi");
 }
 
 function showToast(msg) {
     const t = document.getElementById("ckToast");
     t.textContent = msg;
     t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2400);
+    setTimeout(() => t.classList.remove("show"), 2500);
 }
 
 function getCookie(name) {
@@ -2257,7 +2365,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Keyboard shortcuts
+// Shortcuts
 document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
     if (e.ctrlKey && e.key.toLowerCase() === "s") {
@@ -2272,31 +2380,27 @@ document.addEventListener("keydown", (e) => {
     } else if (e.key.toLowerCase() === "v") {
         setTool("select");
     } else if (e.key.toLowerCase() === "b") {
-        setTool("brush");
+        setTool("bezier");
+    } else if (e.key.toLowerCase() === "p") {
+        setTool("plot");
     } else if (e.key.toLowerCase() === "s") {
         setTool("stamp");
-    } else if (e.key.toLowerCase() === "w") {
-        setTool("wall");
-    } else if (e.key.toLowerCase() === "p") {
-        setTool("path");
-    } else if (e.key.toLowerCase() === "l") {
-        setTool("light");
+    } else if (e.key.toLowerCase() === "a") {
+        setTool("scatter");
     } else if (e.key.toLowerCase() === "e") {
         setTool("erase");
-    } else if (e.key === "Delete" || e.key === "Backspace") {
-        deleteSelectedElement();
     }
 });
 
-// Auto-save every 45 seconds if dirty
+// Auto-save every 45 seconds
 setInterval(() => {
     if (state.isDirty) {
         saveMapData();
     }
 }, 45000);
 
-// Run initialization on load
-window.addEventListener("DOMContentLoaded", initEngine);
+// Init on DOM load
+window.addEventListener("DOMContentLoaded", initKonvaApp);
 </script>
 </body>
 </html>
