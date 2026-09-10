@@ -10,30 +10,32 @@
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=MedievalSharp&display=swap" rel="stylesheet">
 
 <!-- Konva.js 9.3 -->
 <script src="https://unpkg.com/konva@9.3.16/konva.min.js"></script>
 
 <style>
 :root {
-    --bg-dark: #06080d;
-    --bg-panel: #0b0f17;
-    --bg-panel-alt: #111724;
+    --bg-dark: #05070a;
+    --bg-panel: #0a0e17;
+    --bg-panel-alt: #111726;
     --bg-hover: rgba(255, 255, 255, 0.07);
     --border: rgba(255, 255, 255, 0.08);
-    --border-gold: rgba(245, 158, 11, 0.4);
+    --border-gold: rgba(245, 158, 11, 0.35);
     --gold: #f59e0b;
     --gold-bright: #fbbf24;
-    --gold-glow: rgba(245, 158, 11, 0.25);
+    --gold-glow: rgba(245, 158, 11, 0.3);
     --cyan: #00f5ff;
     --emerald: #10b981;
     --crimson: #ef4444;
     --purple: #a855f7;
+    --sky: #38bdf8;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --text-dim: #64748b;
     --font-fantasy: 'Cinzel', serif;
+    --font-hand: 'MedievalSharp', cursive, serif;
     --font-ui: 'Inter', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 }
@@ -65,17 +67,19 @@ html, body {
     position: relative;
 }
 
-/* TOP HEADER */
+/* ══════════════════════════════════════════════════════════════
+   TOP HEADER
+══════════════════════════════════════════════════════════════ */
 .ck-header {
     height: 52px;
-    background: linear-gradient(180deg, #10141f 0%, #0a0d14 100%);
+    background: linear-gradient(180deg, #101524 0%, #080b12 100%);
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     padding: 0 14px;
     gap: 12px;
     z-index: 50;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
 }
 
 .ck-brand {
@@ -88,19 +92,19 @@ html, body {
     border-right: 1px solid var(--border);
 }
 .ck-logo-badge {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
     background: radial-gradient(circle at 30% 30%, #fbbf24 0%, #b45309 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
-    font-size: 1.1rem;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+    font-size: 1.2rem;
 }
 .ck-brand-title {
     font-family: var(--font-fantasy);
-    font-size: 0.95rem;
+    font-size: 0.96rem;
     font-weight: 800;
     letter-spacing: 1px;
     background: linear-gradient(135deg, #fde68a, #f59e0b, #d97706);
@@ -108,7 +112,7 @@ html, body {
     -webkit-text-fill-color: transparent;
 }
 .ck-brand-sub {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     color: var(--text-dim);
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -118,7 +122,7 @@ html, body {
     background: rgba(255,255,255,0.03);
     border: 1px solid transparent;
     border-radius: 6px;
-    padding: 4px 10px;
+    padding: 5px 10px;
     color: var(--text-main);
     font-family: var(--font-fantasy);
     font-size: 0.92rem;
@@ -149,6 +153,12 @@ html, body {
     font-size: 0.72rem;
     color: var(--gold-bright);
     font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.theme-pill-badge:hover {
+    background: rgba(245, 158, 11, 0.18);
+    border-color: var(--gold);
 }
 
 .header-actions {
@@ -216,24 +226,28 @@ html, body {
     50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-/* WORKSPACE */
+/* ══════════════════════════════════════════════════════════════
+   WORKSPACE LAYOUT
+══════════════════════════════════════════════════════════════ */
 .ck-workspace {
     display: grid;
-    grid-template-columns: 54px 305px 1fr 295px;
+    grid-template-columns: 52px 315px 1fr 300px;
     flex: 1;
     overflow: hidden;
     position: relative;
 }
 
-/* TOOLS BAR */
+/* ══════════════════════════════════════════════════════════════
+   1. LEFT TOOL SHELF
+══════════════════════════════════════════════════════════════ */
 .ck-tools-bar {
-    background: #090c13;
+    background: #070a11;
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 10px 0;
-    gap: 6px;
+    gap: 5px;
     z-index: 20;
 }
 .tool-icon-btn {
@@ -252,8 +266,8 @@ html, body {
     position: relative;
 }
 .tool-icon-btn svg {
-    width: 19px;
-    height: 19px;
+    width: 18px;
+    height: 18px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -272,7 +286,7 @@ html, body {
     box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
 }
 .tool-shortcut-tag {
-    font-size: 0.55rem;
+    font-size: 0.52rem;
     font-family: var(--font-mono);
     position: absolute;
     bottom: 2px;
@@ -281,7 +295,7 @@ html, body {
     font-weight: 700;
 }
 .tool-divider {
-    width: 26px;
+    width: 24px;
     height: 1px;
     background: var(--border);
     margin: 4px 0;
@@ -290,9 +304,9 @@ html, body {
     content: attr(data-tooltip);
     position: absolute;
     left: 48px;
-    background: #1e2536;
+    background: #182030;
     color: #fff;
-    padding: 4px 9px;
+    padding: 5px 10px;
     border-radius: 5px;
     font-size: 0.7rem;
     white-space: nowrap;
@@ -300,7 +314,7 @@ html, body {
     pointer-events: none;
     transition: opacity 0.15s;
     border: 1px solid var(--border);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
     z-index: 100;
     font-family: var(--font-ui);
 }
@@ -308,9 +322,11 @@ html, body {
     opacity: 1;
 }
 
-/* PALETTE PANEL */
+/* ══════════════════════════════════════════════════════════════
+   2. LEFT PALETTE PANEL
+══════════════════════════════════════════════════════════════ */
 .ck-palette-panel {
-    background: #0c1018;
+    background: #090d16;
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -320,7 +336,7 @@ html, body {
 .palette-tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
-    background: #090d14;
+    background: #07090f;
 }
 .pal-tab {
     flex: 1;
@@ -341,7 +357,7 @@ html, body {
 .pal-tab.active {
     color: var(--gold-bright);
     border-bottom-color: var(--gold);
-    background: rgba(245, 158, 11, 0.05);
+    background: rgba(245, 158, 11, 0.06);
 }
 
 .palette-filter-bar {
@@ -349,7 +365,7 @@ html, body {
     border-bottom: 1px solid var(--border);
     display: flex;
     gap: 6px;
-    background: #0e131d;
+    background: #0d121e;
 }
 .filter-search-input {
     flex: 1;
@@ -385,16 +401,16 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
     color: var(--text-dim);
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     margin-bottom: 6px;
     padding: 0 2px;
 }
 .category-count {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     background: rgba(255,255,255,0.06);
     padding: 1px 6px;
     border-radius: 10px;
@@ -433,15 +449,15 @@ html, body {
     box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
 }
 .material-preview-box {
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.4rem;
     background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.05);
     overflow: hidden;
 }
 .material-preview-box img {
@@ -465,9 +481,11 @@ html, body {
     font-weight: 700;
 }
 
-/* CENTER VIEWPORT */
+/* ══════════════════════════════════════════════════════════════
+   3. CENTER VIEWPORT
+══════════════════════════════════════════════════════════════ */
 .ck-viewport {
-    background: #06070a;
+    background: #050608;
     position: relative;
     overflow: hidden;
     display: flex;
@@ -488,16 +506,16 @@ html, body {
     position: absolute;
     top: 12px;
     left: 14px;
-    background: rgba(13, 17, 26, 0.88);
-    backdrop-filter: blur(8px);
+    background: rgba(10, 14, 23, 0.9);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 4px 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     z-index: 10;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 .vp-btn {
     background: transparent;
@@ -516,6 +534,10 @@ html, body {
     background: rgba(255,255,255,0.08);
     color: var(--text-main);
 }
+.vp-btn.active {
+    background: rgba(245, 158, 11, 0.18);
+    color: var(--gold-bright);
+}
 .vp-sep {
     width: 1px;
     height: 16px;
@@ -529,14 +551,14 @@ html, body {
     font-family: var(--font-mono);
     font-size: 0.68rem;
     color: var(--text-dim);
-    background: rgba(13, 17, 26, 0.85);
+    background: rgba(10, 14, 23, 0.88);
     backdrop-filter: blur(8px);
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 6px;
     border: 1px solid var(--border);
     pointer-events: none;
     display: flex;
-    gap: 12px;
+    gap: 14px;
     z-index: 10;
 }
 
@@ -546,7 +568,7 @@ html, body {
     right: 14px;
     display: flex;
     align-items: center;
-    background: rgba(13, 17, 26, 0.88);
+    background: rgba(10, 14, 23, 0.9);
     backdrop-filter: blur(8px);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -580,9 +602,11 @@ html, body {
     font-weight: 600;
 }
 
-/* RIGHT PROPERTIES PANEL */
+/* ══════════════════════════════════════════════════════════════
+   4. RIGHT INSPECTOR & LAYERS PANEL
+══════════════════════════════════════════════════════════════ */
 .ck-inspector-panel {
-    background: #0c1018;
+    background: #090d16;
     border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -592,7 +616,7 @@ html, body {
 .inspector-tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
-    background: #090d14;
+    background: #07090f;
 }
 .insp-tab {
     flex: 1;
@@ -613,16 +637,16 @@ html, body {
 .insp-tab.active {
     color: var(--gold-bright);
     border-bottom-color: var(--gold);
-    background: rgba(245, 158, 11, 0.05);
+    background: rgba(245, 158, 11, 0.06);
 }
 
 .inspector-body {
     flex: 1;
     overflow-y: auto;
-    padding: 14px 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 .inspector-body::-webkit-scrollbar {
     width: 5px;
@@ -689,7 +713,57 @@ html, body {
     border-color: var(--gold);
 }
 
-/* Modal */
+/* Layer list styles */
+.layer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    font-size: 0.74rem;
+    transition: all 0.15s;
+}
+.layer-row:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.15);
+}
+.layer-row.active {
+    border-color: var(--gold);
+    background: rgba(245, 158, 11, 0.08);
+}
+.layer-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.layer-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.layer-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.15s;
+}
+.layer-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.1);
+}
+.layer-btn.off {
+    color: var(--crimson);
+    opacity: 0.6;
+}
+
+/* Modals */
 .ck-modal {
     position: fixed;
     inset: 0;
@@ -704,7 +778,7 @@ html, body {
     display: flex;
 }
 .ck-modal-card {
-    background: #0f1420;
+    background: #0f1422;
     border: 1px solid var(--border-gold);
     border-radius: 12px;
     width: 90%;
@@ -731,7 +805,7 @@ html, body {
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%) translateY(50px);
-    background: #141a27;
+    background: #141b2b;
     border: 1px solid var(--gold);
     color: var(--text-main);
     padding: 8px 18px;
@@ -759,15 +833,16 @@ html, body {
             <div class="ck-logo-badge">👑</div>
             <div class="ck-brand-text">
                 <span class="ck-brand-title">Canvas of Kings</span>
-                <span class="ck-brand-sub">2D Map Maker</span>
+                <span class="ck-brand-sub">2D Map Maker Pro</span>
             </div>
         </a>
 
         <input type="text" id="mapTitleInput" class="map-title-input" value="{{ map.title }}" title="Xarita nomini o'zgartirish">
 
-        <div class="theme-pill-badge" id="themePillBadge">
+        <div class="theme-pill-badge" id="themePillBadge" onclick="openEnvironmentModal()" title="Muhitni almashtirish">
             <span id="themeIcon">🏰</span>
             <span id="themeNameLabel">{{ map.get_map_type_display|default:map.map_type|title }}</span>
+            <span style="font-size: 0.65rem; color: var(--text-dim);">▾</span>
         </div>
 
         <div class="header-actions">
@@ -783,14 +858,18 @@ html, body {
                 ↪ <span>Redo</span>
             </button>
 
-            <button class="btn-header" onclick="openEnvironmentModal()" title="Muhit va Ob-havoni sozlash">
-                🕯️ <span>Yorug'lik & Muhit</span>
+            <button class="btn-header" onclick="openEnvironmentModal()" title="Muhit, Ob-havo va Yorug'lik">
+                🕯️ <span>Muhit & Ob-havo</span>
             </button>
 
-            <button class="btn-header" onclick="exportMapPNG()" title="Yuqori sifatli rasm sifatida saqlash">
+            <button class="btn-header" onclick="openShortcutsModal()" title="Klaviatura tugmalari (?)">
+                ⌨️ <span>Tugmalar</span>
+            </button>
+
+            <button class="btn-header" onclick="exportMapPNG(2)" title="Yuqori sifatli 2K PNG saqlash">
                 🖼️ <span>PNG</span>
             </button>
-            <button class="btn-header" onclick="exportMapJSON()" title="JSON ma'lumotni yuklab olish">
+            <button class="btn-header" onclick="exportMapJSON()" title="JSON saqlash">
                 📄 <span>JSON</span>
             </button>
 
@@ -814,22 +893,27 @@ html, body {
                 <span class="tool-shortcut-tag">S</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_bezier" onclick="setTool('bezier')" data-tooltip="Yo'l & Daryo Bezier Chizig'i (B)">
+            <button class="tool-icon-btn" id="tool_bezier" onclick="setTool('bezier')" data-tooltip="Yo'l & Daryo (B)">
                 <svg viewBox="0 0 24 24"><circle cx="4" cy="19" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="20" cy="19" r="2"/><path d="M4 19c4-12 12-12 16 0"/></svg>
                 <span class="tool-shortcut-tag">B</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_plot" onclick="setTool('plot')" data-tooltip="Uchastka (Plot) Hududi chizish (P)">
+            <button class="tool-icon-btn" id="tool_plot" onclick="setTool('plot')" data-tooltip="Uchastka (Plot) Hududi (P)">
                 <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                 <span class="tool-shortcut-tag">P</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_scatter" onclick="setTool('scatter')" data-tooltip="Uchastkaga Daraxt Sepish (A)">
+            <button class="tool-icon-btn" id="tool_scatter" onclick="setTool('scatter')" data-tooltip="Uchastkaga Daraxt/Bino Sepish (A)">
                 <svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2"/><circle cx="15" cy="5" r="1.5"/><circle cx="12" cy="13" r="2.5"/><circle cx="18" cy="17" r="2"/><circle cx="6" cy="18" r="1.5"/></svg>
                 <span class="tool-shortcut-tag">A</span>
             </button>
 
             <div class="tool-divider"></div>
+
+            <button class="tool-icon-btn" id="tool_text" onclick="setTool('text')" data-tooltip="Matn / Qadimiy Nom Yozish (T)">
+                <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                <span class="tool-shortcut-tag">T</span>
+            </button>
 
             <button class="tool-icon-btn" id="tool_circle" onclick="setTool('circle')" data-tooltip="Dumaloq Hudud / Ko'l (C)">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
@@ -850,17 +934,18 @@ html, body {
         <!-- 2. LEFT PALETTE -->
         <aside class="ck-palette-panel">
             <div class="palette-tabs">
-                <div class="pal-tab active" id="tab_kingsbridge" onclick="switchPaletteTab('kingsbridge')">Kingsbridge</div>
-                <div class="pal-tab" id="tab_assets" onclick="switchPaletteTab('assets')">Standart</div>
-                <div class="pal-tab" id="tab_plots" onclick="switchPaletteTab('plots')">Uchastka</div>
+                <div class="pal-tab active" id="tab_all_assets" onclick="filterPaletteCategory('all')">Barchasi</div>
+                <div class="pal-tab" id="tab_buildings" onclick="filterPaletteCategory('buildings')">Binolar</div>
+                <div class="pal-tab" id="tab_nature" onclick="filterPaletteCategory('nature')">Tabiat</div>
+                <div class="pal-tab" id="tab_plots" onclick="filterPaletteCategory('plots')">Uchastka</div>
             </div>
 
             <div class="palette-filter-bar">
-                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (daraxt, uy, chodir, arava...)" oninput="filterPalette(this.value)">
+                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (uy, tosh, daraxt, zindon...)" oninput="filterPalette(this.value)">
             </div>
 
             <div class="palette-content" id="paletteListContainer">
-                <!-- Populated dynamically -->
+                <!-- Dynamically populated -->
             </div>
         </aside>
 
@@ -877,11 +962,15 @@ html, body {
                 <button class="vp-btn" id="gridToggleBtn" onclick="toggleGridDisplay()">
                     ▦ <span id="gridBtnText">Grid: On</span>
                 </button>
+                <button class="vp-btn" id="snapToggleBtn" onclick="toggleSnapDisplay()">
+                    🧲 <span id="snapBtnText">Snap: Off</span>
+                </button>
                 <button class="vp-btn" id="shadowToggleBtn" onclick="toggleShadowsDisplay()">
                     🌑 <span id="shadowBtnText">Soyalar: On</span>
                 </button>
-                <button class="vp-btn" id="scatterQuickBtn" onclick="triggerScatterSelected()" title="Tanlangan uchastkaga daraxt sepish">
-                    🌲 <span>Daraxt Sepish</span>
+                <div class="vp-sep"></div>
+                <button class="vp-btn" id="scatterQuickBtn" onclick="triggerScatterSelected()" title="Tanlangan uchastkaga sepish">
+                    ✨ <span>Tezkor Sepish</span>
                 </button>
             </div>
 
@@ -890,8 +979,9 @@ html, body {
             <div class="canvas-hud-stats" id="hudStats">
                 <span>X: <strong id="hudX">0</strong> Y: <strong id="hudY">0</strong></span>
                 <span>Obyektlar: <strong id="hudObjCount">0</strong></span>
+                <span>Yo'llar: <strong id="hudPathCount">0</strong></span>
                 <span>Uchastkalar: <strong id="hudPlotCount">0</strong></span>
-                <span>Uslub: <strong style="color:var(--gold-bright);">Hand-Drawn Medieval</strong></span>
+                <span>Muhit: <strong id="hudThemeDisplay" style="color:var(--gold-bright);">Kingsbridge</strong></span>
             </div>
 
             <div class="zoom-widget">
@@ -901,15 +991,16 @@ html, body {
             </div>
         </section>
 
-        <!-- 4. RIGHT PROPERTIES PANEL -->
+        <!-- 4. RIGHT PROPERTIES & LAYERS PANEL -->
         <aside class="ck-inspector-panel">
             <div class="inspector-tabs">
                 <div class="insp-tab active" id="tab_props" onclick="switchInspectorTab('props')">Xossalar</div>
+                <div class="insp-tab" id="tab_layers" onclick="switchInspectorTab('layers')">Qatlamlar</div>
                 <div class="insp-tab" id="tab_scatter" onclick="switchInspectorTab('scatter')">Sepish</div>
             </div>
 
             <div class="inspector-body" id="inspectorContent">
-                <!-- Rendered dynamically -->
+                <!-- Rendered dynamically based on tab and selection -->
             </div>
         </aside>
     </main>
@@ -918,22 +1009,43 @@ html, body {
 <!-- Toast -->
 <div class="ck-toast" id="ckToast">Bildirishnoma</div>
 
-<!-- Environment Modal -->
+<!-- Environment & Weather Modal -->
 <div class="ck-modal" id="envModal">
     <div class="ck-modal-card">
         <div class="ck-modal-title">
-            <span>🕯️ Pergament va 2D Yorug'lik Muhiti</span>
+            <span>🕯️ Xarita Muhiti, Ob-havo & Yorug'lik</span>
             <button onclick="closeEnvironmentModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;">✕</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
             <div class="control-row">
+                <span class="control-label">Xarita Mavzusi / Biom:</span>
+                <select id="envBiomeSelect" class="ck-select" onchange="applyBiomePreset(this.value)">
+                    <option value="village">Qadimiy Qishloq (Kingsbridge Medieval)</option>
+                    <option value="castle">Qirollik Qal'asi (Royal Fortress)</option>
+                    <option value="wilderness">Qalin O'rmon & Yovvoyi Tabiat</option>
+                    <option value="dungeon">Zulmatli Zindon (Dungeon / Crypt)</option>
+                    <option value="desert">Jazirama Sahro (Desert Oasis)</option>
+                    <option value="coastal">Dengiz Bo'yi / Port (Coastal Harbor)</option>
+                </select>
+            </div>
+            <div class="control-row">
                 <span class="control-label">Yorug'lik Rejimi:</span>
                 <select id="envLightingSelect" class="ck-select" onchange="changeLightingOverlay(this.value)">
-                    <option value="daylight">Kingsbridge Ochiq Pergament ☀️</option>
-                    <option value="sunset">Shom / Qadimiy Oltin 🌅</option>
-                    <option value="night">Tungi Moviy Soya 🌙</option>
-                    <option value="cloudy">Bulutli Tuman ☁️</option>
-                    <option value="torch">Mash'ala va Zulmat 🕯️</option>
+                    <option value="daylight">Ochiq Kunduzgi Yorug'lik ☀️</option>
+                    <option value="sunset">Shom / Qadimiy Oltin Ufq 🌅</option>
+                    <option value="night">Tungi Moviy Oy Nuri 🌙</option>
+                    <option value="cloudy">Bulutli va Tumanli ☁️</option>
+                    <option value="torch">Zulmatdagi Mash'ala (Torchlight) 🔥</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Ob-havo & Zarrachalar (Weather FX):</span>
+                <select id="envWeatherSelect" class="ck-select" onchange="changeWeatherEffect(this.value)">
+                    <option value="none">Ochiq ob-havo</option>
+                    <option value="rain">Yomg'ir tomchilari 🌧️</option>
+                    <option value="snow">Qor yog'ishi ❄️</option>
+                    <option value="embers">Olov uchqunlari / Ash 🔥</option>
+                    <option value="fog">Harakatlanuvchi tuman 🌫️</option>
                 </select>
             </div>
             <div class="control-row">
@@ -951,14 +1063,43 @@ html, body {
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:10px;">
-            <button class="btn-header gold" onclick="closeEnvironmentModal()">Saqlash va Yopish</button>
+            <button class="btn-header gold" onclick="closeEnvironmentModal()">Tayyor</button>
+        </div>
+    </div>
+</div>
+
+<!-- Shortcuts Modal -->
+<div class="ck-modal" id="shortcutsModal">
+    <div class="ck-modal-card" style="max-width:460px;">
+        <div class="ck-modal-title">
+            <span>⌨️ Klaviatura Tugmalari</span>
+            <button onclick="closeShortcutsModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.75rem;">
+            <div><strong style="color:var(--gold-bright);">V</strong> — Tanlash / Ko'chirish</div>
+            <div><strong style="color:var(--gold-bright);">S</strong> — Aktiv Shtampi</div>
+            <div><strong style="color:var(--gold-bright);">B</strong> — Yo'l / Daryo chizish</div>
+            <div><strong style="color:var(--gold-bright);">P</strong> — Uchastka (Plot) chizish</div>
+            <div><strong style="color:var(--gold-bright);">T</strong> — Matn / Label qo'yish</div>
+            <div><strong style="color:var(--gold-bright);">A</strong> — Uchastkaga sepish</div>
+            <div><strong style="color:var(--gold-bright);">E</strong> — O'chirg'ich</div>
+            <div><strong style="color:var(--gold-bright);">Del / Backspace</strong> — O'chirish</div>
+            <div><strong style="color:var(--gold-bright);">Ctrl + D</strong> — Nusxa olish</div>
+            <div><strong style="color:var(--gold-bright);">Ctrl + Z / Y</strong> — Undo / Redo</div>
+            <div><strong style="color:var(--gold-bright);">Ctrl + S</strong> — Saqlash</div>
+            <div><strong style="color:var(--gold-bright);">Space + Drag</strong> — Xaritani surish (Pan)</div>
+            <div><strong style="color:var(--gold-bright);">Scroll</strong> — Zoom qilish</div>
+            <div><strong style="color:var(--gold-bright);">Double Click</strong> — Chiziqni tugatish</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <button class="btn-header gold" onclick="closeShortcutsModal()">Tushunarli</button>
         </div>
     </div>
 </div>
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  KONVA.JS ENGINE + KINGSBRIDGE HAND-DRAWN ASSETS
+//  DATA & STATE INITIALIZATION
 // ══════════════════════════════════════════════════════════════
 const MAP_ID = {{ map.id }};
 const RAW_MAP_DATA = {{ map_data_json|safe }};
@@ -981,70 +1122,94 @@ function getPreloadedImage(url, callback) {
         imageCache[url] = img;
         callback(img);
     };
+    img.onerror = () => {
+        console.warn("Failed loading image:", url);
+    };
     img.src = url;
 }
-
-/* Fallback default theme presets */
-const THEME_PRESETS = {
-    village: {
-        name: "Kingsbridge Medieval Market",
-        icon: "🏘️",
-        paper: "kingsbridge_authentic",
-        bgColor: "#e8dfcb",
-        lighting: "daylight"
-    }
-};
 
 const state = {
     mapId: MAP_ID,
     title: "{{ map.title|escapejs }}",
-    themeKey: "village",
+    themeKey: RAW_MAP_DATA.mapType || MAP_TYPE || "village",
     paper: RAW_MAP_DATA.paperTheme || "kingsbridge_authentic",
     lighting: RAW_MAP_DATA.lighting || "daylight",
+    weather: RAW_MAP_DATA.weather || "none",
     shadowIntensity: RAW_MAP_DATA.shadowIntensity !== undefined ? RAW_MAP_DATA.shadowIntensity : 0.65,
     showGrid: true,
+    snapToGrid: false,
     showShadows: true,
     gridSize: RAW_MAP_DATA.gridSize || 32,
     
     // Tools
     activeTool: "select",
-    activePaletteTab: "kingsbridge",
+    activeInspectorTab: "props",
+    paletteCategoryFilter: "all",
+    paletteSearchQuery: "",
     selectedAsset: null,
+    
+    // Path tool configuration
+    pathType: "dirt_road",
+    pathWidth: 16,
+    
+    // Text tool configuration
+    textValue: "Qirollik Bozor Maydoni",
+    fontSize: 22,
+    textColor: "#3d2817",
+    textStyle: "Cinzel",
     
     // Data collections
     paths: RAW_MAP_DATA.paths || [],
     plots: RAW_MAP_DATA.plots || [],
     objects: RAW_MAP_DATA.objects || RAW_MAP_DATA.elements || [],
+    labels: RAW_MAP_DATA.labels || [],
+    
+    // Layers visibility & lock
+    layers: {
+        terrain:    { name: "Yer & Tekstura", visible: true, locked: false, opacity: 1.0 },
+        water:      { name: "Yo'l & Daryolar", visible: true, locked: false, opacity: 1.0 },
+        plots:      { name: "Uchastkalar",    visible: true, locked: false, opacity: 1.0 },
+        structures: { name: "Binolar & Uylar",visible: true, locked: false, opacity: 1.0 },
+        nature:     { name: "Tabiat & Daraxt",visible: true, locked: false, opacity: 1.0 },
+        labels:     { name: "Matn & Nomlar",  visible: true, locked: false, opacity: 1.0 },
+        weather:    { name: "Ob-havo & Nur",  visible: true, locked: false, opacity: 1.0 }
+    },
     
     // Procedural Scatter config
     scatterDensity: 0.65,
     scatterScaleMin: 0.8,
     scatterScaleMax: 1.25,
     scatterRandomRotation: true,
+    scatterTargetType: "nature", // 'nature', 'houses', 'tents', 'mountains', 'selected'
     
     // Active Drawing
     activeCurvePoints: [],
     activePlotPoints: [],
     selectedNode: null,
+    selectedNodeType: null,
     isDirty: false,
 
-    // Ground texture — url of the selected texture from GROUND_TEXTURES
-    groundTexture: GROUND_TEXTURES.length > 0 ? GROUND_TEXTURES[0].url : null,
+    // Ground texture
+    groundTexture: RAW_MAP_DATA.groundTexture || (GROUND_TEXTURES.length > 0 ? GROUND_TEXTURES[0].url : null)
 };
-
 
 const historyStack = [];
 let historyIndex = -1;
 
-/* Konva Stage & Layers */
+/* Konva Stage & Layer nodes */
 let stage = null;
 let bgLayer = null;
 let plotsLayer = null;
 let pathsLayer = null;
 let objectsLayer = null;
+let labelsLayer = null;
 let lightingLayer = null;
+let weatherLayer = null;
 let tempLayer = null;
 let transformer = null;
+
+let _bgTextureImg = null;
+let weatherAnimation = null;
 
 // ══════════════════════════════════════════════════════════════
 //  INITIALIZE
@@ -1062,28 +1227,31 @@ function initKonvaApp() {
     plotsLayer = new Konva.Layer();
     pathsLayer = new Konva.Layer();
     objectsLayer = new Konva.Layer();
-    lightingLayer = new Konva.Layer();
+    labelsLayer = new Konva.Layer();
     tempLayer = new Konva.Layer();
+    lightingLayer = new Konva.Layer();
+    weatherLayer = new Konva.Layer();
     
     stage.add(bgLayer);
     stage.add(plotsLayer);
     stage.add(pathsLayer);
     stage.add(objectsLayer);
+    stage.add(labelsLayer);
     stage.add(tempLayer);
     stage.add(lightingLayer);
+    stage.add(weatherLayer);
     
     transformer = new Konva.Transformer({
         borderStroke: "#f59e0b",
         borderStrokeWidth: 1.5,
         anchorStroke: "#f59e0b",
         anchorFill: "#ffffff",
-        anchorSize: 7,
-        rotateAnchorOffset: 22,
+        anchorSize: 8,
+        rotateAnchorOffset: 24,
         enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right']
     });
     objectsLayer.add(transformer);
     
-    // Preload default selected asset
     if (MEDIEVAL_ASSETS && MEDIEVAL_ASSETS.length > 0) {
         state.selectedAsset = MEDIEVAL_ASSETS[0];
     }
@@ -1094,6 +1262,7 @@ function initKonvaApp() {
     buildInspectorControls();
     
     renderAllFromState();
+    startWeatherAnimation();
     pushHistoryState();
     
     window.addEventListener("resize", () => {
@@ -1110,15 +1279,16 @@ function initKonvaApp() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PARCHMENT / GROUND TEXTURE BACKGROUND
+//  BACKGROUND & GROUND TEXTURE
 // ══════════════════════════════════════════════════════════════
-let _bgTextureImg = null;  // cached current ground texture HTMLImageElement
-
 function renderPaperBackground() {
     bgLayer.destroyChildren();
+    if (!state.layers.terrain.visible) {
+        bgLayer.batchDraw();
+        return;
+    }
+    
     const size = 5000;
-
-    // Parchment fallback color
     const isKingsbridge = state.paper === "kingsbridge_authentic";
     const baseColor = isKingsbridge ? "#eae3d1" : (state.paper === "parchment_dark" ? "#16130e" : "#f5edd6");
 
@@ -1132,10 +1302,11 @@ function renderPaperBackground() {
             fillPatternRepeat: 'repeat',
             fillPatternScaleX: 1,
             fillPatternScaleY: 1,
+            opacity: state.layers.terrain.opacity,
             listening: false
         });
         bgLayer.add(bgRect);
-        _addBgOverlaysAndGrid(size, isKingsbridge);
+        _addBgDecorations(size, isKingsbridge);
         bgLayer.batchDraw();
     }
 
@@ -1148,15 +1319,15 @@ function renderPaperBackground() {
             fill: baseColor,
             stroke: "rgba(180,160,130,0.4)",
             strokeWidth: 4,
+            opacity: state.layers.terrain.opacity,
             listening: false
         });
         bgLayer.add(bgRect);
-        _addBgOverlaysAndGrid(size, isKingsbridge);
+        _addBgDecorations(size, isKingsbridge);
         bgLayer.batchDraw();
     }
 
-    // Use the user-selected ground texture if available
-    const texUrl = state.groundTexture || null;
+    const texUrl = state.groundTexture;
     if (texUrl) {
         if (_bgTextureImg && _bgTextureImg._srcUrl === texUrl) {
             _drawBgWithImage(_bgTextureImg);
@@ -1175,20 +1346,20 @@ function renderPaperBackground() {
     }
 }
 
-function _addBgOverlaysAndGrid(size, isKingsbridge) {
-    // Dashed border frame
+function _addBgDecorations(size, isKingsbridge) {
+    // Ornate Border Frame
     bgLayer.add(new Konva.Rect({
-        x: -size / 2 + 30,
-        y: -size / 2 + 30,
-        width: size - 60,
-        height: size - 60,
-        stroke: "rgba(100, 80, 50, 0.25)",
-        strokeWidth: 2,
-        dash: [12, 6],
+        x: -size / 2 + 25,
+        y: -size / 2 + 25,
+        width: size - 50,
+        height: size - 50,
+        stroke: "rgba(100, 80, 50, 0.3)",
+        strokeWidth: 3,
+        dash: [14, 6],
         listening: false
     }));
 
-    // Subtle vignette overlay
+    // Radial Map Vignette
     bgLayer.add(new Konva.Rect({
         x: -size / 2,
         y: -size / 2,
@@ -1197,15 +1368,15 @@ function _addBgOverlaysAndGrid(size, isKingsbridge) {
         fillRadialGradientStartPoint: { x: 0, y: 0 },
         fillRadialGradientStartRadius: 0,
         fillRadialGradientEndPoint: { x: 0, y: 0 },
-        fillRadialGradientEndRadius: size * 0.72,
-        fillRadialGradientColorStops: [0, 'rgba(0,0,0,0)', 1, 'rgba(0,0,0,0.28)'],
+        fillRadialGradientEndRadius: size * 0.7,
+        fillRadialGradientColorStops: [0, 'rgba(0,0,0,0)', 1, 'rgba(0,0,0,0.35)'],
         listening: false
     }));
 
     // Grid
     if (state.showGrid) {
         const step = state.gridSize;
-        const gridColor = isKingsbridge ? "rgba(120,100,70,0.1)" : "rgba(255,255,255,0.06)";
+        const gridColor = isKingsbridge ? "rgba(120,100,70,0.12)" : "rgba(255,255,255,0.07)";
         for (let x = -size / 2; x <= size / 2; x += step) {
             bgLayer.add(new Konva.Line({
                 points: [x, -size / 2, x, size / 2],
@@ -1225,19 +1396,35 @@ function _addBgOverlaysAndGrid(size, isKingsbridge) {
     }
 }
 
-
 // ══════════════════════════════════════════════════════════════
-//  BEZIER PATHS (Yo'l & Daryolar — Hand Drawn Ink Style)
+//  BEZIER PATHS (Yo'llar, Daryolar, Ko'priklar)
 // ══════════════════════════════════════════════════════════════
 function createBezierPath(pathData) {
-    const isRiver = pathData.type === "river";
-    const strokeColor = pathData.color || (isRiver ? "#2a4365" : "#4a3c2c");
-    const strokeWidth = pathData.width || (isRiver ? 24 : 16);
+    if (!state.layers.water.visible) return;
+    
+    const type = pathData.type || "dirt_road";
+    let strokeColor = "#5c442c";
+    let strokeWidth = pathData.width || 16;
+    let dash = [10, 4];
+    let shadowColor = "rgba(0, 0, 0, 0.35)";
+
+    if (type === "river") {
+        strokeColor = "#2b5680";
+        strokeWidth = pathData.width || 28;
+        dash = [];
+        shadowColor = "rgba(10, 30, 60, 0.4)";
+    } else if (type === "cobblestone") {
+        strokeColor = "#52525b";
+        dash = [6, 2];
+    } else if (type === "palisade") {
+        strokeColor = "#78350f";
+        strokeWidth = pathData.width || 12;
+        dash = [4, 4];
+    }
     
     const flatPoints = [];
-    pathData.points.forEach(pt => flatPoints.push(pt[0], pt[1]));
+    (pathData.points || []).forEach(pt => flatPoints.push(pt[0], pt[1]));
     
-    // Kingsbridge style double-stroke hand-drawn road
     const line = new Konva.Line({
         points: flatPoints,
         stroke: strokeColor,
@@ -1246,11 +1433,13 @@ function createBezierPath(pathData) {
         lineJoin: "round",
         tension: 0.45,
         bezier: true,
-        dash: isRiver ? [] : [10, 4], // dashed rustic medieval track
-        shadowColor: "rgba(0, 0, 0, 0.4)",
-        shadowBlur: state.showShadows ? 5 : 0,
+        dash: dash,
+        opacity: state.layers.water.opacity,
+        shadowColor: shadowColor,
+        shadowBlur: state.showShadows ? 6 : 0,
         shadowOffset: { x: 2, y: 3 },
-        shadowOpacity: state.shadowIntensity
+        shadowOpacity: state.shadowIntensity,
+        draggable: !state.layers.water.locked
     });
     
     line.setAttr("pathData", pathData);
@@ -1267,9 +1456,11 @@ function createBezierPath(pathData) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PLOTS (Uchastkalar)
+//  PLOTS (Uchastkalar & Zonalar)
 // ══════════════════════════════════════════════════════════════
 function createPlotShape(plotData) {
+    if (!state.layers.plots.visible) return;
+    
     let shape = null;
     const fillColor = plotData.fill || "rgba(100, 130, 80, 0.22)";
     const strokeColor = plotData.color || "rgba(70, 90, 50, 0.5)";
@@ -1282,7 +1473,9 @@ function createPlotShape(plotData) {
             fill: fillColor,
             stroke: strokeColor,
             strokeWidth: 2,
-            dash: [6, 4]
+            dash: [6, 4],
+            opacity: state.layers.plots.opacity,
+            draggable: !state.layers.plots.locked
         });
     } else if (plotData.shape === "rect") {
         shape = new Konva.Rect({
@@ -1294,7 +1487,9 @@ function createPlotShape(plotData) {
             stroke: strokeColor,
             strokeWidth: 2,
             dash: [6, 4],
-            cornerRadius: 6
+            cornerRadius: 6,
+            opacity: state.layers.plots.opacity,
+            draggable: !state.layers.plots.locked
         });
     } else {
         const flatPoints = [];
@@ -1305,7 +1500,9 @@ function createPlotShape(plotData) {
             stroke: strokeColor,
             strokeWidth: 2,
             closed: true,
-            dash: [6, 4]
+            dash: [6, 4],
+            opacity: state.layers.plots.opacity,
+            draggable: !state.layers.plots.locked
         });
     }
     
@@ -1325,12 +1522,298 @@ function createPlotShape(plotData) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PROCEDURAL SCATTER (Uchastkaga Daraxtlarni Avtomatik Sepish)
+//  OBJECTS (Qo'lda chizilgan uylar, daraxtlar, qoyalar, chodirlar)
+// ══════════════════════════════════════════════════════════════
+function createObjectNode(objData) {
+    const isNature = objData.category && objData.category.includes("Tabiat");
+    const targetLayerVisible = isNature ? state.layers.nature.visible : state.layers.structures.visible;
+    if (!targetLayerVisible) return;
+
+    const group = new Konva.Group({
+        x: objData.x,
+        y: objData.y,
+        rotation: objData.rotation || 0,
+        scaleX: (objData.scale || 1.0) * (objData.flipX ? -1 : 1),
+        scaleY: (objData.scale || 1.0) * (objData.flipY ? -1 : 1),
+        opacity: isNature ? state.layers.nature.opacity : state.layers.structures.opacity,
+        draggable: !(isNature ? state.layers.nature.locked : state.layers.structures.locked)
+    });
+    
+    const w = objData.w || 54;
+    const h = objData.h || 54;
+    
+    // Soft realistic shadow
+    if (state.showShadows && state.shadowIntensity > 0) {
+        const shadow = new Konva.Ellipse({
+            x: 5,
+            y: 8,
+            radiusX: w * 0.44,
+            radiusY: h * 0.34,
+            fill: `rgba(30, 20, 15, ${state.shadowIntensity * 0.5})`,
+            listening: false
+        });
+        group.add(shadow);
+    }
+    
+    // Actual transparent hand-drawn PNG
+    const imgUrl = objData.imgUrl || (findAssetById(objData.asset) ? findAssetById(objData.asset).url : null);
+    
+    if (imgUrl) {
+        getPreloadedImage(imgUrl, (loadedImg) => {
+            const kImg = new Konva.Image({
+                x: -w / 2,
+                y: -h / 2,
+                width: w,
+                height: h,
+                image: loadedImg
+            });
+            group.add(kImg);
+            objectsLayer.batchDraw();
+        });
+    } else {
+        const baseRect = new Konva.Rect({
+            x: -w / 2,
+            y: -h / 2,
+            width: w,
+            height: h,
+            fill: "#92400e",
+            stroke: "#451a03",
+            strokeWidth: 1.5,
+            cornerRadius: 4
+        });
+        group.add(baseRect);
+    }
+    
+    group.setAttr("objData", objData);
+    
+    group.on("dragend", () => {
+        let gx = Math.round(group.x());
+        let gy = Math.round(group.y());
+        if (state.snapToGrid) {
+            gx = Math.round(gx / state.gridSize) * state.gridSize;
+            gy = Math.round(gy / state.gridSize) * state.gridSize;
+            group.position({ x: gx, y: gy });
+        }
+        objData.x = gx;
+        objData.y = gy;
+        markDirty();
+        updateHudCoordinates(gx, gy);
+    });
+    
+    group.on("transformend", () => {
+        objData.x = Math.round(group.x());
+        objData.y = Math.round(group.y());
+        objData.rotation = Math.round(group.rotation());
+        objData.scale = parseFloat(Math.abs(group.scaleX()).toFixed(2));
+        markDirty();
+    });
+    
+    group.on("click tap", () => {
+        if (state.activeTool === "select") {
+            selectItem(group, "object");
+        } else if (state.activeTool === "erase") {
+            removeObject(objData, group);
+        }
+    });
+    
+    objectsLayer.add(group);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TEXT LABELS (Qadimiy xarita yozuvlari & nomlar)
+// ══════════════════════════════════════════════════════════════
+function createLabelNode(labelData) {
+    if (!state.layers.labels.visible) return;
+    
+    const group = new Konva.Group({
+        x: labelData.x,
+        y: labelData.y,
+        rotation: labelData.rotation || 0,
+        opacity: state.layers.labels.opacity,
+        draggable: !state.layers.labels.locked
+    });
+    
+    const textNode = new Konva.Text({
+        text: labelData.text || "Joy Nomi",
+        fontSize: labelData.fontSize || 22,
+        fontFamily: labelData.fontFamily || "'Cinzel', serif",
+        fontStyle: "bold",
+        fill: labelData.color || "#2c1d11",
+        align: "center",
+        shadowColor: "rgba(255, 245, 220, 0.8)",
+        shadowBlur: 3,
+        shadowOffset: { x: 1, y: 1 }
+    });
+    
+    // Center alignment offset
+    textNode.offsetX(textNode.width() / 2);
+    textNode.offsetY(textNode.height() / 2);
+    
+    // Optional ribbon/banner backing
+    if (labelData.showBanner) {
+        const bgBanner = new Konva.Rect({
+            x: -textNode.width() / 2 - 12,
+            y: -textNode.height() / 2 - 6,
+            width: textNode.width() + 24,
+            height: textNode.height() + 12,
+            fill: "rgba(245, 235, 215, 0.85)",
+            stroke: "rgba(120, 80, 40, 0.6)",
+            strokeWidth: 1.5,
+            cornerRadius: 4,
+            shadowColor: "rgba(0,0,0,0.3)",
+            shadowBlur: 5,
+            shadowOffset: { x: 2, y: 2 }
+        });
+        group.add(bgBanner);
+    }
+    
+    group.add(textNode);
+    group.setAttr("labelData", labelData);
+    
+    group.on("dragend", () => {
+        labelData.x = Math.round(group.x());
+        labelData.y = Math.round(group.y());
+        markDirty();
+    });
+    
+    group.on("click tap", () => {
+        if (state.activeTool === "select") {
+            selectItem(group, "label");
+        } else if (state.activeTool === "erase") {
+            removeLabel(labelData, group);
+        }
+    });
+    
+    labelsLayer.add(group);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  LIGHTING & WEATHER FX
+// ══════════════════════════════════════════════════════════════
+function renderLightingOverlay() {
+    lightingLayer.destroyChildren();
+    if (!state.layers.weather.visible || state.lighting === "daylight") {
+        lightingLayer.batchDraw();
+        return;
+    }
+    
+    const size = 5000;
+    let overlayColor = "rgba(0,0,0,0)";
+    if (state.lighting === "night") {
+        overlayColor = "rgba(10, 18, 38, 0.68)";
+    } else if (state.lighting === "sunset") {
+        overlayColor = "rgba(180, 83, 9, 0.28)";
+    } else if (state.lighting === "cloudy") {
+        overlayColor = "rgba(100, 116, 139, 0.35)";
+    } else if (state.lighting === "torch") {
+        overlayColor = "rgba(8, 10, 16, 0.78)";
+    }
+    
+    lightingLayer.add(new Konva.Rect({
+        x: -size / 2,
+        y: -size / 2,
+        width: size,
+        height: size,
+        fill: overlayColor,
+        listening: false
+    }));
+    
+    lightingLayer.batchDraw();
+}
+
+function startWeatherAnimation() {
+    if (weatherAnimation) {
+        weatherAnimation.stop();
+        weatherAnimation = null;
+    }
+    weatherLayer.destroyChildren();
+    
+    if (!state.layers.weather.visible || state.weather === "none") {
+        weatherLayer.batchDraw();
+        return;
+    }
+    
+    const particles = [];
+    const count = state.weather === "rain" ? 90 : (state.weather === "snow" ? 65 : 40);
+    const viewW = stage.width();
+    const viewH = stage.height();
+    
+    for (let i = 0; i < count; i++) {
+        const p = {
+            x: Math.random() * viewW,
+            y: Math.random() * viewH,
+            speedY: state.weather === "rain" ? (6 + Math.random() * 5) : (1 + Math.random() * 2),
+            speedX: state.weather === "rain" ? -2 : (Math.random() - 0.5) * 1.5,
+            size: state.weather === "rain" ? 12 : (2 + Math.random() * 3)
+        };
+        
+        let shape;
+        if (state.weather === "rain") {
+            shape = new Konva.Line({
+                points: [0, 0, -3, p.size],
+                stroke: "rgba(186, 230, 253, 0.45)",
+                strokeWidth: 1.5,
+                listening: false
+            });
+        } else if (state.weather === "snow") {
+            shape = new Konva.Circle({
+                radius: p.size,
+                fill: "rgba(255, 255, 255, 0.65)",
+                listening: false
+            });
+        } else if (state.weather === "embers") {
+            shape = new Konva.Circle({
+                radius: 2 + Math.random() * 2,
+                fill: "rgba(245, 158, 11, 0.8)",
+                shadowColor: "#f59e0b",
+                shadowBlur: 6,
+                listening: false
+            });
+        }
+        
+        shape.position({ x: p.x, y: p.y });
+        weatherLayer.add(shape);
+        p.node = shape;
+        particles.push(p);
+    }
+    
+    weatherAnimation = new Konva.Animation((frame) => {
+        const w = stage.width();
+        const h = stage.height();
+        particles.forEach(p => {
+            p.y += p.speedY;
+            p.x += p.speedX;
+            if (p.y > h) { p.y = -10; p.x = Math.random() * w; }
+            if (p.x < 0) p.x = w;
+            if (p.x > w) p.x = 0;
+            p.node.position({ x: p.x, y: p.y });
+        });
+    }, weatherLayer);
+    
+    weatherAnimation.start();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PROCEDURAL SCATTER (Aqlli joylashtirish algoritmi)
 // ══════════════════════════════════════════════════════════════
 function proceduralScatterIntoPlot(plot) {
-    // Select one of the hand-drawn tree assets
-    const treeAssets = MEDIEVAL_ASSETS.filter(a => a.category.includes("Tabiat"));
-    const fallbackAsset = treeAssets.length > 0 ? treeAssets[0] : (state.selectedAsset || MEDIEVAL_ASSETS[0]);
+    let candidateAssets = [];
+    
+    if (state.scatterTargetType === "nature") {
+        candidateAssets = MEDIEVAL_ASSETS.filter(a => a.category.includes("Tabiat"));
+    } else if (state.scatterTargetType === "houses") {
+        candidateAssets = MEDIEVAL_ASSETS.filter(a => a.category.includes("Uylar") || a.category.includes("Bino"));
+    } else if (state.scatterTargetType === "mountains") {
+        candidateAssets = MEDIEVAL_ASSETS.filter(a => a.category.includes("Tog"));
+    } else if (state.scatterTargetType === "tents") {
+        candidateAssets = MEDIEVAL_ASSETS.filter(a => a.category.includes("Bozor") || a.category.includes("Chodir"));
+    } else {
+        candidateAssets = state.selectedAsset ? [state.selectedAsset] : MEDIEVAL_ASSETS;
+    }
+    
+    if (!candidateAssets || candidateAssets.length === 0) {
+        candidateAssets = MEDIEVAL_ASSETS;
+    }
     
     const density = state.scatterDensity;
     let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
@@ -1347,12 +1830,12 @@ function proceduralScatterIntoPlot(plot) {
     }
     
     const area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
-    const targetCount = Math.floor((area / 2000) * density);
+    const targetCount = Math.max(3, Math.floor((area / 2200) * density));
     let addedCount = 0;
     const placedPoints = [];
-    const minDistance = 28 * (1.1 - density * 0.4);
+    const minDistance = 32 * (1.15 - density * 0.45);
     
-    for (let attempts = 0; attempts < targetCount * 6 && addedCount < targetCount; attempts++) {
+    for (let attempts = 0; attempts < targetCount * 7 && addedCount < targetCount; attempts++) {
         const randX = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
         const randY = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
         
@@ -1361,16 +1844,16 @@ function proceduralScatterIntoPlot(plot) {
         
         placedPoints.push({ x: randX, y: randY });
         
-        // Randomly pick between varieties of hand-drawn trees
-        const pickedTree = treeAssets.length > 0 ? treeAssets[Math.floor(Math.random() * treeAssets.length)] : fallbackAsset;
+        const pickedAsset = candidateAssets[Math.floor(Math.random() * candidateAssets.length)];
         const scaleVal = state.scatterScaleMin + Math.random() * (state.scatterScaleMax - state.scatterScaleMin);
         const rotVal = state.scatterRandomRotation ? Math.floor(Math.random() * 360) : 0;
         
         const newObj = {
             id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
-            asset: pickedTree.id,
-            name: pickedTree.name,
-            imgUrl: pickedTree.url,
+            asset: pickedAsset.id,
+            name: pickedAsset.name,
+            category: pickedAsset.category,
+            imgUrl: pickedAsset.url,
             x: Math.round(randX),
             y: Math.round(randY),
             rotation: rotVal,
@@ -1388,7 +1871,7 @@ function proceduralScatterIntoPlot(plot) {
     updateHudCounts();
     markDirty();
     pushHistoryState();
-    showToast(`🌲 ${addedCount} ta qadimiy daraxt uchastkaga sepildi!`);
+    showToast(`✨ ${addedCount} ta aktiv uchastkaga sepildi!`);
 }
 
 function isPointInsidePlot(px, py, plot) {
@@ -1411,131 +1894,12 @@ function isPointInsidePlot(px, py, plot) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  OBJECT / ASSET NODE CREATION (PNG Hand-Drawn Rendering)
-// ══════════════════════════════════════════════════════════════
-function createObjectNode(objData) {
-    const group = new Konva.Group({
-        x: objData.x,
-        y: objData.y,
-        rotation: objData.rotation || 0,
-        scaleX: objData.scale || 1.0,
-        scaleY: objData.scale || 1.0,
-        draggable: true
-    });
-    
-    const w = objData.w || 50;
-    const h = objData.h || 50;
-    
-    // 1. Hand-drawn top-down soft shadow
-    if (state.showShadows && state.shadowIntensity > 0) {
-        const shadow = new Konva.Ellipse({
-            x: 6,
-            y: 9,
-            radiusX: w * 0.42,
-            radiusY: h * 0.32,
-            fill: `rgba(40, 30, 20, ${state.shadowIntensity * 0.5})`,
-            listening: false
-        });
-        group.add(shadow);
-    }
-    
-    // 2. Render actual transparent PNG
-    const imgUrl = objData.imgUrl || (findAssetById(objData.asset) ? findAssetById(objData.asset).url : null);
-    
-    if (imgUrl) {
-        getPreloadedImage(imgUrl, (loadedImg) => {
-            const kImg = new Konva.Image({
-                x: -w / 2,
-                y: -h / 2,
-                width: w,
-                height: h,
-                image: loadedImg
-            });
-            group.add(kImg);
-            objectsLayer.batchDraw();
-        });
-    } else {
-        // Fallback block if no image
-        const baseRect = new Konva.Rect({
-            x: -w / 2,
-            y: -h / 2,
-            width: w,
-            height: h,
-            fill: "#854d0e",
-            stroke: "#451a03",
-            strokeWidth: 1.5,
-            cornerRadius: 4
-        });
-        group.add(baseRect);
-    }
-    
-    group.setAttr("objData", objData);
-    
-    group.on("dragend", () => {
-        objData.x = Math.round(group.x());
-        objData.y = Math.round(group.y());
-        markDirty();
-    });
-    
-    group.on("transformend", () => {
-        objData.x = Math.round(group.x());
-        objData.y = Math.round(group.y());
-        objData.rotation = Math.round(group.rotation());
-        objData.scale = parseFloat(group.scaleX().toFixed(2));
-        markDirty();
-    });
-    
-    group.on("click tap", () => {
-        if (state.activeTool === "select") {
-            selectItem(group, "object");
-        } else if (state.activeTool === "erase") {
-            removeObject(objData, group);
-        }
-    });
-    
-    objectsLayer.add(group);
-}
-
-// ══════════════════════════════════════════════════════════════
-//  2D LIGHTING & OVERLAY
-// ══════════════════════════════════════════════════════════════
-function renderLightingOverlay() {
-    lightingLayer.destroyChildren();
-    if (state.lighting === "daylight") {
-        lightingLayer.batchDraw();
-        return;
-    }
-    
-    const size = 5000;
-    let overlayColor = "rgba(0,0,0,0)";
-    if (state.lighting === "night") {
-        overlayColor = "rgba(15, 23, 42, 0.65)";
-    } else if (state.lighting === "sunset") {
-        overlayColor = "rgba(180, 83, 9, 0.25)";
-    } else if (state.lighting === "cloudy") {
-        overlayColor = "rgba(148, 163, 184, 0.3)";
-    } else if (state.lighting === "torch") {
-        overlayColor = "rgba(10, 12, 18, 0.72)";
-    }
-    
-    lightingLayer.add(new Konva.Rect({
-        x: -size / 2,
-        y: -size / 2,
-        width: size,
-        height: size,
-        fill: overlayColor,
-        listening: false
-    }));
-    
-    lightingLayer.batchDraw();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  INTERACTIVE EVENTS
+//  STAGE EVENTS (Pointer, Pan, Zoom, Tools)
 // ══════════════════════════════════════════════════════════════
 let isDrawingBezier = false;
 let isDrawingPlot = false;
 let startDragPointer = null;
+let isSpacePressed = false;
 
 function setupStageEvents() {
     stage.on("pointerdown", onStagePointerDown);
@@ -1554,7 +1918,8 @@ function onStagePointerDown(e) {
     const worldPos = getPointerWorldPos();
     updateHudCoordinates(worldPos.x, worldPos.y);
     
-    if (e.evt.button === 1 || e.evt.altKey || (state.activeTool === "select" && e.target === stage)) {
+    // Pan condition: middle click, spacebar held, or clicking empty stage in select mode
+    if (e.evt.button === 1 || isSpacePressed || (state.activeTool === "select" && e.target === stage)) {
         startDragPointer = { x: e.evt.clientX, y: e.evt.clientY, stageX: stage.x(), stageY: stage.y() };
         stage.container().style.cursor = "grabbing";
         return;
@@ -1563,21 +1928,52 @@ function onStagePointerDown(e) {
     if (state.activeTool === "select" && e.target === stage) {
         transformer.nodes([]);
         state.selectedNode = null;
+        state.selectedNodeType = null;
         buildInspectorControls();
         return;
     }
     
+    // Snap pos if enabled
+    let placeX = Math.round(worldPos.x);
+    let placeY = Math.round(worldPos.y);
+    if (state.snapToGrid) {
+        placeX = Math.round(placeX / state.gridSize) * state.gridSize;
+        placeY = Math.round(placeY / state.gridSize) * state.gridSize;
+    }
+    
     if (state.activeTool === "bezier") {
         isDrawingBezier = true;
-        state.activeCurvePoints.push([Math.round(worldPos.x), Math.round(worldPos.y)]);
+        state.activeCurvePoints.push([placeX, placeY]);
         renderTemporaryBezierPreview();
         return;
     }
     
     if (state.activeTool === "plot") {
         isDrawingPlot = true;
-        state.activePlotPoints.push([Math.round(worldPos.x), Math.round(worldPos.y)]);
+        state.activePlotPoints.push([placeX, placeY]);
         renderTemporaryPlotPreview();
+        return;
+    }
+    
+    if (state.activeTool === "text") {
+        const newLabel = {
+            id: "lbl_" + Date.now(),
+            text: state.textValue || "Qirollik Bozor Maydoni",
+            fontSize: state.fontSize || 22,
+            fontFamily: state.textStyle || "Cinzel",
+            color: state.textColor || "#2c1d11",
+            showBanner: true,
+            x: placeX,
+            y: placeY,
+            rotation: 0
+        };
+        state.labels.push(newLabel);
+        createLabelNode(newLabel);
+        labelsLayer.batchDraw();
+        updateHudCounts();
+        markDirty();
+        pushHistoryState();
+        showToast("Matn joylashtirildi!");
         return;
     }
     
@@ -1585,8 +1981,8 @@ function onStagePointerDown(e) {
         const newPlot = {
             id: "plot_" + Date.now(),
             shape: "circle",
-            x: Math.round(worldPos.x),
-            y: Math.round(worldPos.y),
+            x: placeX,
+            y: placeY,
             radius: 80,
             fill: "rgba(100, 130, 80, 0.25)",
             color: "#4a5d3f"
@@ -1605,8 +2001,8 @@ function onStagePointerDown(e) {
         const newPlot = {
             id: "plot_" + Date.now(),
             shape: "rect",
-            x: Math.round(worldPos.x),
-            y: Math.round(worldPos.y),
+            x: placeX,
+            y: placeY,
             w: 160,
             h: 110,
             fill: "rgba(180, 140, 90, 0.25)",
@@ -1631,9 +2027,10 @@ function onStagePointerDown(e) {
             id: "obj_" + Date.now(),
             asset: asset.id,
             name: asset.name,
+            category: asset.category,
             imgUrl: asset.url,
-            x: Math.round(worldPos.x),
-            y: Math.round(worldPos.y),
+            x: placeX,
+            y: placeY,
             rotation: 0,
             scale: 1.0,
             w: asset.width || 56,
@@ -1671,7 +2068,7 @@ function onStagePointerMove(e) {
 function onStagePointerUp() {
     if (startDragPointer) {
         startDragPointer = null;
-        stage.container().style.cursor = "default";
+        stage.container().style.cursor = isSpacePressed ? "grab" : "default";
     }
 }
 
@@ -1685,7 +2082,7 @@ function onStageWheel(e) {
         y: (pointer.y - stage.y()) / oldScale,
     };
     let direction = e.evt.deltaY < 0 ? 1 : -1;
-    let newScale = Math.max(0.2, Math.min(4.0, direction > 0 ? oldScale * scaleBy : oldScale / scaleBy));
+    let newScale = Math.max(0.15, Math.min(4.5, direction > 0 ? oldScale * scaleBy : oldScale / scaleBy));
     stage.scale({ x: newScale, y: newScale });
     stage.position({
         x: pointer.x - mousePointTo.x * newScale,
@@ -1697,7 +2094,7 @@ function onStageWheel(e) {
 
 function zoomStage(delta) {
     const factor = delta > 0 ? 1.15 : 0.85;
-    const newScale = Math.max(0.2, Math.min(4.0, stage.scaleX() * factor));
+    const newScale = Math.max(0.15, Math.min(4.5, stage.scaleX() * factor));
     stage.scale({ x: newScale, y: newScale });
     stage.batchDraw();
     document.getElementById("zoomValDisplay").textContent = Math.round(newScale * 100) + "%";
@@ -1726,8 +2123,8 @@ function renderTemporaryBezierPreview(movingPos) {
     pts.forEach(p => flat.push(p[0], p[1]));
     tempLayer.add(new Konva.Line({
         points: flat,
-        stroke: "#785a3a",
-        strokeWidth: 4,
+        stroke: state.pathType === "river" ? "#38bdf8" : "#854d0e",
+        strokeWidth: state.pathWidth || 16,
         dash: [8, 4],
         tension: 0.45,
         bezier: true
@@ -1752,14 +2149,13 @@ function renderTemporaryPlotPreview(movingPos) {
     tempLayer.batchDraw();
 }
 
-// Double click to finish line or plot
+// Finish bezier / plot on double click
 window.addEventListener("dblclick", () => {
     if (isDrawingBezier && state.activeCurvePoints.length > 1) {
         const newPath = {
             id: "path_" + Date.now(),
-            type: "road",
-            width: 18,
-            color: "#4a3c2c",
+            type: state.pathType || "dirt_road",
+            width: state.pathWidth || 16,
             points: [...state.activeCurvePoints]
         };
         state.paths.push(newPath);
@@ -1771,7 +2167,8 @@ window.addEventListener("dblclick", () => {
         tempLayer.batchDraw();
         markDirty();
         pushHistoryState();
-        showToast("Egri yo'l yakunlandi!");
+        updateHudCounts();
+        showToast("Egri yo'l tayyor!");
     } else if (isDrawingPlot && state.activePlotPoints.length > 2) {
         const newPlot = {
             id: "plot_" + Date.now(),
@@ -1789,13 +2186,18 @@ window.addEventListener("dblclick", () => {
         tempLayer.batchDraw();
         markDirty();
         pushHistoryState();
+        updateHudCounts();
         showToast("Uchastka tayyor!");
     }
 });
 
+// ══════════════════════════════════════════════════════════════
+//  SELECTION & TRANSFORM CONTROLS
+// ══════════════════════════════════════════════════════════════
 function selectItem(node, type) {
     state.selectedNode = node;
-    if (type === "object") {
+    state.selectedNodeType = type;
+    if (type === "object" || type === "label") {
         transformer.nodes([node]);
     } else {
         transformer.nodes([]);
@@ -1804,12 +2206,93 @@ function selectItem(node, type) {
     stage.batchDraw();
 }
 
+function removeSelected() {
+    if (!state.selectedNode) return;
+    
+    if (state.selectedNodeType === "object") {
+        const objData = state.selectedNode.getAttr("objData");
+        removeObject(objData, state.selectedNode);
+    } else if (state.selectedNodeType === "path") {
+        const pathData = state.selectedNode.getAttr("pathData");
+        removePath(pathData);
+    } else if (state.selectedNodeType === "plot") {
+        const plotData = state.selectedNode.getAttr("plotData");
+        removePlot(plotData);
+    } else if (state.selectedNodeType === "label") {
+        const labelData = state.selectedNode.getAttr("labelData");
+        removeLabel(labelData, state.selectedNode);
+    }
+}
+
+function duplicateSelected() {
+    if (!state.selectedNode || state.selectedNodeType !== "object") return;
+    const orig = state.selectedNode.getAttr("objData");
+    const newObj = JSON.parse(JSON.stringify(orig));
+    newObj.id = "obj_" + Date.now();
+    newObj.x += 24;
+    newObj.y += 24;
+    state.objects.push(newObj);
+    createObjectNode(newObj);
+    objectsLayer.batchDraw();
+    updateHudCounts();
+    markDirty();
+    pushHistoryState();
+    showToast("Nusxa olindi!");
+}
+
+function rotateSelected(deg = 45) {
+    if (!state.selectedNode) return;
+    const curRot = state.selectedNode.rotation();
+    state.selectedNode.rotation(curRot + deg);
+    const objData = state.selectedNode.getAttr("objData");
+    if (objData) {
+        objData.rotation = Math.round(state.selectedNode.rotation());
+        markDirty();
+    }
+    stage.batchDraw();
+}
+
+function flipSelected(axis = 'x') {
+    if (!state.selectedNode) return;
+    if (axis === 'x') {
+        state.selectedNode.scaleX(-state.selectedNode.scaleX());
+    } else {
+        state.selectedNode.scaleY(-state.selectedNode.scaleY());
+    }
+    const objData = state.selectedNode.getAttr("objData");
+    if (objData) {
+        objData.flipX = state.selectedNode.scaleX() < 0;
+        objData.flipY = state.selectedNode.scaleY() < 0;
+        markDirty();
+    }
+    stage.batchDraw();
+}
+
+function bringToFront() {
+    if (!state.selectedNode) return;
+    state.selectedNode.moveToTop();
+    stage.batchDraw();
+    markDirty();
+    showToast("Eng ustki qatlamga ko'chirildi");
+}
+
+function sendToBack() {
+    if (!state.selectedNode) return;
+    state.selectedNode.moveToBottom();
+    stage.batchDraw();
+    markDirty();
+    showToast("Pastki qatlamga o'tkazildi");
+}
+
 function removeObject(objData, groupNode) {
     state.objects = state.objects.filter(o => o.id !== objData.id);
     groupNode.destroy();
     transformer.nodes([]);
+    state.selectedNode = null;
+    state.selectedNodeType = null;
     objectsLayer.batchDraw();
     updateHudCounts();
+    buildInspectorControls();
     markDirty();
     pushHistoryState();
     showToast("Aktiv o'chirildi");
@@ -1817,7 +2300,10 @@ function removeObject(objData, groupNode) {
 
 function removePlot(plotData) {
     state.plots = state.plots.filter(p => p.id !== plotData.id);
+    state.selectedNode = null;
+    state.selectedNodeType = null;
     renderAllFromState();
+    buildInspectorControls();
     markDirty();
     pushHistoryState();
     showToast("Uchastka o'chirildi");
@@ -1825,25 +2311,45 @@ function removePlot(plotData) {
 
 function removePath(pathData) {
     state.paths = state.paths.filter(p => p.id !== pathData.id);
+    state.selectedNode = null;
+    state.selectedNodeType = null;
     renderAllFromState();
+    buildInspectorControls();
     markDirty();
     pushHistoryState();
     showToast("Yo'l o'chirildi");
+}
+
+function removeLabel(labelData, groupNode) {
+    state.labels = state.labels.filter(l => l.id !== labelData.id);
+    groupNode.destroy();
+    transformer.nodes([]);
+    state.selectedNode = null;
+    state.selectedNodeType = null;
+    labelsLayer.batchDraw();
+    updateHudCounts();
+    buildInspectorControls();
+    markDirty();
+    pushHistoryState();
+    showToast("Matn o'chirildi");
 }
 
 function renderAllFromState() {
     plotsLayer.destroyChildren();
     pathsLayer.destroyChildren();
     objectsLayer.destroyChildren();
+    labelsLayer.destroyChildren();
     objectsLayer.add(transformer);
     
     state.plots.forEach(plot => createPlotShape(plot));
     state.paths.forEach(path => createBezierPath(path));
     state.objects.forEach(obj => createObjectNode(obj));
+    state.labels.forEach(lbl => createLabelNode(lbl));
     
     plotsLayer.batchDraw();
     pathsLayer.batchDraw();
     objectsLayer.batchDraw();
+    labelsLayer.batchDraw();
     renderLightingOverlay();
     updateHudCounts();
 }
@@ -1856,6 +2362,7 @@ function updateHudCoordinates(x, y) {
 function updateHudCounts() {
     document.getElementById("hudObjCount").textContent = state.objects.length;
     document.getElementById("hudPlotCount").textContent = state.plots.length;
+    document.getElementById("hudPathCount").textContent = state.paths.length;
 }
 
 function findAssetById(id) {
@@ -1863,7 +2370,7 @@ function findAssetById(id) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PALETTE BUILDER  (96 assets, 9 categories + ground textures)
+//  PALETTE BUILDER & CATEGORIES
 // ══════════════════════════════════════════════════════════════
 function buildMaterialPalette() {
     const container = document.getElementById("paletteListContainer");
@@ -1886,7 +2393,7 @@ function buildMaterialPalette() {
                 _bgTextureImg = null;
                 renderPaperBackground();
                 buildMaterialPalette();
-                showToast(`Yer: ${tex.name}`);
+                showToast(`Yer teksturasi: ${tex.name}`);
             };
             card.innerHTML = `
                 <div class="material-preview-box" style="overflow:hidden;">
@@ -1899,16 +2406,25 @@ function buildMaterialPalette() {
         container.appendChild(sec);
     }
 
-    // ── Asset categories from MEDIEVAL_ASSETS ─────────────────
-    // Group by category field
+    // ── Asset categories ──────────────────────────────────────
     const catMap = {};
     (MEDIEVAL_ASSETS || []).forEach(a => {
         const cat = a.category || 'Bino & Inshoot';
+        
+        // Apply filter if selected
+        if (state.paletteCategoryFilter === "buildings" && !cat.includes("Bino") && !cat.includes("Uylar") && !cat.includes("Qal'a")) return;
+        if (state.paletteCategoryFilter === "nature" && !cat.includes("Tabiat") && !cat.includes("Tog")) return;
+        
+        // Search query filter
+        if (state.paletteSearchQuery) {
+            const q = state.paletteSearchQuery.toLowerCase();
+            if (!a.name.toLowerCase().includes(q) && !cat.toLowerCase().includes(q)) return;
+        }
+
         if (!catMap[cat]) catMap[cat] = [];
         catMap[cat].push(a);
     });
 
-    // Category display order + icons
     const CAT_ORDER = [
         ["Uylar & Binolar",     "🏠"],
         ["Qal'a & Tosh",        "🏰"],
@@ -1924,20 +2440,18 @@ function buildMaterialPalette() {
     CAT_ORDER.forEach(([catName, icon]) => {
         const items = catMap[catName];
         if (!items || items.length === 0) return;
-        delete catMap[catName];  // mark as rendered
-
+        delete catMap[catName];
         _renderPaletteSection(container, `${icon} ${catName}`, items);
     });
 
-    // Render any remaining uncategorised assets
     Object.entries(catMap).forEach(([catName, items]) => {
         if (items && items.length > 0) _renderPaletteSection(container, catName, items);
     });
 
-    // ── Plot tools ───────────────────────────────────────────
+    // ── Plot tools section ────────────────────────────────────
     const plotItems = [
         { id: "pl_forest", name: "O'rmon Hududi",    icon: "🌲", type: "plot_tool"   },
-        { id: "pl_lake",   name: "Ko'l / Havza",      icon: "💧", type: "circle_tool" },
+        { id: "pl_lake",   name: "Ko'l / Suv Havzasi", icon: "💧", type: "circle_tool" },
         { id: "pl_town",   name: "Shahar Kvartali",   icon: "🏰", type: "rect_tool"   },
     ];
     _renderPaletteSection(container, "✏️ Uchastkalar (Plots)", plotItems);
@@ -1975,6 +2489,18 @@ function _renderPaletteSection(container, catName, items) {
     container.appendChild(section);
 }
 
+function filterPaletteCategory(catKey) {
+    state.paletteCategoryFilter = catKey;
+    document.querySelectorAll(".pal-tab").forEach(t => t.classList.remove("active"));
+    const tab = document.getElementById("tab_" + (catKey === "all" ? "all_assets" : catKey));
+    if (tab) tab.classList.add("active");
+    buildMaterialPalette();
+}
+
+function filterPalette(val) {
+    state.paletteSearchQuery = val.trim();
+    buildMaterialPalette();
+}
 
 function selectPaletteAsset(mat) {
     state.selectedAsset = mat;
@@ -1992,41 +2518,152 @@ function setTool(toolName) {
     document.querySelectorAll(".tool-icon-btn").forEach(b => b.classList.remove("active"));
     const activeBtn = document.getElementById("tool_" + toolName);
     if (activeBtn) activeBtn.classList.add("active");
-    if (toolName !== "select") transformer.nodes([]);
+    if (toolName !== "select") {
+        transformer.nodes([]);
+    }
     showToast(`Asbob: ${toolName.toUpperCase()}`);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INSPECTOR & LAYERS MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+function switchInspectorTab(tabName) {
+    state.activeInspectorTab = tabName;
+    document.querySelectorAll(".insp-tab").forEach(t => t.classList.remove("active"));
+    document.getElementById("tab_" + tabName).classList.add("active");
+    buildInspectorControls();
 }
 
 function buildInspectorControls() {
     const container = document.getElementById("inspectorContent");
     container.innerHTML = "";
     
-    // Scatter Settings
-    const scatterSec = document.createElement("div");
-    scatterSec.className = "insp-section";
-    scatterSec.innerHTML = `
-        <div class="insp-section-title">
-            <span>🌲 Uchastkaga Daraxt Sepish</span>
-        </div>
-        <div class="control-row">
-            <span class="control-label">Aktiv turi:</span>
-            <span class="control-val">${state.selectedAsset ? state.selectedAsset.name : "Daraxt"}</span>
-        </div>
-        <div class="control-row">
-            <span class="control-label">Zichlik (Density):</span>
-            <input type="range" class="ck-range" min="10" max="100" value="${Math.round(state.scatterDensity * 100)}" oninput="state.scatterDensity = this.value / 100">
-        </div>
-        <button class="btn-header gold" style="width:100%;margin-top:8px;justify-content:center;" onclick="triggerScatterSelected()">
-            ✨ Uchastkaga Daraxt Sepish
-        </button>
-    `;
-    container.appendChild(scatterSec);
+    if (state.activeInspectorTab === "layers") {
+        buildLayersTab(container);
+        return;
+    }
     
-    // Map Settings
+    if (state.activeInspectorTab === "scatter") {
+        buildScatterTab(container);
+        return;
+    }
+    
+    // Default: Props tab
+    // 1. If an object is selected
+    if (state.selectedNode && state.selectedNodeType === "object") {
+        const objData = state.selectedNode.getAttr("objData") || {};
+        const objSec = document.createElement("div");
+        objSec.className = "insp-section";
+        objSec.innerHTML = `
+            <div class="insp-section-title">
+                <span>📦 Tanlangan Obyekt</span>
+                <button onclick="removeSelected()" style="background:none;border:none;color:var(--crimson);cursor:pointer;font-size:0.8rem;">🗑️ O'chirish</button>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Nomi:</span>
+                <span class="control-val">${objData.name || "Aktiv"}</span>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Masshtab (Scale):</span>
+                <span class="control-val" id="valObjScale">${objData.scale || 1.0}x</span>
+            </div>
+            <input type="range" class="ck-range" min="30" max="250" value="${Math.round((objData.scale || 1.0) * 100)}" oninput="updateSelectedScale(this.value / 100)">
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
+                <button class="btn-header" onclick="rotateSelected(45)">🔄 45° Burish</button>
+                <button class="btn-header" onclick="duplicateSelected()">📋 Klonlash</button>
+                <button class="btn-header" onclick="flipSelected('x')">↔️ Gorizontal</button>
+                <button class="btn-header" onclick="flipSelected('y')">↕️ Vertikal</button>
+                <button class="btn-header" onclick="bringToFront()">⬆️ Ustiga</button>
+                <button class="btn-header" onclick="sendToBack()">⬇️ Tagiga</button>
+            </div>
+        `;
+        container.appendChild(objSec);
+    }
+    
+    // 2. If a label is selected
+    if (state.selectedNode && state.selectedNodeType === "label") {
+        const lblData = state.selectedNode.getAttr("labelData") || {};
+        const lblSec = document.createElement("div");
+        lblSec.className = "insp-section";
+        lblSec.innerHTML = `
+            <div class="insp-section-title">
+                <span>🏷️ Matn Tahrirlash</span>
+                <button onclick="removeSelected()" style="background:none;border:none;color:var(--crimson);cursor:pointer;font-size:0.8rem;">🗑️</button>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Matn:</span>
+                <input type="text" class="ck-input" style="width:160px;" value="${lblData.text || ''}" oninput="updateSelectedLabelText(this.value)">
+            </div>
+            <div class="control-row">
+                <span class="control-label">O'lchami:</span>
+                <input type="range" class="ck-range" min="12" max="64" value="${lblData.fontSize || 22}" oninput="updateSelectedLabelSize(+this.value)">
+            </div>
+        `;
+        container.appendChild(lblSec);
+    }
+    
+    // 3. Active Path / Tool settings
+    if (state.activeTool === "bezier") {
+        const pathSec = document.createElement("div");
+        pathSec.className = "insp-section";
+        pathSec.innerHTML = `
+            <div class="insp-section-title">
+                <span>〰️ Yo'l & Daryo Sozlamalari</span>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Yo'l turi:</span>
+                <select class="ck-select" onchange="state.pathType = this.value;">
+                    <option value="dirt_road" ${state.pathType==='dirt_road'?'selected':''}>Tuproq yo'l</option>
+                    <option value="river" ${state.pathType==='river'?'selected':''}>Moviy Daryo</option>
+                    <option value="cobblestone" ${state.pathType==='cobblestone'?'selected':''}>Toshli ko'cha</option>
+                    <option value="palisade" ${state.pathType==='palisade'?'selected':''}>Yog'och panjara</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Kengligi:</span>
+                <input type="range" class="ck-range" min="8" max="50" value="${state.pathWidth}" oninput="state.pathWidth = +this.value">
+            </div>
+            <p style="font-size:0.68rem;color:var(--text-dim);margin-top:6px;">Nuqtalarni qo'ying va yakunlash uchun <strong>Double Click</strong> qiling.</p>
+        `;
+        container.appendChild(pathSec);
+    }
+    
+    // 4. Text Tool settings
+    if (state.activeTool === "text") {
+        const txtSec = document.createElement("div");
+        txtSec.className = "insp-section";
+        txtSec.innerHTML = `
+            <div class="insp-section-title">
+                <span>🏷️ Matn Qo'yish (Label)</span>
+            </div>
+            <div class="control-row">
+                <span class="control-label">Matn mazmuni:</span>
+                <input type="text" class="ck-input" style="width:150px;" value="${state.textValue}" oninput="state.textValue = this.value">
+            </div>
+            <div class="control-row">
+                <span class="control-label">Shrift:</span>
+                <select class="ck-select" onchange="state.textStyle = this.value;">
+                    <option value="Cinzel">Cinzel (Qadimiy)</option>
+                    <option value="MedievalSharp">MedievalSharp</option>
+                    <option value="Inter">Inter (Zamonaviy)</option>
+                </select>
+            </div>
+            <div class="control-row">
+                <span class="control-label">O'lchami:</span>
+                <input type="range" class="ck-range" min="14" max="54" value="${state.fontSize}" oninput="state.fontSize = +this.value">
+            </div>
+            <p style="font-size:0.68rem;color:var(--text-dim);margin-top:6px;">Xaritaning istalgan joyiga bosib nomni joylashtiring.</p>
+        `;
+        container.appendChild(txtSec);
+    }
+
+    // 5. General Canvas & Map Settings
     const mapSec = document.createElement("div");
     mapSec.className = "insp-section";
     mapSec.innerHTML = `
         <div class="insp-section-title">
-            <span>🗺 Xarita Sozlamalari</span>
+            <span>🗺 Xarita Parametrlari</span>
         </div>
         <div class="control-row">
             <span class="control-label">Grid o'lchami:</span>
@@ -2034,10 +2671,142 @@ function buildInspectorControls() {
                 <option value="16" ${state.gridSize===16?'selected':''}>16 px</option>
                 <option value="32" ${state.gridSize===32?'selected':''}>32 px (Standart)</option>
                 <option value="48" ${state.gridSize===48?'selected':''}>48 px</option>
+                <option value="64" ${state.gridSize===64?'selected':''}>64 px</option>
             </select>
+        </div>
+        <div class="control-row">
+            <span class="control-label">Katakka yopishish (Snap):</span>
+            <input type="checkbox" ${state.snapToGrid?'checked':''} onchange="state.snapToGrid = this.checked; updateSnapButtonUI();">
         </div>
     `;
     container.appendChild(mapSec);
+}
+
+function buildLayersTab(container) {
+    const sec = document.createElement("div");
+    sec.className = "insp-section";
+    sec.innerHTML = `
+        <div class="insp-section-title">
+            <span>📑 Xarita Qatlamlari</span>
+        </div>
+        <p style="font-size:0.68rem;color:var(--text-dim);margin-bottom:10px;">Qatlamlarni ko'rsatish/yashirish va tahrirlashdan qulflash.</p>
+    `;
+    
+    Object.entries(state.layers).forEach(([k, layer]) => {
+        const row = document.createElement("div");
+        row.className = "layer-row";
+        row.innerHTML = `
+            <div class="layer-info">
+                <span>${layer.name}</span>
+            </div>
+            <div class="layer-actions">
+                <button class="layer-btn ${layer.visible ? '' : 'off'}" title="${layer.visible ? 'Yashirish' : 'Ko\'rsatish'}" onclick="toggleLayerVisibility('${k}')">
+                    ${layer.visible ? '👁️' : '🕶️'}
+                </button>
+                <button class="layer-btn" title="${layer.locked ? 'Qulfni ochish' : 'Qulflash'}" onclick="toggleLayerLock('${k}')">
+                    ${layer.locked ? '🔒' : '🔓'}
+                </button>
+            </div>
+        `;
+        sec.appendChild(row);
+    });
+    
+    container.appendChild(sec);
+}
+
+function toggleLayerVisibility(key) {
+    state.layers[key].visible = !state.layers[key].visible;
+    renderAllFromState();
+    renderPaperBackground();
+    startWeatherAnimation();
+    buildInspectorControls();
+    showToast(`${state.layers[key].name}: ${state.layers[key].visible ? "Ko'rsatildi" : "Yashirildi"}`);
+}
+
+function toggleLayerLock(key) {
+    state.layers[key].locked = !state.layers[key].locked;
+    renderAllFromState();
+    buildInspectorControls();
+    showToast(`${state.layers[key].name}: ${state.layers[key].locked ? "Qulflandi" : "Ochildi"}`);
+}
+
+function buildScatterTab(container) {
+    const sec = document.createElement("div");
+    sec.className = "insp-section";
+    sec.innerHTML = `
+        <div class="insp-section-title">
+            <span>✨ Procedural Scatter (Avto-sepish)</span>
+        </div>
+        <div class="control-row">
+            <span class="control-label">Aktiv guruhi:</span>
+            <select class="ck-select" onchange="state.scatterTargetType = this.value;">
+                <option value="nature" ${state.scatterTargetType==='nature'?'selected':''}>Daraxtlar & O'rmon 🌲</option>
+                <option value="houses" ${state.scatterTargetType==='houses'?'selected':''}>Uylar & Qishloq 🏠</option>
+                <option value="mountains" ${state.scatterTargetType==='mountains'?'selected':''}>Tog'lar tizmasi ⛰️</option>
+                <option value="tents" ${state.scatterTargetType==='tents'?'selected':''}>Bozor & Lager ⛺</option>
+                <option value="selected" ${state.scatterTargetType==='selected'?'selected':''}>Hozir tanlangan aktiv</option>
+            </select>
+        </div>
+        <div class="control-row">
+            <span class="control-label">Zichlik (Density):</span>
+            <input type="range" class="ck-range" min="10" max="100" value="${Math.round(state.scatterDensity * 100)}" oninput="state.scatterDensity = this.value / 100">
+        </div>
+        <div class="control-row">
+            <span class="control-label">Tasodifiy burilish (Rotation):</span>
+            <input type="checkbox" ${state.scatterRandomRotation?'checked':''} onchange="state.scatterRandomRotation = this.checked">
+        </div>
+        <button class="btn-header gold" style="width:100%;margin-top:10px;justify-content:center;" onclick="triggerScatterSelected()">
+            ✨ Uchastkaga Sepish
+        </button>
+        <p style="font-size:0.67rem;color:var(--text-dim);margin-top:8px;">Uchastka (Plot) ustiga bosing yoki ushbu tugma orqali oxirgi uchastkani to'ldiring.</p>
+    `;
+    container.appendChild(sec);
+}
+
+function updateSelectedScale(newScale) {
+    if (!state.selectedNode) return;
+    const objData = state.selectedNode.getAttr("objData");
+    if (objData) {
+        objData.scale = parseFloat(newScale);
+        state.selectedNode.scaleX(newScale * (objData.flipX ? -1 : 1));
+        state.selectedNode.scaleY(newScale * (objData.flipY ? -1 : 1));
+        const valElem = document.getElementById("valObjScale");
+        if (valElem) valElem.textContent = newScale.toFixed(2) + "x";
+        objectsLayer.batchDraw();
+        markDirty();
+    }
+}
+
+function updateSelectedLabelText(text) {
+    if (!state.selectedNode) return;
+    const lblData = state.selectedNode.getAttr("labelData");
+    if (lblData) {
+        lblData.text = text;
+        const txtNode = state.selectedNode.findOne('Text');
+        if (txtNode) {
+            txtNode.text(text);
+            txtNode.offsetX(txtNode.width() / 2);
+            txtNode.offsetY(txtNode.height() / 2);
+        }
+        labelsLayer.batchDraw();
+        markDirty();
+    }
+}
+
+function updateSelectedLabelSize(size) {
+    if (!state.selectedNode) return;
+    const lblData = state.selectedNode.getAttr("labelData");
+    if (lblData) {
+        lblData.fontSize = size;
+        const txtNode = state.selectedNode.findOne('Text');
+        if (txtNode) {
+            txtNode.fontSize(size);
+            txtNode.offsetX(txtNode.width() / 2);
+            txtNode.offsetY(txtNode.height() / 2);
+        }
+        labelsLayer.batchDraw();
+        markDirty();
+    }
 }
 
 function triggerScatterSelected() {
@@ -2055,14 +2824,30 @@ function toggleGridDisplay() {
     renderPaperBackground();
 }
 
+function toggleSnapDisplay() {
+    state.snapToGrid = !state.snapToGrid;
+    updateSnapButtonUI();
+    showToast("Katakka yopishish: " + (state.snapToGrid ? "Yoqildi" : "O'chirildi"));
+}
+
+function updateSnapButtonUI() {
+    const btn = document.getElementById("snapBtnText");
+    if (btn) btn.textContent = "Snap: " + (state.snapToGrid ? "On" : "Off");
+}
+
 function toggleShadowsDisplay() {
     state.showShadows = !state.showShadows;
     document.getElementById("shadowBtnText").textContent = "Soyalar: " + (state.showShadows ? "On" : "Off");
     renderAllFromState();
 }
 
+// ══════════════════════════════════════════════════════════════
+//  ENVIRONMENT & BIOMES MODAL
+// ══════════════════════════════════════════════════════════════
 function openEnvironmentModal() {
+    document.getElementById("envBiomeSelect").value = state.themeKey || "village";
     document.getElementById("envLightingSelect").value = state.lighting;
+    document.getElementById("envWeatherSelect").value = state.weather;
     document.getElementById("paperThemeSelect").value = state.paper;
     document.getElementById("shadowIntRange").value = Math.round(state.shadowIntensity * 100);
     document.getElementById("envModal").classList.add("show");
@@ -2072,9 +2857,75 @@ function closeEnvironmentModal() {
     document.getElementById("envModal").classList.remove("show");
 }
 
+function openShortcutsModal() {
+    document.getElementById("shortcutsModal").classList.add("show");
+}
+
+function closeShortcutsModal() {
+    document.getElementById("shortcutsModal").classList.remove("show");
+}
+
+function applyBiomePreset(biome) {
+    state.themeKey = biome;
+    const badgeName = document.getElementById("themeNameLabel");
+    const badgeIcon = document.getElementById("themeIcon");
+    const hudDisplay = document.getElementById("hudThemeDisplay");
+    
+    if (biome === "village") {
+        state.paper = "kingsbridge_authentic";
+        state.lighting = "daylight";
+        state.weather = "none";
+        badgeName.textContent = "Qishloq";
+        badgeIcon.textContent = "🏘️";
+    } else if (biome === "castle") {
+        state.paper = "blueprint";
+        state.lighting = "sunset";
+        state.weather = "none";
+        badgeName.textContent = "Qal'a";
+        badgeIcon.textContent = "🏰";
+    } else if (biome === "wilderness") {
+        state.paper = "kingsbridge_authentic";
+        state.lighting = "daylight";
+        state.weather = "none";
+        badgeName.textContent = "Tabiat";
+        badgeIcon.textContent = "🌲";
+    } else if (biome === "dungeon") {
+        state.paper = "parchment_dark";
+        state.lighting = "torch";
+        state.weather = "embers";
+        badgeName.textContent = "Zindon";
+        badgeIcon.textContent = "🕳️";
+    } else if (biome === "desert") {
+        state.paper = "vintage_cream";
+        state.lighting = "sunset";
+        state.weather = "none";
+        badgeName.textContent = "Sahro";
+        badgeIcon.textContent = "🏜️";
+    } else if (biome === "coastal") {
+        state.paper = "kingsbridge_authentic";
+        state.lighting = "daylight";
+        state.weather = "rain";
+        badgeName.textContent = "Sohil";
+        badgeIcon.textContent = "⚓";
+    }
+    
+    hudDisplay.textContent = badgeName.textContent;
+    renderPaperBackground();
+    renderLightingOverlay();
+    startWeatherAnimation();
+    markDirty();
+    showToast(`Biom: ${badgeName.textContent} o'rnatildi`);
+}
+
 function changeLightingOverlay(val) {
     state.lighting = val;
     renderLightingOverlay();
+    markDirty();
+}
+
+function changeWeatherEffect(val) {
+    state.weather = val;
+    startWeatherAnimation();
     markDirty();
 }
 
@@ -2090,14 +2941,18 @@ function updateShadowSetting(val) {
     markDirty();
 }
 
+// ══════════════════════════════════════════════════════════════
+//  HISTORY & UNDO/REDO
+// ══════════════════════════════════════════════════════════════
 function pushHistoryState() {
     if (historyIndex < historyStack.length - 1) historyStack.splice(historyIndex + 1);
     historyStack.push({
         paths: JSON.parse(JSON.stringify(state.paths)),
         plots: JSON.parse(JSON.stringify(state.plots)),
-        objects: JSON.parse(JSON.stringify(state.objects))
+        objects: JSON.parse(JSON.stringify(state.objects)),
+        labels: JSON.parse(JSON.stringify(state.labels))
     });
-    if (historyStack.length > 30) historyStack.shift();
+    if (historyStack.length > 35) historyStack.shift();
     historyIndex = historyStack.length - 1;
 }
 
@@ -2121,6 +2976,7 @@ function restoreHistoryState(s) {
     state.paths = JSON.parse(JSON.stringify(s.paths));
     state.plots = JSON.parse(JSON.stringify(s.plots));
     state.objects = JSON.parse(JSON.stringify(s.objects));
+    state.labels = JSON.parse(JSON.stringify(s.labels || []));
     renderAllFromState();
     markDirty();
 }
@@ -2137,6 +2993,9 @@ function markSaved() {
     document.getElementById("saveText").textContent = "Saqlangan";
 }
 
+// ══════════════════════════════════════════════════════════════
+//  SAVE & EXPORT
+// ══════════════════════════════════════════════════════════════
 async function saveMapData() {
     const payload = {
         title: state.title,
@@ -2146,12 +3005,15 @@ async function saveMapData() {
             name: state.title,
             mapType: state.themeKey,
             paperTheme: state.paper,
+            groundTexture: state.groundTexture,
             lighting: state.lighting,
+            weather: state.weather,
             shadowIntensity: state.shadowIntensity,
             gridSize: state.gridSize,
             paths: state.paths,
             plots: state.plots,
-            objects: state.objects
+            objects: state.objects,
+            labels: state.labels
         }
     };
     
@@ -2169,31 +3031,34 @@ async function saveMapData() {
             markSaved();
             showToast("🏰 Xarita muvaffaqiyatli saqlandi!");
         } else {
-            showToast("Saqlashda xato: " + json.message);
+            showToast("Saqlashda xato: " + (json.message || "Noma'lum"));
         }
     } catch(err) {
         showToast("Server bilan aloqa xatosi");
     }
 }
 
-function exportMapPNG() {
+function exportMapPNG(pixelRatio = 2) {
     transformer.nodes([]);
-    const dataUrl = stage.toDataURL({ pixelRatio: 2 });
+    const dataUrl = stage.toDataURL({ pixelRatio: pixelRatio });
     const link = document.createElement("a");
     link.download = `${state.title.replace(/\s+/g, "_")}_Map.png`;
     link.href = dataUrl;
     link.click();
-    showToast("🖼️ Yuqori sifatli PNG saqlandi!");
+    showToast(`🖼️ ${pixelRatio}x sifatli PNG yuklab olindi!`);
 }
 
 function exportMapJSON() {
     const exportData = {
+        title: state.title,
         map_id: state.mapId,
-        name: state.title,
+        theme: state.themeKey,
         paths: state.paths,
         plots: state.plots,
         objects: state.objects,
-        lighting: state.lighting
+        labels: state.labels,
+        lighting: state.lighting,
+        weather: state.weather
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const link = document.createElement("a");
@@ -2225,20 +3090,51 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Keyboard shortcuts
+// ══════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════════════════════
 document.addEventListener("keydown", (e) => {
-    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+    
+    if (e.code === "Space") {
+        isSpacePressed = true;
+        stage.container().style.cursor = "grab";
+    }
+    
     if (e.ctrlKey && e.key.toLowerCase() === "s") { e.preventDefault(); saveMapData(); }
     else if (e.ctrlKey && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
     else if (e.ctrlKey && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); }
+    else if (e.ctrlKey && e.key.toLowerCase() === "d") { e.preventDefault(); duplicateSelected(); }
+    else if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); removeSelected(); }
     else if (e.key.toLowerCase() === "v") setTool("select");
     else if (e.key.toLowerCase() === "s") setTool("stamp");
     else if (e.key.toLowerCase() === "b") setTool("bezier");
     else if (e.key.toLowerCase() === "p") setTool("plot");
+    else if (e.key.toLowerCase() === "t") setTool("text");
     else if (e.key.toLowerCase() === "a") setTool("scatter");
     else if (e.key.toLowerCase() === "e") setTool("erase");
+    else if (e.key === "?") openShortcutsModal();
+    else if (e.key === "Escape") {
+        transformer.nodes([]);
+        state.selectedNode = null;
+        isDrawingBezier = false;
+        isDrawingPlot = false;
+        state.activeCurvePoints = [];
+        state.activePlotPoints = [];
+        tempLayer.destroyChildren();
+        tempLayer.batchDraw();
+        buildInspectorControls();
+    }
 });
 
+document.addEventListener("keyup", (e) => {
+    if (e.code === "Space") {
+        isSpacePressed = false;
+        stage.container().style.cursor = "default";
+    }
+});
+
+// Auto-save interval: 45 seconds
 setInterval(() => { if (state.isDirty) saveMapData(); }, 45000);
 window.addEventListener("DOMContentLoaded", initKonvaApp);
 </script>

@@ -120,20 +120,34 @@ def create_map(request):
             'architecture': {'paper': 'grid_blueprint', 'gridColor': 'rgba(100,116,139,0.2)', 'lighting': 'flat'},
             'level': {'paper': 'dark_slate', 'gridColor': 'rgba(255,255,255,0.08)', 'lighting': 'dramatic'},
         }
-        theme_cfg = THEME_DEFAULTS.get(map_type, THEME_DEFAULTS['dungeon'])
+        # Default ground texture based on map type
+        tex_by_type = {
+            'village': '/static/assets/world_builder/textures/ground_grass_lush.jpg',
+            'wilderness': '/static/assets/world_builder/textures/ground_grass_lush.jpg',
+            'dungeon': '/static/assets/world_builder/textures/ground_dirt_meadow.jpg',
+            'desert': '/static/assets/world_builder/textures/ground_dirt_meadow.jpg',
+            'castle': '/static/assets/world_builder/textures/ground_dirt_meadow.jpg',
+        }
+        weather_by_type = {
+            'coastal': 'rain',
+            'dungeon': 'embers',
+            'wilderness': 'fog',
+        }
+
         default_data = {
             'version': 2,
             'mapType': map_type,
             'gridSize': 32,
             'gridType': 'square',
             'paperTheme': theme_cfg['paper'],
+            'groundTexture': tex_by_type.get(map_type, '/static/assets/world_builder/textures/ground_grass_lush.jpg'),
             'lighting': theme_cfg['lighting'],
+            'weather': weather_by_type.get(map_type, 'none'),
             'shadowIntensity': 0.65,
             'shadowAngle': 45,
             'shadowDistance': 12,
             'vignette': True,
             'fogOfWar': False,
-            'weather': 'none',
             'activeLayer': 'ly_structures',
             'layers': [
                 {'id': 'ly_terrain',     'name': 'Terrain & Biome',  'visible': True, 'locked': False, 'color': '#22c55e'},
