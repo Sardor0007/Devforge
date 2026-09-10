@@ -965,6 +965,7 @@ const RAW_MAP_DATA = {{ map_data_json|safe }};
 const MAP_TYPE = "{{ map.map_type|default:'village' }}";
 const USER_ASSETS = {{ user_assets_json|safe }};
 const MEDIEVAL_ASSETS = {{ medieval_assets_json|safe }};
+const GROUND_TEXTURES = {{ ground_textures_json|safe }};
 
 /* Image cache to keep loaded HTMLImageElements */
 const imageCache = {};
@@ -1025,8 +1026,12 @@ const state = {
     activeCurvePoints: [],
     activePlotPoints: [],
     selectedNode: null,
-    isDirty: false
+    isDirty: false,
+
+    // Ground texture — url of the selected texture from GROUND_TEXTURES
+    groundTexture: GROUND_TEXTURES.length > 0 ? GROUND_TEXTURES[0].url : null,
 };
+
 
 const historyStack = [];
 let historyIndex = -1;
@@ -1105,29 +1110,73 @@ function initKonvaApp() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PARCHMENT BACKGROUND (Authentic Kingsbridge Tint)
+//  PARCHMENT / GROUND TEXTURE BACKGROUND
 // ══════════════════════════════════════════════════════════════
+let _bgTextureImg = null;  // cached current ground texture HTMLImageElement
+
 function renderPaperBackground() {
     bgLayer.destroyChildren();
     const size = 5000;
-    
-    // Parchment colors
+
+    // Parchment fallback color
     const isKingsbridge = state.paper === "kingsbridge_authentic";
     const baseColor = isKingsbridge ? "#eae3d1" : (state.paper === "parchment_dark" ? "#16130e" : "#f5edd6");
-    
-    const bgRect = new Konva.Rect({
-        x: -size / 2,
-        y: -size / 2,
-        width: size,
-        height: size,
-        fill: baseColor,
-        stroke: "rgba(180, 160, 130, 0.4)",
-        strokeWidth: 4,
-        listening: false
-    });
-    bgLayer.add(bgRect);
-    
-    // Subtle Map Border
+
+    function _drawBgWithImage(img) {
+        const bgRect = new Konva.Rect({
+            x: -size / 2,
+            y: -size / 2,
+            width: size,
+            height: size,
+            fillPatternImage: img,
+            fillPatternRepeat: 'repeat',
+            fillPatternScaleX: 1,
+            fillPatternScaleY: 1,
+            listening: false
+        });
+        bgLayer.add(bgRect);
+        _addBgOverlaysAndGrid(size, isKingsbridge);
+        bgLayer.batchDraw();
+    }
+
+    function _drawBgSolid() {
+        const bgRect = new Konva.Rect({
+            x: -size / 2,
+            y: -size / 2,
+            width: size,
+            height: size,
+            fill: baseColor,
+            stroke: "rgba(180,160,130,0.4)",
+            strokeWidth: 4,
+            listening: false
+        });
+        bgLayer.add(bgRect);
+        _addBgOverlaysAndGrid(size, isKingsbridge);
+        bgLayer.batchDraw();
+    }
+
+    // Use the user-selected ground texture if available
+    const texUrl = state.groundTexture || null;
+    if (texUrl) {
+        if (_bgTextureImg && _bgTextureImg._srcUrl === texUrl) {
+            _drawBgWithImage(_bgTextureImg);
+        } else {
+            const img = new Image();
+            img.onload = () => {
+                img._srcUrl = texUrl;
+                _bgTextureImg = img;
+                _drawBgWithImage(img);
+            };
+            img.onerror = _drawBgSolid;
+            img.src = texUrl;
+        }
+    } else {
+        _drawBgSolid();
+    }
+}
+
+function _addBgOverlaysAndGrid(size, isKingsbridge) {
+    // Dashed border frame
     bgLayer.add(new Konva.Rect({
         x: -size / 2 + 30,
         y: -size / 2 + 30,
@@ -1138,11 +1187,25 @@ function renderPaperBackground() {
         dash: [12, 6],
         listening: false
     }));
-    
-    // Subtle Grid
+
+    // Subtle vignette overlay
+    bgLayer.add(new Konva.Rect({
+        x: -size / 2,
+        y: -size / 2,
+        width: size,
+        height: size,
+        fillRadialGradientStartPoint: { x: 0, y: 0 },
+        fillRadialGradientStartRadius: 0,
+        fillRadialGradientEndPoint: { x: 0, y: 0 },
+        fillRadialGradientEndRadius: size * 0.72,
+        fillRadialGradientColorStops: [0, 'rgba(0,0,0,0)', 1, 'rgba(0,0,0,0.28)'],
+        listening: false
+    }));
+
+    // Grid
     if (state.showGrid) {
         const step = state.gridSize;
-        const gridColor = isKingsbridge ? "rgba(120, 100, 70, 0.08)" : "rgba(255, 255, 255, 0.04)";
+        const gridColor = isKingsbridge ? "rgba(120,100,70,0.1)" : "rgba(255,255,255,0.06)";
         for (let x = -size / 2; x <= size / 2; x += step) {
             bgLayer.add(new Konva.Line({
                 points: [x, -size / 2, x, size / 2],
@@ -1160,8 +1223,8 @@ function renderPaperBackground() {
             }));
         }
     }
-    bgLayer.batchDraw();
 }
+
 
 // ══════════════════════════════════════════════════════════════
 //  BEZIER PATHS (Yo'l & Daryolar — Hand Drawn Ink Style)
@@ -1800,59 +1863,118 @@ function findAssetById(id) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PALETTE BUILDER
+//  PALETTE BUILDER  (96 assets, 9 categories + ground textures)
 // ══════════════════════════════════════════════════════════════
 function buildMaterialPalette() {
     const container = document.getElementById("paletteListContainer");
     container.innerHTML = "";
-    
-    const categories = {
-        "Kingsbridge (Qo'lda Chizilgan)": MEDIEVAL_ASSETS,
-        "Uchastkalar (Plots)": [
-            { id: "pl_forest", name: "O'rmon Hududi", category: "Uchastka", icon: "🌲", type: "plot_tool" },
-            { id: "pl_lake", name: "Ko'l / Suv Havzasi", category: "Uchastka", icon: "💧", type: "circle_tool" },
-            { id: "pl_town", name: "Shahar Kvartali", category: "Uchastka", icon: "🏰", type: "rect_tool" }
-        ]
-    };
-    
-    Object.entries(categories).forEach(([catName, items]) => {
-        if (!items || items.length === 0) return;
-        const section = document.createElement("div");
-        section.className = "palette-group-section";
-        
-        const catHeader = document.createElement("div");
-        catHeader.className = "category-header";
-        catHeader.innerHTML = `<span>${catName}</span><span class="category-count">${items.length}</span>`;
-        section.appendChild(catHeader);
-        
+
+    // ── Ground textures section ────────────────────────────────
+    if (GROUND_TEXTURES && GROUND_TEXTURES.length > 0) {
+        const sec = document.createElement("div");
+        sec.className = "palette-group-section";
+        sec.innerHTML = `<div class="category-header"><span>🌿 Yer Teksturasi</span><span class="category-count">${GROUND_TEXTURES.length}</span></div>`;
         const grid = document.createElement("div");
         grid.className = "materials-grid";
-        
-        items.forEach(mat => {
+        GROUND_TEXTURES.forEach(tex => {
             const card = document.createElement("div");
-            card.className = "material-card" + (state.selectedAsset && state.selectedAsset.id === mat.id ? " active" : "");
-            card.onclick = () => selectPaletteAsset(mat);
-            
-            let previewInner = "";
-            if (mat.url) {
-                previewInner = `<img src="${mat.url}" alt="${mat.name}">`;
-            } else {
-                previewInner = `<span style="font-size:1.4rem;">${mat.icon || '📦'}</span>`;
-            }
-            
+            const isActive = state.groundTexture === tex.url;
+            card.className = "material-card texture-card" + (isActive ? " active" : "");
+            card.title = tex.name;
+            card.onclick = () => {
+                state.groundTexture = tex.url;
+                _bgTextureImg = null;
+                renderPaperBackground();
+                buildMaterialPalette();
+                showToast(`Yer: ${tex.name}`);
+            };
             card.innerHTML = `
-                <div class="material-preview-box">
-                    ${previewInner}
+                <div class="material-preview-box" style="overflow:hidden;">
+                    <img src="${tex.url}" alt="${tex.name}" style="width:100%;height:100%;object-fit:cover;">
                 </div>
-                <div class="material-name" title="${mat.name}">${mat.name}</div>
-            `;
+                <div class="material-name" title="${tex.name}">${tex.name}</div>`;
             grid.appendChild(card);
         });
-        
-        section.appendChild(grid);
-        container.appendChild(section);
+        sec.appendChild(grid);
+        container.appendChild(sec);
+    }
+
+    // ── Asset categories from MEDIEVAL_ASSETS ─────────────────
+    // Group by category field
+    const catMap = {};
+    (MEDIEVAL_ASSETS || []).forEach(a => {
+        const cat = a.category || 'Bino & Inshoot';
+        if (!catMap[cat]) catMap[cat] = [];
+        catMap[cat].push(a);
     });
+
+    // Category display order + icons
+    const CAT_ORDER = [
+        ["Uylar & Binolar",     "🏠"],
+        ["Qal'a & Tosh",        "🏰"],
+        ["Bozor & Chodir",      "⛺"],
+        ["Tabiat & Daraxtlar",  "🌲"],
+        ["Tog' & Relief",       "⛰️"],
+        ["Zindon & G'or",       "🕳️"],
+        ["Rekvizit & Aravallar","🪵"],
+        ["Kingsbridge",         "📜"],
+        ["Bino & Inshoot",      "🏛️"],
+    ];
+
+    CAT_ORDER.forEach(([catName, icon]) => {
+        const items = catMap[catName];
+        if (!items || items.length === 0) return;
+        delete catMap[catName];  // mark as rendered
+
+        _renderPaletteSection(container, `${icon} ${catName}`, items);
+    });
+
+    // Render any remaining uncategorised assets
+    Object.entries(catMap).forEach(([catName, items]) => {
+        if (items && items.length > 0) _renderPaletteSection(container, catName, items);
+    });
+
+    // ── Plot tools ───────────────────────────────────────────
+    const plotItems = [
+        { id: "pl_forest", name: "O'rmon Hududi",    icon: "🌲", type: "plot_tool"   },
+        { id: "pl_lake",   name: "Ko'l / Havza",      icon: "💧", type: "circle_tool" },
+        { id: "pl_town",   name: "Shahar Kvartali",   icon: "🏰", type: "rect_tool"   },
+    ];
+    _renderPaletteSection(container, "✏️ Uchastkalar (Plots)", plotItems);
 }
+
+function _renderPaletteSection(container, catName, items) {
+    const section = document.createElement("div");
+    section.className = "palette-group-section";
+
+    const header = document.createElement("div");
+    header.className = "category-header";
+    header.innerHTML = `<span>${catName}</span><span class="category-count">${items.length}</span>`;
+    section.appendChild(header);
+
+    const grid = document.createElement("div");
+    grid.className = "materials-grid";
+
+    items.forEach(mat => {
+        const card = document.createElement("div");
+        const isSelected = state.selectedAsset && state.selectedAsset.id === mat.id;
+        card.className = "material-card" + (isSelected ? " active" : "");
+        card.onclick = () => selectPaletteAsset(mat);
+
+        const previewInner = mat.url
+            ? `<img src="${mat.url}" alt="${mat.name}" loading="lazy">`
+            : `<span style="font-size:1.4rem;">${mat.icon || '📦'}</span>`;
+
+        card.innerHTML = `
+            <div class="material-preview-box">${previewInner}</div>
+            <div class="material-name" title="${mat.name}">${mat.name}</div>`;
+        grid.appendChild(card);
+    });
+
+    section.appendChild(grid);
+    container.appendChild(section);
+}
+
 
 function selectPaletteAsset(mat) {
     state.selectedAsset = mat;

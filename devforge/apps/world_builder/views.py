@@ -34,28 +34,62 @@ def editor_view(request, map_id):
 
     # Hand-drawn medieval map assets extracted from top-down illustration
     medieval_assets = []
+    ground_textures = []
     try:
         import os
         from django.conf import settings
         mb_dir = os.path.join(settings.BASE_DIR, 'static', 'assets', 'world_builder')
         if os.path.exists(mb_dir):
-            for fname in os.listdir(mb_dir):
-                if fname.endswith('.png'):
-                    label = fname.replace('.png', '').replace('_', ' ').title()
+            for fname in sorted(os.listdir(mb_dir)):
+                fpath = os.path.join(mb_dir, fname)
+                if not os.path.isfile(fpath):
+                    continue
+                ext = fname.rsplit('.', 1)[-1].lower()
+                if ext not in ('png', 'jpg', 'jpeg', 'svg'):
+                    continue
+
+                label = fname.rsplit('.', 1)[0].replace('_', ' ').title()
+                f = fname.lower()
+
+                # Categorise by filename keywords
+                if 'tree' in f or 'bush' in f or 'shrub' in f or 'forest' in f:
+                    category = 'Tabiat & Daraxtlar'
+                elif 'mountain' in f or 'peak' in f or 'hill' in f:
+                    category = 'Tog\' & Relief'
+                elif 'dungeon' in f or 'cave' in f or 'tunnel' in f:
+                    category = 'Zindon & G\'or'
+                elif 'tent' in f or 'awning' in f or 'pavilion' in f or 'canopy' in f or 'market' in f or 'stall' in f or 'merchant' in f:
+                    category = 'Bozor & Chodir'
+                elif 'roof' in f or 'timber' in f or 'house' in f or 'building' in f or 'outpost' in f or 'grand' in f:
+                    category = 'Uylar & Binolar'
+                elif 'stone' in f or 'slate' in f or 'castle' in f or 'tower' in f or 'fort' in f:
+                    category = 'Qal\'a & Tosh'
+                elif 'wagon' in f or 'cart' in f or 'horse' in f or 'well' in f or 'campfire' in f or 'standing' in f:
+                    category = 'Rekvizit & Aravallar'
+                elif 'kingsbridge' in f or 'ruined' in f or 'curved' in f:
+                    category = 'Kingsbridge'
+                else:
                     category = 'Bino & Inshoot'
-                    if 'tree' in fname or 'bush' in fname:
-                        category = 'Tabiat & Daraxtlar'
-                    elif 'tent' in fname or 'awning' in fname or 'pavilion' in fname:
-                        category = 'Chodir & Lager'
-                    elif 'wagon' in fname or 'well' in fname or 'stone' in fname:
-                        category = 'Relyef & Arava'
-                    
-                    medieval_assets.append({
-                        'id': fname.replace('.png', ''),
+
+                medieval_assets.append({
+                    'id': fname.rsplit('.', 1)[0],
+                    'name': label,
+                    'category': category,
+                    'url': f'/static/assets/world_builder/{fname}',
+                    'type': 'image_asset',
+                })
+
+        # Scan ground textures
+        tex_dir = os.path.join(mb_dir, 'textures')
+        if os.path.exists(tex_dir):
+            for fname in sorted(os.listdir(tex_dir)):
+                ext = fname.rsplit('.', 1)[-1].lower()
+                if ext in ('jpg', 'jpeg', 'png'):
+                    label = fname.rsplit('.', 1)[0].replace('_', ' ').title()
+                    ground_textures.append({
+                        'id': fname.rsplit('.', 1)[0],
                         'name': label,
-                        'category': category,
-                        'url': f'/static/assets/world_builder/{fname}',
-                        'type': 'image_asset'
+                        'url': f'/static/assets/world_builder/textures/{fname}',
                     })
     except Exception as e:
         logger.warning("Failed scanning medieval assets: %s", e)
@@ -65,6 +99,7 @@ def editor_view(request, map_id):
         'map_data_json': _json.dumps(world_map.data or {}),
         'user_assets_json': _json.dumps(user_assets),
         'medieval_assets_json': _json.dumps(medieval_assets),
+        'ground_textures_json': _json.dumps(ground_textures),
     })
 
 
