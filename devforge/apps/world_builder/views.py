@@ -32,10 +32,39 @@ def editor_view(request, map_id):
     except Exception:
         pass
 
+    # Hand-drawn medieval map assets extracted from top-down illustration
+    medieval_assets = []
+    try:
+        import os
+        from django.conf import settings
+        mb_dir = os.path.join(settings.BASE_DIR, 'static', 'assets', 'world_builder')
+        if os.path.exists(mb_dir):
+            for fname in os.listdir(mb_dir):
+                if fname.endswith('.png'):
+                    label = fname.replace('.png', '').replace('_', ' ').title()
+                    category = 'Bino & Inshoot'
+                    if 'tree' in fname or 'bush' in fname:
+                        category = 'Tabiat & Daraxtlar'
+                    elif 'tent' in fname or 'awning' in fname or 'pavilion' in fname:
+                        category = 'Chodir & Lager'
+                    elif 'wagon' in fname or 'well' in fname or 'stone' in fname:
+                        category = 'Relyef & Arava'
+                    
+                    medieval_assets.append({
+                        'id': fname.replace('.png', ''),
+                        'name': label,
+                        'category': category,
+                        'url': f'/static/assets/world_builder/{fname}',
+                        'type': 'image_asset'
+                    })
+    except Exception as e:
+        logger.warning("Failed scanning medieval assets: %s", e)
+
     return render(request, 'world_builder/editor.html', {
         'map': world_map,
         'map_data_json': _json.dumps(world_map.data or {}),
         'user_assets_json': _json.dumps(user_assets),
+        'medieval_assets_json': _json.dumps(medieval_assets),
     })
 
 

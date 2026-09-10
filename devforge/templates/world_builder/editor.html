@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-<!-- Konva.js 9.3 (Full 2D High-Performance Canvas Library) -->
+<!-- Konva.js 9.3 -->
 <script src="https://unpkg.com/konva@9.3.16/konva.min.js"></script>
 
 <style>
@@ -55,7 +55,6 @@ html, body {
     font-family: var(--font-ui);
 }
 
-/* App Shell */
 .app-shell {
     display: flex;
     flex-direction: column;
@@ -66,9 +65,7 @@ html, body {
     position: relative;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TOP HEADER
-   ══════════════════════════════════════════════════════════════ */
+/* TOP HEADER */
 .ck-header {
     height: 52px;
     background: linear-gradient(180deg, #10141f 0%, #0a0d14 100%);
@@ -219,18 +216,16 @@ html, body {
     50% { opacity: 0.4; transform: scale(0.85); }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   MAIN WORKSPACE LAYOUT
-   ══════════════════════════════════════════════════════════════ */
+/* WORKSPACE */
 .ck-workspace {
     display: grid;
-    grid-template-columns: 54px 285px 1fr 295px;
+    grid-template-columns: 54px 305px 1fr 295px;
     flex: 1;
     overflow: hidden;
     position: relative;
 }
 
-/* 1. LEFT TOOL SHELF */
+/* TOOLS BAR */
 .ck-tools-bar {
     background: #090c13;
     border-right: 1px solid var(--border);
@@ -291,8 +286,6 @@ html, body {
     background: var(--border);
     margin: 4px 0;
 }
-
-/* Tooltip on hover */
 .tool-icon-btn::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -315,7 +308,7 @@ html, body {
     opacity: 1;
 }
 
-/* 2. LEFT PALETTE (Aktivlar & Uchastkalar) */
+/* PALETTE PANEL */
 .ck-palette-panel {
     background: #0c1018;
     border-right: 1px solid var(--border);
@@ -423,8 +416,8 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 6px;
-    gap: 4px;
+    padding: 4px;
+    gap: 3px;
     transition: all 0.15s ease;
     position: relative;
     overflow: hidden;
@@ -440,19 +433,25 @@ html, body {
     box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
 }
 .material-preview-box {
-    width: 38px;
-    height: 38px;
+    width: 46px;
+    height: 46px;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.4rem;
-    background: rgba(0,0,0,0.3);
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+    background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.06);
+    overflow: hidden;
+}
+.material-preview-box img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
 .material-name {
-    font-size: 0.63rem;
+    font-size: 0.61rem;
     color: var(--text-muted);
     text-align: center;
     white-space: nowrap;
@@ -466,7 +465,7 @@ html, body {
     font-weight: 700;
 }
 
-/* 3. CENTER VIEWPORT (KONVA.JS CONTAINER) */
+/* CENTER VIEWPORT */
 .ck-viewport {
     background: #06070a;
     position: relative;
@@ -516,10 +515,6 @@ html, body {
 .vp-btn:hover {
     background: rgba(255,255,255,0.08);
     color: var(--text-main);
-}
-.vp-btn.active {
-    background: rgba(245, 158, 11, 0.15);
-    color: var(--gold-bright);
 }
 .vp-sep {
     width: 1px;
@@ -585,7 +580,7 @@ html, body {
     font-weight: 600;
 }
 
-/* 4. RIGHT PROPERTIES & ATMOSPHERE PANEL */
+/* RIGHT PROPERTIES PANEL */
 .ck-inspector-panel {
     background: #0c1018;
     border-left: 1px solid var(--border);
@@ -694,53 +689,7 @@ html, body {
     border-color: var(--gold);
 }
 
-/* Layer row in Layers panel */
-.layer-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all 0.15s;
-    margin-bottom: 4px;
-}
-.layer-row:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: var(--border);
-}
-.layer-row.active {
-    background: rgba(245, 158, 11, 0.12);
-    border-color: var(--border-gold);
-}
-.layer-color-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-    flex-shrink: 0;
-}
-.layer-name-text {
-    flex: 1;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-.layer-action-btn {
-    background: none;
-    border: none;
-    color: var(--text-dim);
-    cursor: pointer;
-    font-size: 0.8rem;
-    padding: 2px 4px;
-    border-radius: 4px;
-}
-.layer-action-btn:hover {
-    color: var(--text-main);
-    background: rgba(255,255,255,0.1);
-}
-
-/* Modal overlay */
+/* Modal */
 .ck-modal {
     position: fixed;
     inset: 0;
@@ -804,7 +753,7 @@ html, body {
 <body>
 
 <div class="app-shell">
-    <!-- ════ TOP HEADER ════ -->
+    <!-- TOP HEADER -->
     <header class="ck-header">
         <a href="{% url 'world_builder:dashboard' %}" class="ck-brand" title="Dashboardga qaytish">
             <div class="ck-logo-badge">👑</div>
@@ -851,7 +800,7 @@ html, body {
         </div>
     </header>
 
-    <!-- ════ MAIN WORKSPACE ════ -->
+    <!-- MAIN WORKSPACE -->
     <main class="ck-workspace">
         <!-- 1. LEFT TOOL SHELF -->
         <aside class="ck-tools-bar">
@@ -860,24 +809,24 @@ html, body {
                 <span class="tool-shortcut-tag">V</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_bezier" onclick="setTool('bezier')" data-tooltip="Bezier Curve Yo'l & Daryo (B)">
+            <button class="tool-icon-btn" id="tool_stamp" onclick="setTool('stamp')" data-tooltip="Aktiv / Bino Shtampi (S)">
+                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                <span class="tool-shortcut-tag">S</span>
+            </button>
+
+            <button class="tool-icon-btn" id="tool_bezier" onclick="setTool('bezier')" data-tooltip="Yo'l & Daryo Bezier Chizig'i (B)">
                 <svg viewBox="0 0 24 24"><circle cx="4" cy="19" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="20" cy="19" r="2"/><path d="M4 19c4-12 12-12 16 0"/></svg>
                 <span class="tool-shortcut-tag">B</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_plot" onclick="setTool('plot')" data-tooltip="Uchastka (Plot) Hudud chizish (P)">
+            <button class="tool-icon-btn" id="tool_plot" onclick="setTool('plot')" data-tooltip="Uchastka (Plot) Hududi chizish (P)">
                 <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                 <span class="tool-shortcut-tag">P</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_scatter" onclick="setTool('scatter')" data-tooltip="Avtomatik Sepish (Procedural Scatter) (A)">
+            <button class="tool-icon-btn" id="tool_scatter" onclick="setTool('scatter')" data-tooltip="Uchastkaga Daraxt Sepish (A)">
                 <svg viewBox="0 0 24 24"><circle cx="7" cy="8" r="2"/><circle cx="15" cy="5" r="1.5"/><circle cx="12" cy="13" r="2.5"/><circle cx="18" cy="17" r="2"/><circle cx="6" cy="18" r="1.5"/></svg>
                 <span class="tool-shortcut-tag">A</span>
-            </button>
-
-            <button class="tool-icon-btn" id="tool_stamp" onclick="setTool('stamp')" data-tooltip="Aktiv / Obyekt Shtampi (S)">
-                <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
-                <span class="tool-shortcut-tag">S</span>
             </button>
 
             <div class="tool-divider"></div>
@@ -887,7 +836,7 @@ html, body {
                 <span class="tool-shortcut-tag">C</span>
             </button>
 
-            <button class="tool-icon-btn" id="tool_rect" onclick="setTool('rect')" data-tooltip="To'rtburchak Hudud / Kvartal (R)">
+            <button class="tool-icon-btn" id="tool_rect" onclick="setTool('rect')" data-tooltip="To'rtburchak Kvartal / Bino Hududi (R)">
                 <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
                 <span class="tool-shortcut-tag">R</span>
             </button>
@@ -901,21 +850,21 @@ html, body {
         <!-- 2. LEFT PALETTE -->
         <aside class="ck-palette-panel">
             <div class="palette-tabs">
-                <div class="pal-tab active" id="tab_assets" onclick="switchPaletteTab('assets')">Aktivlar</div>
-                <div class="pal-tab" id="tab_plots" onclick="switchPaletteTab('plots')">Uchastkalar</div>
-                <div class="pal-tab" id="tab_paths" onclick="switchPaletteTab('paths')">Yo'llar</div>
+                <div class="pal-tab active" id="tab_kingsbridge" onclick="switchPaletteTab('kingsbridge')">Kingsbridge</div>
+                <div class="pal-tab" id="tab_assets" onclick="switchPaletteTab('assets')">Standart</div>
+                <div class="pal-tab" id="tab_plots" onclick="switchPaletteTab('plots')">Uchastka</div>
             </div>
 
             <div class="palette-filter-bar">
-                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (daraxt, bino, relyef...)" oninput="filterPalette(this.value)">
+                <input type="text" id="paletteSearch" class="filter-search-input" placeholder="Qidirish (daraxt, uy, chodir, arava...)" oninput="filterPalette(this.value)">
             </div>
 
             <div class="palette-content" id="paletteListContainer">
-                <!-- Dynamically populated based on map_type theme -->
+                <!-- Populated dynamically -->
             </div>
         </aside>
 
-        <!-- 3. CENTER VIEWPORT (KONVA.JS CONTAINER) -->
+        <!-- 3. CENTER VIEWPORT -->
         <section class="ck-viewport" id="viewportContainer">
             <div class="canvas-floating-toolbar">
                 <button class="vp-btn" onclick="resetCanvasTransform()" title="Markazga keltirish">
@@ -932,18 +881,17 @@ html, body {
                     🌑 <span id="shadowBtnText">Soyalar: On</span>
                 </button>
                 <button class="vp-btn" id="scatterQuickBtn" onclick="triggerScatterSelected()" title="Tanlangan uchastkaga daraxt sepish">
-                    🌲 <span>Sepish (Scatter)</span>
+                    🌲 <span>Daraxt Sepish</span>
                 </button>
             </div>
 
-            <!-- Konva Container -->
             <div id="konvaContainer"></div>
 
             <div class="canvas-hud-stats" id="hudStats">
                 <span>X: <strong id="hudX">0</strong> Y: <strong id="hudY">0</strong></span>
                 <span>Obyektlar: <strong id="hudObjCount">0</strong></span>
                 <span>Uchastkalar: <strong id="hudPlotCount">0</strong></span>
-                <span>Muhit: <strong id="hudTheme">{{ map.map_type|title }}</strong></span>
+                <span>Uslub: <strong style="color:var(--gold-bright);">Hand-Drawn Medieval</strong></span>
             </div>
 
             <div class="zoom-widget">
@@ -953,61 +901,53 @@ html, body {
             </div>
         </section>
 
-        <!-- 4. RIGHT PROPERTIES & ATMOSPHERE PANEL -->
+        <!-- 4. RIGHT PROPERTIES PANEL -->
         <aside class="ck-inspector-panel">
             <div class="inspector-tabs">
                 <div class="insp-tab active" id="tab_props" onclick="switchInspectorTab('props')">Xossalar</div>
                 <div class="insp-tab" id="tab_scatter" onclick="switchInspectorTab('scatter')">Sepish</div>
-                <div class="insp-tab" id="tab_layers" onclick="switchInspectorTab('layers')">Qatlamlar</div>
             </div>
 
             <div class="inspector-body" id="inspectorContent">
-                <!-- Inspector sections dynamically rendered -->
+                <!-- Rendered dynamically -->
             </div>
         </aside>
     </main>
 </div>
 
-<!-- Toast notification -->
+<!-- Toast -->
 <div class="ck-toast" id="ckToast">Bildirishnoma</div>
 
-<!-- Environment / Lighting Settings Modal -->
+<!-- Environment Modal -->
 <div class="ck-modal" id="envModal">
     <div class="ck-modal-card">
         <div class="ck-modal-title">
-            <span>🕯️ 2D Yorug'lik va Ob-Havo Qatlami</span>
+            <span>🕯️ Pergament va 2D Yorug'lik Muhiti</span>
             <button onclick="closeEnvironmentModal()" style="background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;">✕</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
             <div class="control-row">
-                <span class="control-label">Yorug'lik Muhiti:</span>
+                <span class="control-label">Yorug'lik Rejimi:</span>
                 <select id="envLightingSelect" class="ck-select" onchange="changeLightingOverlay(this.value)">
-                    <option value="daylight">Kunduzgi (Daylight ☀️)</option>
-                    <option value="sunset">Shom / Oltin soat (Sunset 🌅)</option>
-                    <option value="night">Tungi rejim (Night Blue 🌙)</option>
-                    <option value="cloudy">Bulutli tuman (Overcast ☁️)</option>
-                    <option value="torch">Mash'alali zulmat (Dungeon 🕯️)</option>
+                    <option value="daylight">Kingsbridge Ochiq Pergament ☀️</option>
+                    <option value="sunset">Shom / Qadimiy Oltin 🌅</option>
+                    <option value="night">Tungi Moviy Soya 🌙</option>
+                    <option value="cloudy">Bulutli Tuman ☁️</option>
+                    <option value="torch">Mash'ala va Zulmat 🕯️</option>
                 </select>
             </div>
             <div class="control-row">
-                <span class="control-label">Qog'oz / Pergament Foni:</span>
+                <span class="control-label">Pergament Uslubi:</span>
                 <select id="paperThemeSelect" class="ck-select" onchange="changePaperTheme(this.value)">
-                    <option value="parchment_dark">Qorong'i Pergament</option>
+                    <option value="kingsbridge_authentic">Kingsbridge Autentik Qog'ozi (Chizma)</option>
+                    <option value="parchment_dark">Qorong'i Qadimiy Pergament</option>
                     <option value="vintage_cream">Vintage Qaymoqrang</option>
                     <option value="blueprint">Sehrgar Chizmasi (Blueprint)</option>
-                    <option value="forest_bark">O'rmon Po'stlog'i</option>
-                    <option value="antique_atlas">Qadimiy Atlas</option>
-                    <option value="sandstone">Sahro Qumtoshi</option>
-                    <option value="dark_slate">Qora Slants (Dungeon)</option>
                 </select>
             </div>
             <div class="control-row">
-                <span class="control-label">2D Soya intensivligi:</span>
-                <input type="range" class="ck-range" id="shadowIntRange" min="0" max="100" value="60" oninput="updateShadowSetting(this.value)">
-            </div>
-            <div class="control-row">
-                <span class="control-label">Vinyetka (Burchaklar zulmati):</span>
-                <input type="checkbox" id="vignetteCheck" checked onchange="toggleVignette(this.checked)" style="accent-color:var(--gold);">
+                <span class="control-label">Qo'lda chizilgan soyalar kuchi:</span>
+                <input type="range" class="ck-range" id="shadowIntRange" min="0" max="100" value="65" oninput="updateShadowSetting(this.value)">
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:10px;">
@@ -1018,100 +958,59 @@ html, body {
 
 <script>
 // ══════════════════════════════════════════════════════════════
-//  KONVA.JS 2D MAP MAKER ENGINE
+//  KONVA.JS ENGINE + KINGSBRIDGE HAND-DRAWN ASSETS
 // ══════════════════════════════════════════════════════════════
 const MAP_ID = {{ map.id }};
 const RAW_MAP_DATA = {{ map_data_json|safe }};
-const MAP_TYPE = "{{ map.map_type|default:'level' }}";
+const MAP_TYPE = "{{ map.map_type|default:'village' }}";
 const USER_ASSETS = {{ user_assets_json|safe }};
+const MEDIEVAL_ASSETS = {{ medieval_assets_json|safe }};
 
-/* Procedural Assets & Plots Catalog based on Map Theme */
+/* Image cache to keep loaded HTMLImageElements */
+const imageCache = {};
+
+function getPreloadedImage(url, callback) {
+    if (imageCache[url]) {
+        callback(imageCache[url]);
+        return;
+    }
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = () => {
+        imageCache[url] = img;
+        callback(img);
+    };
+    img.src = url;
+}
+
+/* Fallback default theme presets */
 const THEME_PRESETS = {
-    dungeon: {
-        name: "Dark Dungeon & Crypt",
-        icon: "⚔️",
-        paper: "dark_slate",
-        bgColor: "#0a0c12",
-        lighting: "torch",
-        palette: [
-            { id: "d_stone_wall", name: "Tosh Devor", category: "Bino & Inshoot", icon: "🏛️", color: "#374151", type: "asset", w: 40, h: 40 },
-            { id: "d_pillar", name: "Ustun (Pillar)", category: "Bino & Inshoot", icon: "🔘", color: "#4b5563", type: "asset", w: 28, h: 28 },
-            { id: "d_iron_door", name: "Temir Eshik", category: "Bino & Inshoot", icon: "🚪", color: "#78350f", type: "asset", w: 36, h: 20 },
-            { id: "d_chest", name: "Xazina Sandig'i", category: "Relyef & Detal", icon: "📦", color: "#d97706", type: "asset", w: 30, h: 24 },
-            { id: "d_torch", name: "Devor Mash'alasi", category: "Yorug'lik", icon: "🔥", color: "#f97316", type: "asset", w: 24, h: 24, lightRadius: 160 },
-            { id: "d_crypt_plot", name: "Zindon Xonasi (Plot)", category: "Uchastkalar", icon: "🔲", color: "#1f2937", type: "plot", fill: "rgba(31, 41, 55, 0.65)" },
-            { id: "d_lava_plot", name: "Lava / Xavfli Hudud", category: "Uchastkalar", icon: "🌋", color: "#991b1b", type: "plot", fill: "rgba(153, 27, 27, 0.45)" }
-        ]
-    },
     village: {
-        name: "Medieval Village & Town",
+        name: "Kingsbridge Medieval Market",
         icon: "🏘️",
-        paper: "vintage_cream",
-        bgColor: "#f7f2e7",
-        lighting: "daylight",
-        palette: [
-            { id: "v_house_wood", name: "Yog'och Uy", category: "Bino & Inshoot", icon: "🏠", color: "#b45309", type: "asset", w: 65, h: 50 },
-            { id: "v_house_large", name: "Katta Shahar Uyi", category: "Bino & Inshoot", icon: "🏡", color: "#78350f", type: "asset", w: 85, h: 60 },
-            { id: "v_tree_oak", name: "Dub Daraxti", category: "Tabiat", icon: "🌳", color: "#15803d", type: "asset", w: 46, h: 46, scatterWeight: 1.0 },
-            { id: "v_tree_pine", name: "Qarag'ay", category: "Tabiat", icon: "🌲", color: "#166534", type: "asset", w: 38, h: 38, scatterWeight: 0.8 },
-            { id: "v_well", name: "Shahar Qudug'i", category: "Relyef & Detal", icon: "🪣", color: "#6b7280", type: "asset", w: 28, h: 28 },
-            { id: "v_forest_plot", name: "O'rmon Hududi (Plot)", category: "Uchastkalar", icon: "🌲", color: "#166534", type: "plot", fill: "rgba(22, 101, 52, 0.35)", defaultScatterAsset: "v_tree_oak" },
-            { id: "v_lake_plot", name: "Ko'l / Suv Havzasi", category: "Uchastkalar", icon: "💧", color: "#0284c7", type: "plot", fill: "rgba(2, 132, 199, 0.35)" }
-        ]
-    },
-    castle: {
-        name: "Royal Fortress & Citadel",
-        icon: "🏰",
-        paper: "blueprint",
-        bgColor: "#111b2b",
-        lighting: "sunset",
-        palette: [
-            { id: "c_tower", name: "Qorovul Minorasi", category: "Bino & Inshoot", icon: "🗼", color: "#475569", type: "asset", w: 55, h: 55 },
-            { id: "c_gate", name: "Darvozaxona", category: "Bino & Inshoot", icon: "⛩️", color: "#1e293b", type: "asset", w: 75, h: 40 },
-            { id: "c_throne", name: "Qirollik Taxti", category: "Relyef & Detal", icon: "👑", color: "#eab308", type: "asset", w: 32, h: 32 },
-            { id: "c_brazier", name: "Oltin Mangal", category: "Yorug'lik", icon: "🔥", color: "#f59e0b", type: "asset", w: 26, h: 26, lightRadius: 180 },
-            { id: "c_courtyard_plot", name: "Qal'a Hovlisi (Plot)", category: "Uchastkalar", icon: "🏛️", color: "#334155", type: "plot", fill: "rgba(51, 65, 85, 0.45)" }
-        ]
-    },
-    wilderness: {
-        name: "Wilderness & Forest",
-        icon: "🌲",
-        paper: "forest_bark",
-        bgColor: "#0f1710",
-        lighting: "daylight",
-        palette: [
-            { id: "w_ancient_tree", name: "Ulkan Asriy Daraxt", category: "Tabiat", icon: "🌳", color: "#14532d", type: "asset", w: 70, h: 70, scatterWeight: 1.0 },
-            { id: "w_pine", name: "Zich Qarag'ay", category: "Tabiat", icon: "🌲", color: "#166534", type: "asset", w: 42, h: 42, scatterWeight: 1.2 },
-            { id: "w_boulder", name: "Qoyatosh (Granit)", category: "Relyef & Detal", icon: "🪨", color: "#475569", type: "asset", w: 45, h: 38, scatterWeight: 0.5 },
-            { id: "w_camp_fire", name: "Sayyoh Gulxani", category: "Yorug'lik", icon: "⛺", color: "#ea580c", type: "asset", w: 28, h: 28, lightRadius: 150 },
-            { id: "w_dense_forest", name: "Qalin O'rmon (Plot)", category: "Uchastkalar", icon: "🌲", color: "#14532d", type: "plot", fill: "rgba(20, 83, 45, 0.4)", defaultScatterAsset: "w_ancient_tree" }
-        ]
+        paper: "kingsbridge_authentic",
+        bgColor: "#e8dfcb",
+        lighting: "daylight"
     }
 };
 
-/* Resolve current theme configuration */
-const currentThemeKey = THEME_PRESETS[MAP_TYPE] ? MAP_TYPE : "village";
-const currentTheme = THEME_PRESETS[currentThemeKey];
-
-/* Application State */
 const state = {
     mapId: MAP_ID,
     title: "{{ map.title|escapejs }}",
-    themeKey: currentThemeKey,
-    paper: RAW_MAP_DATA.paperTheme || currentTheme.paper,
-    lighting: RAW_MAP_DATA.lighting || currentTheme.lighting,
-    shadowIntensity: RAW_MAP_DATA.shadowIntensity !== undefined ? RAW_MAP_DATA.shadowIntensity : 0.6,
-    vignette: RAW_MAP_DATA.vignette !== false,
+    themeKey: "village",
+    paper: RAW_MAP_DATA.paperTheme || "kingsbridge_authentic",
+    lighting: RAW_MAP_DATA.lighting || "daylight",
+    shadowIntensity: RAW_MAP_DATA.shadowIntensity !== undefined ? RAW_MAP_DATA.shadowIntensity : 0.65,
     showGrid: true,
     showShadows: true,
     gridSize: RAW_MAP_DATA.gridSize || 32,
     
     // Tools
     activeTool: "select",
-    activePaletteTab: "assets",
-    selectedAsset: currentTheme.palette[0],
+    activePaletteTab: "kingsbridge",
+    selectedAsset: null,
     
-    // Data collections (JSON structure)
+    // Data collections
     paths: RAW_MAP_DATA.paths || [],
     plots: RAW_MAP_DATA.plots || [],
     objects: RAW_MAP_DATA.objects || RAW_MAP_DATA.elements || [],
@@ -1119,32 +1018,31 @@ const state = {
     // Procedural Scatter config
     scatterDensity: 0.65,
     scatterScaleMin: 0.8,
-    scatterScaleMax: 1.3,
+    scatterScaleMax: 1.25,
     scatterRandomRotation: true,
     
-    // Active Drawing buffer
+    // Active Drawing
     activeCurvePoints: [],
     activePlotPoints: [],
     selectedNode: null,
     isDirty: false
 };
 
-// History Undo/Redo stack
 const historyStack = [];
 let historyIndex = -1;
 
 /* Konva Stage & Layers */
 let stage = null;
-let bgLayer = null;       // Paper & Grid
-let plotsLayer = null;    // Geometric Plots (Forests, Lakes, Town Zones)
-let pathsLayer = null;    // Bezier Curves (Rivers, Roads)
-let objectsLayer = null;  // Sprites / Placed Assets
-let lightingLayer = null; // 2D Lighting & Weather overlay
-let tempLayer = null;     // Current drawing guides
-let transformer = null;   // Konva selection transformer
+let bgLayer = null;
+let plotsLayer = null;
+let pathsLayer = null;
+let objectsLayer = null;
+let lightingLayer = null;
+let tempLayer = null;
+let transformer = null;
 
 // ══════════════════════════════════════════════════════════════
-//  INITIALIZE KONVA STAGE & LAYERS
+//  INITIALIZE
 // ══════════════════════════════════════════════════════════════
 function initKonvaApp() {
     const container = document.getElementById("konvaContainer");
@@ -1152,8 +1050,7 @@ function initKonvaApp() {
     stage = new Konva.Stage({
         container: "konvaContainer",
         width: container.clientWidth,
-        height: container.clientHeight,
-        draggable: false // handled via pointer
+        height: container.clientHeight
     });
     
     bgLayer = new Konva.Layer();
@@ -1170,97 +1067,95 @@ function initKonvaApp() {
     stage.add(tempLayer);
     stage.add(lightingLayer);
     
-    // Setup Transformer for Object Manipulation
     transformer = new Konva.Transformer({
-        borderStroke: "#00f5ff",
+        borderStroke: "#f59e0b",
         borderStrokeWidth: 1.5,
-        anchorStroke: "#00f5ff",
+        anchorStroke: "#f59e0b",
         anchorFill: "#ffffff",
         anchorSize: 7,
-        rotateAnchorOffset: 20,
+        rotateAnchorOffset: 22,
         enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right']
     });
     objectsLayer.add(transformer);
     
-    // Build initial background
-    renderPaperBackground();
+    // Preload default selected asset
+    if (MEDIEVAL_ASSETS && MEDIEVAL_ASSETS.length > 0) {
+        state.selectedAsset = MEDIEVAL_ASSETS[0];
+    }
     
-    // Build and attach event listeners
+    renderPaperBackground();
     setupStageEvents();
     buildMaterialPalette();
     buildInspectorControls();
     
-    // Render existing state from JSON
     renderAllFromState();
-    
-    // Save Initial History
     pushHistoryState();
     
-    // Responsive Resize
-    window.addEventListener("resize", onWindowResize);
+    window.addEventListener("resize", () => {
+        const c = document.getElementById("viewportContainer");
+        stage.width(c.clientWidth);
+        stage.height(c.clientHeight);
+        renderPaperBackground();
+    });
     
-    // Map Title listener
     document.getElementById("mapTitleInput").addEventListener("input", (e) => {
         state.title = e.target.value.trim();
         markDirty();
     });
 }
 
-function onWindowResize() {
-    const container = document.getElementById("viewportContainer");
-    if (!stage || !container) return;
-    stage.width(container.clientWidth);
-    stage.height(container.clientHeight);
-    renderPaperBackground();
-}
-
 // ══════════════════════════════════════════════════════════════
-//  PAPER BACKGROUND & GRID
+//  PARCHMENT BACKGROUND (Authentic Kingsbridge Tint)
 // ══════════════════════════════════════════════════════════════
 function renderPaperBackground() {
     bgLayer.destroyChildren();
-    
     const size = 5000;
-    const paperColors = {
-        parchment_dark: { fill: "#151310", stroke: "#241f18" },
-        vintage_cream:  { fill: "#f5eedb", stroke: "#dfd2b5" },
-        blueprint:      { fill: "#0c1828", stroke: "#14253d" },
-        forest_bark:    { fill: "#131c12", stroke: "#1c2b1b" },
-        antique_atlas:  { fill: "#241e16", stroke: "#382f23" },
-        sandstone:      { fill: "#2b1f13", stroke: "#3d2d1c" },
-        dark_slate:     { fill: "#0a0c10", stroke: "#161b24" }
-    };
-    const pCfg = paperColors[state.paper] || paperColors.vintage_cream;
     
-    // Giant Parchment Base
-    const parchmentRect = new Konva.Rect({
+    // Parchment colors
+    const isKingsbridge = state.paper === "kingsbridge_authentic";
+    const baseColor = isKingsbridge ? "#eae3d1" : (state.paper === "parchment_dark" ? "#16130e" : "#f5edd6");
+    
+    const bgRect = new Konva.Rect({
         x: -size / 2,
         y: -size / 2,
         width: size,
         height: size,
-        fill: pCfg.fill,
-        stroke: "rgba(245, 158, 11, 0.3)",
+        fill: baseColor,
+        stroke: "rgba(180, 160, 130, 0.4)",
         strokeWidth: 4,
         listening: false
     });
-    bgLayer.add(parchmentRect);
+    bgLayer.add(bgRect);
     
-    // Coordinate Grid
+    // Subtle Map Border
+    bgLayer.add(new Konva.Rect({
+        x: -size / 2 + 30,
+        y: -size / 2 + 30,
+        width: size - 60,
+        height: size - 60,
+        stroke: "rgba(100, 80, 50, 0.25)",
+        strokeWidth: 2,
+        dash: [12, 6],
+        listening: false
+    }));
+    
+    // Subtle Grid
     if (state.showGrid) {
         const step = state.gridSize;
+        const gridColor = isKingsbridge ? "rgba(120, 100, 70, 0.08)" : "rgba(255, 255, 255, 0.04)";
         for (let x = -size / 2; x <= size / 2; x += step) {
             bgLayer.add(new Konva.Line({
                 points: [x, -size / 2, x, size / 2],
-                stroke: "rgba(255, 255, 255, 0.04)",
-                strokeWidth: 0.7,
+                stroke: gridColor,
+                strokeWidth: 0.6,
                 listening: false
             }));
         }
         for (let y = -size / 2; y <= size / 2; y += step) {
             bgLayer.add(new Konva.Line({
                 points: [-size / 2, y, size / 2, y],
-                stroke: "rgba(255, 255, 255, 0.04)",
-                strokeWidth: 0.7,
+                stroke: gridColor,
+                strokeWidth: 0.6,
                 listening: false
             }));
         }
@@ -1269,33 +1164,30 @@ function renderPaperBackground() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  BEZIER CURVES & PATH SYSTEM (Yo'l & Daryolar)
+//  BEZIER PATHS (Yo'l & Daryolar — Hand Drawn Ink Style)
 // ══════════════════════════════════════════════════════════════
 function createBezierPath(pathData) {
     const isRiver = pathData.type === "river";
-    const strokeColor = pathData.color || (isRiver ? "#0284c7" : "#854d0e");
-    const strokeWidth = pathData.width || (isRiver ? 26 : 18);
+    const strokeColor = pathData.color || (isRiver ? "#2a4365" : "#4a3c2c");
+    const strokeWidth = pathData.width || (isRiver ? 24 : 16);
     
-    // Flatten points array for Konva.Line
     const flatPoints = [];
-    pathData.points.forEach(pt => {
-        flatPoints.push(pt[0], pt[1]);
-    });
+    pathData.points.forEach(pt => flatPoints.push(pt[0], pt[1]));
     
-    // Konva Line with Bezier Tension (tension = 0.5 creates smooth Bezier Curves)
+    // Kingsbridge style double-stroke hand-drawn road
     const line = new Konva.Line({
         points: flatPoints,
         stroke: strokeColor,
         strokeWidth: strokeWidth,
         lineCap: "round",
         lineJoin: "round",
-        tension: 0.45, // Bezier Spline
+        tension: 0.45,
         bezier: true,
-        shadowColor: "rgba(0, 0, 0, 0.5)",
-        shadowBlur: state.showShadows ? 6 : 0,
-        shadowOffset: { x: 3, y: 5 },
-        shadowOpacity: state.shadowIntensity,
-        draggable: false
+        dash: isRiver ? [] : [10, 4], // dashed rustic medieval track
+        shadowColor: "rgba(0, 0, 0, 0.4)",
+        shadowBlur: state.showShadows ? 5 : 0,
+        shadowOffset: { x: 2, y: 3 },
+        shadowOpacity: state.shadowIntensity
     });
     
     line.setAttr("pathData", pathData);
@@ -1309,36 +1201,21 @@ function createBezierPath(pathData) {
     });
     
     pathsLayer.add(line);
-    
-    // If river, add internal lighter flow line
-    if (isRiver) {
-        const flowLine = new Konva.Line({
-            points: flatPoints,
-            stroke: "rgba(255, 255, 255, 0.4)",
-            strokeWidth: strokeWidth * 0.35,
-            lineCap: "round",
-            lineJoin: "round",
-            tension: 0.45,
-            bezier: true,
-            listening: false
-        });
-        pathsLayer.add(flowLine);
-    }
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PLOTS & UCHASTKALAR (Polygon, Circle, Rect Zones)
+//  PLOTS (Uchastkalar)
 // ══════════════════════════════════════════════════════════════
 function createPlotShape(plotData) {
     let shape = null;
-    const fillColor = plotData.fill || "rgba(22, 101, 52, 0.35)";
-    const strokeColor = plotData.color || "#166534";
+    const fillColor = plotData.fill || "rgba(100, 130, 80, 0.22)";
+    const strokeColor = plotData.color || "rgba(70, 90, 50, 0.5)";
     
     if (plotData.shape === "circle") {
         shape = new Konva.Circle({
             x: plotData.x,
             y: plotData.y,
-            radius: plotData.radius || 70,
+            radius: plotData.radius || 75,
             fill: fillColor,
             stroke: strokeColor,
             strokeWidth: 2,
@@ -1354,10 +1231,9 @@ function createPlotShape(plotData) {
             stroke: strokeColor,
             strokeWidth: 2,
             dash: [6, 4],
-            cornerRadius: 8
+            cornerRadius: 6
         });
     } else {
-        // Freeform Polygon plot
         const flatPoints = [];
         (plotData.points || []).forEach(pt => flatPoints.push(pt[0], pt[1]));
         shape = new Konva.Line({
@@ -1386,38 +1262,20 @@ function createPlotShape(plotData) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PROCEDURAL SCATTER ALGORITHM (Tasodifiy joylashtirish)
+//  PROCEDURAL SCATTER (Uchastkaga Daraxtlarni Avtomatik Sepish)
 // ══════════════════════════════════════════════════════════════
-/**
- * Uchastka (Plot) ichiga daraxt/aktivlarni tasodifiy sepish algoritmi
- * 1. Hududning chegaraviy qutisini (Bounding Box) hisoblaydi
- * 2. Zichlikka ko'ra tasodifiy nuqtalar (x, y) generatsiya qiladi
- * 3. Point-in-Polygon (yoki circle/rect tekshiruv) orqali ichida ekanligini tasdiqlaydi
- * 4. Min-masofa (collision avoidance) tekshiradi
- * 5. Tasodifiy masshtab va aylanish burchagi bilan aktiv obyektlarini qo'shadi
- */
 function proceduralScatterIntoPlot(plot) {
-    const assetId = plot.defaultScatterAsset || (state.selectedAsset ? state.selectedAsset.id : "v_tree_oak");
-    const assetDef = findAssetById(assetId);
-    if (!assetDef) return;
+    // Select one of the hand-drawn tree assets
+    const treeAssets = MEDIEVAL_ASSETS.filter(a => a.category.includes("Tabiat"));
+    const fallbackAsset = treeAssets.length > 0 ? treeAssets[0] : (state.selectedAsset || MEDIEVAL_ASSETS[0]);
     
-    const density = state.scatterDensity; // 0.1 dan 1.0 gacha
+    const density = state.scatterDensity;
     let bounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
     
     if (plot.shape === "circle") {
-        bounds = {
-            minX: plot.x - plot.radius,
-            maxX: plot.x + plot.radius,
-            minY: plot.y - plot.radius,
-            maxY: plot.y + plot.radius
-        };
+        bounds = { minX: plot.x - plot.radius, maxX: plot.x + plot.radius, minY: plot.y - plot.radius, maxY: plot.y + plot.radius };
     } else if (plot.shape === "rect") {
-        bounds = {
-            minX: plot.x,
-            maxX: plot.x + plot.w,
-            minY: plot.y,
-            maxY: plot.y + plot.h
-        };
+        bounds = { minX: plot.x, maxX: plot.x + plot.w, minY: plot.y, maxY: plot.y + plot.h };
     } else if (plot.points && plot.points.length > 2) {
         bounds.minX = Math.min(...plot.points.map(p => p[0]));
         bounds.maxX = Math.max(...plot.points.map(p => p[0]));
@@ -1425,45 +1283,37 @@ function proceduralScatterIntoPlot(plot) {
         bounds.maxY = Math.max(...plot.points.map(p => p[1]));
     }
     
-    const areaWidth = bounds.maxX - bounds.minX;
-    const areaHeight = bounds.maxY - bounds.minY;
-    const area = areaWidth * areaHeight;
-    
-    // Zichlik bo'yicha aktivlar soni
-    const targetCount = Math.floor((area / 1800) * density);
+    const area = (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
+    const targetCount = Math.floor((area / 2000) * density);
     let addedCount = 0;
     const placedPoints = [];
-    const minDistance = 24 * (1.1 - density * 0.4);
+    const minDistance = 28 * (1.1 - density * 0.4);
     
-    for (let attempts = 0; attempts < targetCount * 5 && addedCount < targetCount; attempts++) {
-        const randX = bounds.minX + Math.random() * areaWidth;
-        const randY = bounds.minY + Math.random() * areaHeight;
+    for (let attempts = 0; attempts < targetCount * 6 && addedCount < targetCount; attempts++) {
+        const randX = bounds.minX + Math.random() * (bounds.maxX - bounds.minX);
+        const randY = bounds.minY + Math.random() * (bounds.maxY - bounds.minY);
         
-        // Check if inside plot geometry
         if (!isPointInsidePlot(randX, randY, plot)) continue;
+        if (placedPoints.some(pt => Math.hypot(pt.x - randX, pt.y - randY) < minDistance)) continue;
         
-        // Avoid overlapping existing points
-        const tooClose = placedPoints.some(pt => Math.hypot(pt.x - randX, pt.y - randY) < minDistance);
-        if (tooClose) continue;
-        
-        // Add Procedural Asset
         placedPoints.push({ x: randX, y: randY });
         
-        const scaleVariation = state.scatterScaleMin + Math.random() * (state.scatterScaleMax - state.scatterScaleMin);
-        const rotationVal = state.scatterRandomRotation ? Math.floor(Math.random() * 360) : 0;
+        // Randomly pick between varieties of hand-drawn trees
+        const pickedTree = treeAssets.length > 0 ? treeAssets[Math.floor(Math.random() * treeAssets.length)] : fallbackAsset;
+        const scaleVal = state.scatterScaleMin + Math.random() * (state.scatterScaleMax - state.scatterScaleMin);
+        const rotVal = state.scatterRandomRotation ? Math.floor(Math.random() * 360) : 0;
         
         const newObj = {
             id: "obj_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
-            asset: assetDef.id,
-            name: assetDef.name,
-            icon: assetDef.icon,
-            color: assetDef.color,
+            asset: pickedTree.id,
+            name: pickedTree.name,
+            imgUrl: pickedTree.url,
             x: Math.round(randX),
             y: Math.round(randY),
-            rotation: rotationVal,
-            scale: parseFloat(scaleVariation.toFixed(2)),
-            w: assetDef.w || 38,
-            h: assetDef.h || 38
+            rotation: rotVal,
+            scale: parseFloat(scaleVal.toFixed(2)),
+            w: 52,
+            h: 52
         };
         
         state.objects.push(newObj);
@@ -1475,7 +1325,7 @@ function proceduralScatterIntoPlot(plot) {
     updateHudCounts();
     markDirty();
     pushHistoryState();
-    showToast(`🌲 ${addedCount} ta aktiv avtomatik joylashtirildi!`);
+    showToast(`🌲 ${addedCount} ta qadimiy daraxt uchastkaga sepildi!`);
 }
 
 function isPointInsidePlot(px, py, plot) {
@@ -1484,7 +1334,6 @@ function isPointInsidePlot(px, py, plot) {
     } else if (plot.shape === "rect") {
         return px >= plot.x && px <= plot.x + plot.w && py >= plot.y && py <= plot.y + plot.h;
     } else if (plot.points && plot.points.length > 2) {
-        // Ray-casting algorithm for Polygon
         let inside = false;
         const pts = plot.points;
         for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
@@ -1499,7 +1348,7 @@ function isPointInsidePlot(px, py, plot) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  OBJECT / ASSET PLACEMENT (Konva.Group + 2D Shadow)
+//  OBJECT / ASSET NODE CREATION (PNG Hand-Drawn Rendering)
 // ══════════════════════════════════════════════════════════════
 function createObjectNode(objData) {
     const group = new Konva.Group({
@@ -1511,54 +1360,54 @@ function createObjectNode(objData) {
         draggable: true
     });
     
-    const w = objData.w || 38;
-    const h = objData.h || 38;
+    const w = objData.w || 50;
+    const h = objData.h || 50;
     
-    // 1. Dynamic 2D Drop Shadow
+    // 1. Hand-drawn top-down soft shadow
     if (state.showShadows && state.shadowIntensity > 0) {
         const shadow = new Konva.Ellipse({
-            x: 4,
-            y: 8,
-            radiusX: w * 0.45,
-            radiusY: h * 0.28,
-            fill: `rgba(0, 0, 0, ${state.shadowIntensity * 0.6})`,
+            x: 6,
+            y: 9,
+            radiusX: w * 0.42,
+            radiusY: h * 0.32,
+            fill: `rgba(40, 30, 20, ${state.shadowIntensity * 0.5})`,
             listening: false
         });
         group.add(shadow);
     }
     
-    // 2. Base Graphic
-    const baseRect = new Konva.Rect({
-        x: -w / 2,
-        y: -h / 2,
-        width: w,
-        height: h,
-        fill: objData.color || "#475569",
-        stroke: "rgba(0,0,0,0.4)",
-        strokeWidth: 1.5,
-        cornerRadius: 6
-    });
-    group.add(baseRect);
+    // 2. Render actual transparent PNG
+    const imgUrl = objData.imgUrl || (findAssetById(objData.asset) ? findAssetById(objData.asset).url : null);
     
-    // 3. Asset Emoji / Icon Glyph
-    if (objData.icon) {
-        const textGlyph = new Konva.Text({
+    if (imgUrl) {
+        getPreloadedImage(imgUrl, (loadedImg) => {
+            const kImg = new Konva.Image({
+                x: -w / 2,
+                y: -h / 2,
+                width: w,
+                height: h,
+                image: loadedImg
+            });
+            group.add(kImg);
+            objectsLayer.batchDraw();
+        });
+    } else {
+        // Fallback block if no image
+        const baseRect = new Konva.Rect({
             x: -w / 2,
-            y: -h / 2 + 1,
+            y: -h / 2,
             width: w,
             height: h,
-            text: objData.icon,
-            fontSize: Math.min(w, h) * 0.65,
-            align: "center",
-            verticalAlign: "middle",
-            listening: false
+            fill: "#854d0e",
+            stroke: "#451a03",
+            strokeWidth: 1.5,
+            cornerRadius: 4
         });
-        group.add(textGlyph);
+        group.add(baseRect);
     }
     
     group.setAttr("objData", objData);
     
-    // Drag events
     group.on("dragend", () => {
         objData.x = Math.round(group.x());
         objData.y = Math.round(group.y());
@@ -1585,72 +1434,41 @@ function createObjectNode(objData) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  2D LIGHTING & WEATHER OVERLAY (Day, Sunset, Night, Cloudy)
+//  2D LIGHTING & OVERLAY
 // ══════════════════════════════════════════════════════════════
 function renderLightingOverlay() {
     lightingLayer.destroyChildren();
-    
     if (state.lighting === "daylight") {
         lightingLayer.batchDraw();
         return;
     }
     
     const size = 5000;
-    const x = -size / 2;
-    const y = -size / 2;
-    
     let overlayColor = "rgba(0,0,0,0)";
     if (state.lighting === "night") {
-        overlayColor = "rgba(10, 18, 45, 0.65)"; // Night dark blue overlay
+        overlayColor = "rgba(15, 23, 42, 0.65)";
     } else if (state.lighting === "sunset") {
-        overlayColor = "rgba(194, 65, 12, 0.28)"; // Sunset orange glow
+        overlayColor = "rgba(180, 83, 9, 0.25)";
     } else if (state.lighting === "cloudy") {
-        overlayColor = "rgba(148, 163, 184, 0.35)"; // Overcast light grey
+        overlayColor = "rgba(148, 163, 184, 0.3)";
     } else if (state.lighting === "torch") {
-        overlayColor = "rgba(7, 10, 18, 0.75)"; // Dungeon darkness
+        overlayColor = "rgba(10, 12, 18, 0.72)";
     }
     
-    const overlay = new Konva.Rect({
-        x: x,
-        y: y,
+    lightingLayer.add(new Konva.Rect({
+        x: -size / 2,
+        y: -size / 2,
         width: size,
         height: size,
         fill: overlayColor,
         listening: false
-    });
-    lightingLayer.add(overlay);
-    
-    // If torch or night, punch radial warm lights for torches
-    if (state.lighting === "torch" || state.lighting === "night") {
-        state.objects.forEach(obj => {
-            const def = findAssetById(obj.asset);
-            if (def && def.lightRadius) {
-                const lightCircle = new Konva.Circle({
-                    x: obj.x,
-                    y: obj.y,
-                    radius: def.lightRadius,
-                    fillRadialGradientStartPoint: { x: 0, y: 0 },
-                    fillRadialGradientStartRadius: 0,
-                    fillRadialGradientEndPoint: { x: 0, y: 0 },
-                    fillRadialGradientEndRadius: def.lightRadius,
-                    fillRadialGradientColorStops: [
-                        0, "rgba(251, 191, 36, 0.85)",
-                        0.4, "rgba(245, 158, 11, 0.4)",
-                        1, "rgba(0, 0, 0, 0)"
-                    ],
-                    globalCompositeOperation: "screen",
-                    listening: false
-                });
-                lightingLayer.add(lightCircle);
-            }
-        });
-    }
+    }));
     
     lightingLayer.batchDraw();
 }
 
 // ══════════════════════════════════════════════════════════════
-//  INTERACTION & STAGE EVENT HANDLING
+//  INTERACTIVE EVENTS
 // ══════════════════════════════════════════════════════════════
 let isDrawingBezier = false;
 let isDrawingPlot = false;
@@ -1673,14 +1491,12 @@ function onStagePointerDown(e) {
     const worldPos = getPointerWorldPos();
     updateHudCoordinates(worldPos.x, worldPos.y);
     
-    // Middle Click OR Space+Click = Pan Stage
     if (e.evt.button === 1 || e.evt.altKey || (state.activeTool === "select" && e.target === stage)) {
         startDragPointer = { x: e.evt.clientX, y: e.evt.clientY, stageX: stage.x(), stageY: stage.y() };
         stage.container().style.cursor = "grabbing";
         return;
     }
     
-    // Clicked on empty space with Select tool
     if (state.activeTool === "select" && e.target === stage) {
         transformer.nodes([]);
         state.selectedNode = null;
@@ -1688,7 +1504,6 @@ function onStagePointerDown(e) {
         return;
     }
     
-    // Bezier Path Drawing
     if (state.activeTool === "bezier") {
         isDrawingBezier = true;
         state.activeCurvePoints.push([Math.round(worldPos.x), Math.round(worldPos.y)]);
@@ -1696,7 +1511,6 @@ function onStagePointerDown(e) {
         return;
     }
     
-    // Plot Polygon Drawing
     if (state.activeTool === "plot") {
         isDrawingPlot = true;
         state.activePlotPoints.push([Math.round(worldPos.x), Math.round(worldPos.y)]);
@@ -1704,7 +1518,6 @@ function onStagePointerDown(e) {
         return;
     }
     
-    // Circle Plot
     if (state.activeTool === "circle") {
         const newPlot = {
             id: "plot_" + Date.now(),
@@ -1712,8 +1525,8 @@ function onStagePointerDown(e) {
             x: Math.round(worldPos.x),
             y: Math.round(worldPos.y),
             radius: 80,
-            fill: "rgba(2, 132, 199, 0.35)",
-            color: "#0284c7"
+            fill: "rgba(100, 130, 80, 0.25)",
+            color: "#4a5d3f"
         };
         state.plots.push(newPlot);
         createPlotShape(newPlot);
@@ -1721,11 +1534,10 @@ function onStagePointerDown(e) {
         updateHudCounts();
         markDirty();
         pushHistoryState();
-        showToast("Ko'l / Doira uchastkasi yaratildi");
+        showToast("Doira uchastka yaratildi");
         return;
     }
     
-    // Rect Plot
     if (state.activeTool === "rect") {
         const newPlot = {
             id: "plot_" + Date.now(),
@@ -1734,8 +1546,8 @@ function onStagePointerDown(e) {
             y: Math.round(worldPos.y),
             w: 160,
             h: 110,
-            fill: "rgba(245, 158, 11, 0.25)",
-            color: "#f59e0b"
+            fill: "rgba(180, 140, 90, 0.25)",
+            color: "#785a3a"
         };
         state.plots.push(newPlot);
         createPlotShape(newPlot);
@@ -1743,25 +1555,26 @@ function onStagePointerDown(e) {
         updateHudCounts();
         markDirty();
         pushHistoryState();
-        showToast("To'rtburchak uchastka yaratildi");
+        showToast("To'rtburchak kvartal yaratildi");
         return;
     }
     
-    // Stamp Single Asset
+    // Stamp Asset
     if (state.activeTool === "stamp") {
-        const asset = state.selectedAsset || currentTheme.palette[0];
+        const asset = state.selectedAsset || MEDIEVAL_ASSETS[0];
+        if (!asset) return;
+        
         const newObj = {
             id: "obj_" + Date.now(),
             asset: asset.id,
             name: asset.name,
-            icon: asset.icon,
-            color: asset.color,
+            imgUrl: asset.url,
             x: Math.round(worldPos.x),
             y: Math.round(worldPos.y),
             rotation: 0,
             scale: 1.0,
-            w: asset.w || 38,
-            h: asset.h || 38
+            w: asset.width || 56,
+            h: asset.height || 56
         };
         state.objects.push(newObj);
         createObjectNode(newObj);
@@ -1775,16 +1588,13 @@ function onStagePointerDown(e) {
 
 function onStagePointerMove(e) {
     if (startDragPointer) {
-        const dx = e.evt.clientX - startDragPointer.x;
-        const dy = e.evt.clientY - startDragPointer.y;
         stage.position({
-            x: startDragPointer.stageX + dx,
-            y: startDragPointer.stageY + dy
+            x: startDragPointer.stageX + (e.evt.clientX - startDragPointer.x),
+            y: startDragPointer.stageY + (e.evt.clientY - startDragPointer.y)
         });
         stage.batchDraw();
         return;
     }
-    
     const worldPos = getPointerWorldPos();
     updateHudCoordinates(worldPos.x, worldPos.y);
     
@@ -1795,7 +1605,7 @@ function onStagePointerMove(e) {
     }
 }
 
-function onStagePointerUp(e) {
+function onStagePointerUp() {
     if (startDragPointer) {
         startDragPointer = null;
         stage.container().style.cursor = "default";
@@ -1807,32 +1617,24 @@ function onStageWheel(e) {
     const scaleBy = 1.12;
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
-    
     const mousePointTo = {
         x: (pointer.x - stage.x()) / oldScale,
         y: (pointer.y - stage.y()) / oldScale,
     };
-    
     let direction = e.evt.deltaY < 0 ? 1 : -1;
-    let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-    newScale = Math.max(0.2, Math.min(4.0, newScale));
-    
+    let newScale = Math.max(0.2, Math.min(4.0, direction > 0 ? oldScale * scaleBy : oldScale / scaleBy));
     stage.scale({ x: newScale, y: newScale });
-    
-    const newPos = {
+    stage.position({
         x: pointer.x - mousePointTo.x * newScale,
         y: pointer.y - mousePointTo.y * newScale,
-    };
-    stage.position(newPos);
+    });
     stage.batchDraw();
-    
     document.getElementById("zoomValDisplay").textContent = Math.round(newScale * 100) + "%";
 }
 
 function zoomStage(delta) {
     const factor = delta > 0 ? 1.15 : 0.85;
-    const oldScale = stage.scaleX();
-    const newScale = Math.max(0.2, Math.min(4.0, oldScale * factor));
+    const newScale = Math.max(0.2, Math.min(4.0, stage.scaleX() * factor));
     stage.scale({ x: newScale, y: newScale });
     stage.batchDraw();
     document.getElementById("zoomValDisplay").textContent = Math.round(newScale * 100) + "%";
@@ -1853,26 +1655,20 @@ function fitCanvasView() {
     document.getElementById("zoomValDisplay").textContent = "80%";
 }
 
-// ══════════════════════════════════════════════════════════════
-//  BEZIER & PLOT DRAWING FINISHERS
-// ══════════════════════════════════════════════════════════════
 function renderTemporaryBezierPreview(movingPos) {
     tempLayer.destroyChildren();
     const pts = [...state.activeCurvePoints];
     if (movingPos) pts.push([Math.round(movingPos.x), Math.round(movingPos.y)]);
-    
     const flat = [];
     pts.forEach(p => flat.push(p[0], p[1]));
-    
-    const preview = new Konva.Line({
+    tempLayer.add(new Konva.Line({
         points: flat,
-        stroke: "#fbbf24",
+        stroke: "#785a3a",
         strokeWidth: 4,
         dash: [8, 4],
         tension: 0.45,
         bezier: true
-    });
-    tempLayer.add(preview);
+    }));
     tempLayer.batchDraw();
 }
 
@@ -1880,69 +1676,60 @@ function renderTemporaryPlotPreview(movingPos) {
     tempLayer.destroyChildren();
     const pts = [...state.activePlotPoints];
     if (movingPos) pts.push([Math.round(movingPos.x), Math.round(movingPos.y)]);
-    
     const flat = [];
     pts.forEach(p => flat.push(p[0], p[1]));
-    
-    const preview = new Konva.Line({
+    tempLayer.add(new Konva.Line({
         points: flat,
-        stroke: "#10b981",
+        stroke: "#4a5d3f",
         strokeWidth: 2,
-        fill: "rgba(16, 185, 129, 0.2)",
+        fill: "rgba(100, 130, 80, 0.2)",
         dash: [6, 4],
         closed: true
-    });
-    tempLayer.add(preview);
+    }));
     tempLayer.batchDraw();
 }
 
-// Double click to finish Bezier line or Plot
+// Double click to finish line or plot
 window.addEventListener("dblclick", () => {
     if (isDrawingBezier && state.activeCurvePoints.length > 1) {
         const newPath = {
             id: "path_" + Date.now(),
-            type: "river",
-            width: 24,
-            color: "#0284c7",
+            type: "road",
+            width: 18,
+            color: "#4a3c2c",
             points: [...state.activeCurvePoints]
         };
         state.paths.push(newPath);
         createBezierPath(newPath);
         pathsLayer.batchDraw();
-        
         state.activeCurvePoints = [];
         isDrawingBezier = false;
         tempLayer.destroyChildren();
         tempLayer.batchDraw();
         markDirty();
         pushHistoryState();
-        showToast("Bezier daryo/yo'li yakunlandi!");
+        showToast("Egri yo'l yakunlandi!");
     } else if (isDrawingPlot && state.activePlotPoints.length > 2) {
         const newPlot = {
             id: "plot_" + Date.now(),
             shape: "polygon",
             points: [...state.activePlotPoints],
-            fill: "rgba(22, 101, 52, 0.35)",
-            color: "#166534",
-            defaultScatterAsset: "v_tree_oak"
+            fill: "rgba(100, 130, 80, 0.25)",
+            color: "#4a5d3f"
         };
         state.plots.push(newPlot);
         createPlotShape(newPlot);
         plotsLayer.batchDraw();
-        
         state.activePlotPoints = [];
         isDrawingPlot = false;
         tempLayer.destroyChildren();
         tempLayer.batchDraw();
         markDirty();
         pushHistoryState();
-        showToast("O'rmon uchastkasi tayyor!");
+        showToast("Uchastka tayyor!");
     }
 });
 
-// ══════════════════════════════════════════════════════════════
-//  SELECT & TRANSFORM
-// ══════════════════════════════════════════════════════════════
 function selectItem(node, type) {
     state.selectedNode = node;
     if (type === "object") {
@@ -1981,29 +1768,19 @@ function removePath(pathData) {
     showToast("Yo'l o'chirildi");
 }
 
-// ══════════════════════════════════════════════════════════════
-//  RENDER ALL FROM STATE
-// ══════════════════════════════════════════════════════════════
 function renderAllFromState() {
     plotsLayer.destroyChildren();
     pathsLayer.destroyChildren();
     objectsLayer.destroyChildren();
-    
     objectsLayer.add(transformer);
     
-    // Plots
     state.plots.forEach(plot => createPlotShape(plot));
-    
-    // Paths
     state.paths.forEach(path => createBezierPath(path));
-    
-    // Objects
     state.objects.forEach(obj => createObjectNode(obj));
     
     plotsLayer.batchDraw();
     pathsLayer.batchDraw();
     objectsLayer.batchDraw();
-    
     renderLightingOverlay();
     updateHudCounts();
 }
@@ -2019,41 +1796,27 @@ function updateHudCounts() {
 }
 
 function findAssetById(id) {
-    for (let key in THEME_PRESETS) {
-        const found = THEME_PRESETS[key].palette.find(p => p.id === id);
-        if (found) return found;
-    }
-    return currentTheme.palette[0];
+    return MEDIEVAL_ASSETS.find(a => a.id === id);
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PALETTE & INSPECTOR BUILDERS
+//  PALETTE BUILDER
 // ══════════════════════════════════════════════════════════════
 function buildMaterialPalette() {
     const container = document.getElementById("paletteListContainer");
     container.innerHTML = "";
     
     const categories = {
-        "Uchastkalar (Plots)": [],
-        "Tabiat & Daraxtlar": [],
-        "Bino & Inshoot": [],
-        "Relyef & Detallar": []
+        "Kingsbridge (Qo'lda Chizilgan)": MEDIEVAL_ASSETS,
+        "Uchastkalar (Plots)": [
+            { id: "pl_forest", name: "O'rmon Hududi", category: "Uchastka", icon: "🌲", type: "plot_tool" },
+            { id: "pl_lake", name: "Ko'l / Suv Havzasi", category: "Uchastka", icon: "💧", type: "circle_tool" },
+            { id: "pl_town", name: "Shahar Kvartali", category: "Uchastka", icon: "🏰", type: "rect_tool" }
+        ]
     };
     
-    currentTheme.palette.forEach(item => {
-        if (item.type === "plot") {
-            categories["Uchastkalar (Plots)"].push(item);
-        } else if (item.category === "Tabiat") {
-            categories["Tabiat & Daraxtlar"].push(item);
-        } else if (item.category.includes("Bino")) {
-            categories["Bino & Inshoot"].push(item);
-        } else {
-            categories["Relyef & Detallar"].push(item);
-        }
-    });
-    
     Object.entries(categories).forEach(([catName, items]) => {
-        if (items.length === 0) return;
+        if (!items || items.length === 0) return;
         const section = document.createElement("div");
         section.className = "palette-group-section";
         
@@ -2069,9 +1832,17 @@ function buildMaterialPalette() {
             const card = document.createElement("div");
             card.className = "material-card" + (state.selectedAsset && state.selectedAsset.id === mat.id ? " active" : "");
             card.onclick = () => selectPaletteAsset(mat);
+            
+            let previewInner = "";
+            if (mat.url) {
+                previewInner = `<img src="${mat.url}" alt="${mat.name}">`;
+            } else {
+                previewInner = `<span style="font-size:1.4rem;">${mat.icon || '📦'}</span>`;
+            }
+            
             card.innerHTML = `
-                <div class="material-preview-box" style="border-color:${mat.color}44;">
-                    ${mat.icon}
+                <div class="material-preview-box">
+                    ${previewInner}
                 </div>
                 <div class="material-name" title="${mat.name}">${mat.name}</div>
             `;
@@ -2085,11 +1856,11 @@ function buildMaterialPalette() {
 
 function selectPaletteAsset(mat) {
     state.selectedAsset = mat;
-    if (mat.type === "plot") {
-        setTool("plot");
-    } else {
-        setTool("stamp");
-    }
+    if (mat.type === "plot_tool") setTool("plot");
+    else if (mat.type === "circle_tool") setTool("circle");
+    else if (mat.type === "rect_tool") setTool("rect");
+    else setTool("stamp");
+    
     buildMaterialPalette();
     showToast(`${mat.name} tanlandi`);
 }
@@ -2099,10 +1870,7 @@ function setTool(toolName) {
     document.querySelectorAll(".tool-icon-btn").forEach(b => b.classList.remove("active"));
     const activeBtn = document.getElementById("tool_" + toolName);
     if (activeBtn) activeBtn.classList.add("active");
-    
-    if (toolName !== "select") {
-        transformer.nodes([]);
-    }
+    if (toolName !== "select") transformer.nodes([]);
     showToast(`Asbob: ${toolName.toUpperCase()}`);
 }
 
@@ -2110,12 +1878,12 @@ function buildInspectorControls() {
     const container = document.getElementById("inspectorContent");
     container.innerHTML = "";
     
-    // Scatter Settings section
+    // Scatter Settings
     const scatterSec = document.createElement("div");
     scatterSec.className = "insp-section";
     scatterSec.innerHTML = `
         <div class="insp-section-title">
-            <span>🌲 Avtomatik Sepish (Scatter)</span>
+            <span>🌲 Uchastkaga Daraxt Sepish</span>
         </div>
         <div class="control-row">
             <span class="control-label">Aktiv turi:</span>
@@ -2125,17 +1893,13 @@ function buildInspectorControls() {
             <span class="control-label">Zichlik (Density):</span>
             <input type="range" class="ck-range" min="10" max="100" value="${Math.round(state.scatterDensity * 100)}" oninput="state.scatterDensity = this.value / 100">
         </div>
-        <div class="control-row">
-            <span class="control-label">Tasodifiy aylanish:</span>
-            <input type="checkbox" ${state.scatterRandomRotation ? 'checked' : ''} onchange="state.scatterRandomRotation = this.checked" style="accent-color:var(--gold);">
-        </div>
         <button class="btn-header gold" style="width:100%;margin-top:8px;justify-content:center;" onclick="triggerScatterSelected()">
-            ✨ Uchastkaga Sepish
+            ✨ Uchastkaga Daraxt Sepish
         </button>
     `;
     container.appendChild(scatterSec);
     
-    // General Map Settings
+    // Map Settings
     const mapSec = document.createElement("div");
     mapSec.className = "insp-section";
     mapSec.innerHTML = `
@@ -2148,12 +1912,7 @@ function buildInspectorControls() {
                 <option value="16" ${state.gridSize===16?'selected':''}>16 px</option>
                 <option value="32" ${state.gridSize===32?'selected':''}>32 px (Standart)</option>
                 <option value="48" ${state.gridSize===48?'selected':''}>48 px</option>
-                <option value="64" ${state.gridSize===64?'selected':''}>64 px</option>
             </select>
-        </div>
-        <div class="control-row">
-            <span class="control-label">Yorug'lik:</span>
-            <span class="control-val">${state.lighting|title}</span>
         </div>
     `;
     container.appendChild(mapSec);
@@ -2161,18 +1920,13 @@ function buildInspectorControls() {
 
 function triggerScatterSelected() {
     if (state.plots.length === 0) {
-        showToast("Avval biror uchastka (o'rmon) chizing!");
+        showToast("Avval biror uchastka chizing!");
         setTool("plot");
         return;
     }
-    // Scatter into last plot or selected plot
-    const targetPlot = state.plots[state.plots.length - 1];
-    proceduralScatterIntoPlot(targetPlot);
+    proceduralScatterIntoPlot(state.plots[state.plots.length - 1]);
 }
 
-// ══════════════════════════════════════════════════════════════
-//  TOPBAR ACTIONS & MODALS
-// ══════════════════════════════════════════════════════════════
 function toggleGridDisplay() {
     state.showGrid = !state.showGrid;
     document.getElementById("gridBtnText").textContent = "Grid: " + (state.showGrid ? "On" : "Off");
@@ -2189,7 +1943,6 @@ function openEnvironmentModal() {
     document.getElementById("envLightingSelect").value = state.lighting;
     document.getElementById("paperThemeSelect").value = state.paper;
     document.getElementById("shadowIntRange").value = Math.round(state.shadowIntensity * 100);
-    document.getElementById("vignetteCheck").checked = state.vignette;
     document.getElementById("envModal").classList.add("show");
 }
 
@@ -2215,24 +1968,13 @@ function updateShadowSetting(val) {
     markDirty();
 }
 
-function toggleVignette(checked) {
-    state.vignette = checked;
-    markDirty();
-}
-
-// ══════════════════════════════════════════════════════════════
-//  HISTORY (UNDO / REDO)
-// ══════════════════════════════════════════════════════════════
 function pushHistoryState() {
-    if (historyIndex < historyStack.length - 1) {
-        historyStack.splice(historyIndex + 1);
-    }
-    const snapshot = {
+    if (historyIndex < historyStack.length - 1) historyStack.splice(historyIndex + 1);
+    historyStack.push({
         paths: JSON.parse(JSON.stringify(state.paths)),
         plots: JSON.parse(JSON.stringify(state.plots)),
         objects: JSON.parse(JSON.stringify(state.objects))
-    };
-    historyStack.push(snapshot);
+    });
     if (historyStack.length > 30) historyStack.shift();
     historyIndex = historyStack.length - 1;
 }
@@ -2261,9 +2003,6 @@ function restoreHistoryState(s) {
     markDirty();
 }
 
-// ══════════════════════════════════════════════════════════════
-//  PERSISTENCE & EXPORTS
-// ══════════════════════════════════════════════════════════════
 function markDirty() {
     state.isDirty = true;
     document.getElementById("saveDot").classList.add("dirty");
@@ -2287,7 +2026,6 @@ async function saveMapData() {
             paperTheme: state.paper,
             lighting: state.lighting,
             shadowIntensity: state.shadowIntensity,
-            vignette: state.vignette,
             gridSize: state.gridSize,
             paths: state.paths,
             plots: state.plots,
@@ -2365,41 +2103,21 @@ function getCookie(name) {
     return cookieValue;
 }
 
-// Shortcuts
+// Keyboard shortcuts
 document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-    if (e.ctrlKey && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-        saveMapData();
-    } else if (e.ctrlKey && e.key.toLowerCase() === "z") {
-        e.preventDefault();
-        undo();
-    } else if (e.ctrlKey && e.key.toLowerCase() === "y") {
-        e.preventDefault();
-        redo();
-    } else if (e.key.toLowerCase() === "v") {
-        setTool("select");
-    } else if (e.key.toLowerCase() === "b") {
-        setTool("bezier");
-    } else if (e.key.toLowerCase() === "p") {
-        setTool("plot");
-    } else if (e.key.toLowerCase() === "s") {
-        setTool("stamp");
-    } else if (e.key.toLowerCase() === "a") {
-        setTool("scatter");
-    } else if (e.key.toLowerCase() === "e") {
-        setTool("erase");
-    }
+    if (e.ctrlKey && e.key.toLowerCase() === "s") { e.preventDefault(); saveMapData(); }
+    else if (e.ctrlKey && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); }
+    else if (e.ctrlKey && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); }
+    else if (e.key.toLowerCase() === "v") setTool("select");
+    else if (e.key.toLowerCase() === "s") setTool("stamp");
+    else if (e.key.toLowerCase() === "b") setTool("bezier");
+    else if (e.key.toLowerCase() === "p") setTool("plot");
+    else if (e.key.toLowerCase() === "a") setTool("scatter");
+    else if (e.key.toLowerCase() === "e") setTool("erase");
 });
 
-// Auto-save every 45 seconds
-setInterval(() => {
-    if (state.isDirty) {
-        saveMapData();
-    }
-}, 45000);
-
-// Init on DOM load
+setInterval(() => { if (state.isDirty) saveMapData(); }, 45000);
 window.addEventListener("DOMContentLoaded", initKonvaApp);
 </script>
 </body>
