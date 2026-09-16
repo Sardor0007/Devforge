@@ -483,6 +483,8 @@ def set_language_view(request, lang_code):
     supported = [code for code, _ in settings.LANGUAGES]
     if lang_code in supported:
         translation.activate(lang_code)
+        if hasattr(translation, 'LANGUAGE_SESSION_KEY'):
+            request.session[translation.LANGUAGE_SESSION_KEY] = lang_code
         request.session['_language'] = lang_code
         request.session['django_language'] = lang_code
 
@@ -498,6 +500,7 @@ def set_language_view(request, lang_code):
             cookie_name,
             lang_code,
             max_age=365 * 24 * 60 * 60,
+            path='/',
             samesite='Lax'
         )
     return response
