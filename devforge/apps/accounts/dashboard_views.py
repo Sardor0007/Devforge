@@ -41,6 +41,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from apps.accounts.models import User, Subscription, UserBalance, SiteConfig
+from apps.accounts.studios import get_studios_status, toggle_studio_visibility, set_all_studios_visibility, STUDIO_DEFINITIONS
 from apps.feed.models import Post
 import decimal
 
@@ -82,21 +83,47 @@ def super_admin_dashboard(request):
         'total_posts': posts.count(),
         'pending_assets': assets.filter(is_approved=False).count(),
         'plan_choices': Subscription.PLAN_CHOICES,
-        'all_studios_enabled': SiteConfig.get_bool('all_studios_enabled', default=False),
+        'studios_list': get_studios_status(),
+        'all_studios_enabled': all(s['is_enabled'] for s in get_studios_status()),
     }
     return render(request, 'dashboard/super_admin.html', context)
 
 @login_required
 @user_passes_test(lambda u: u.is_staff or u.is_superuser)
 @require_POST
-def super_admin_toggle_all_studios(request):
-    current = SiteConfig.get_bool('all_studios_enabled', default=False)
-    new_val = not current
-    SiteConfig.set_bool('all_studios_enabled', new_val, description="Show all studios in Studio Suite dropdown")
+def super_admin_toggle_studio(request, studio_id):
+    new_val = toggle_studio_visibility(studio_id)
+    studio_name = next((s['name'] for s in STUDIO_DEFINITIONS if s['id'] == studio_id or s['config_key'] == studio_id), studio_id)
     if new_val:
-        messages.success(request, "Studio Suite: Barcha studiolarni ko'rsatish YOQILDI!")
+        messages.success(request, f"Studio Suite: {studio_name} muvaffaqiyatli YOQILDI!")
     else:
-        messages.info(request, "Studio Suite: Cheklov yoqildi (faqat 3D Studio ko'rsatiladi).")
+        messages.info(request, f"Studio Suite: {studio_name} O'CHIRILDI (yashirildi).")
+    return redirect('super_admin_dashboard')
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
+@require_POST
+def super_admin_set_all_studios(request, action):
+    enable = (action == 'enable')
+    set_all_studios_visibility(enable)
+    if enable:
+        messages.success(request, "Studio Suite: Barcha studiyalar ko'rsatishga YOQILDI!")
+    else:
+        messages.info(request, "Studio Suite: Barcha studiyalar O'CHIRILDI (yashirildi).")
+    return redirect('super_admin_dashboard')
+
+@login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
+@require_POST
+def super_admin_toggle_all_studios(request):
+    studios = get_studios_status()
+    all_on = all(s['is_enabled'] for s in studios)
+    new_val = not all_on
+    set_all_studios_visibility(new_val)
+    if new_val:
+        messages.success(request, "Studio Suite: Barcha studiyalar YOQILDI!")
+    else:
+        messages.info(request, "Studio Suite: Barcha studiyalar O'CHIRILDI.")
     return redirect('super_admin_dashboard')
 
 

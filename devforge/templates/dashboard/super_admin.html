@@ -231,33 +231,74 @@
                 </div>
             </div>
 
-            <!-- FEATURE FLAG: Studio Suite Toggle -->
-            <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(167,139,250,0.05); border: 1px solid rgba(167,139,250,0.25); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                        <span style="font-family: monospace; font-weight: 700; color: #a78bfa; font-size: 0.92rem;">🎛️ Studio Suite — Barcha studiolarni ko'rsatish</span>
-                        {% if all_studios_enabled %}
-                            <span class="dev-badge ok">● YOQILGAN (Barcha 6 ta studio)</span>
-                        {% else %}
-                            <span class="dev-badge muted">○ O'CHIRILGAN (Faqat 3D Studio)</span>
-                        {% endif %}
+            <!-- FEATURE FLAGS: Studio Suite Management (Individual Studio Visibility) -->
+            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(167,139,250,0.04); border: 1px solid rgba(167,139,250,0.25); border-radius: var(--radius-lg);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-family: monospace; font-weight: 800; color: #a78bfa; font-size: 1rem;">🎛️ Studio Suite — Studiyalar Ko'rinishini Boshqarish</span>
+                            <span class="dev-badge purple">{{ studios_list|length }} ta Studio</span>
+                        </div>
+                        <div style="font-size: 0.83rem; color: var(--text-secondary); margin-top: 0.3rem;">
+                            Foydalanuvchilar menyusida (Studio Suite) aynan qaysi studiyalar ko'rinishi yoki yashirilishini alohida sozlang.
+                        </div>
                     </div>
-                    <div style="font-size: 0.82rem; color: var(--text-secondary);">
-                        Dasturchi opsiyasi: Yoqilsa foydalanuvchilar menyusida barcha studiolar (3D, Image, Audio, Video, World, Game Engine) ko'rinadi.<br>O'chirilsa faqat 3D Studio ko'rinadi.
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <form action="{% url 'super_admin_set_all_studios' action='enable' %}" method="post" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="dev-action approve" style="padding: 0.45rem 0.9rem; font-family: monospace;">
+                                🟢 Barchasini yoqish
+                            </button>
+                        </form>
+                        <form action="{% url 'super_admin_set_all_studios' action='disable' %}" method="post" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" class="dev-action remove" style="padding: 0.45rem 0.9rem; font-family: monospace;">
+                                🔴 Barchasini yashirish
+                            </button>
+                        </form>
                     </div>
                 </div>
-                <form action="{% url 'super_admin_toggle_all_studios' %}" method="post" style="margin: 0;">
-                    {% csrf_token %}
-                    {% if all_studios_enabled %}
-                        <button type="submit" class="dev-action remove" style="padding: 0.6rem 1.25rem; font-size: 0.85rem; font-family: monospace;">
-                            🔴 Studiolarni berkitish (Faqat 3D)
-                        </button>
-                    {% else %}
-                        <button type="submit" class="dev-action approve" style="padding: 0.6rem 1.25rem; font-size: 0.85rem; font-family: monospace;">
-                            🟢 Barcha studiolarni ko'rsatish
-                        </button>
-                    {% endif %}
-                </form>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                    {% for studio in studios_list %}
+                    <div style="padding: 1.1rem 1.25rem; background: var(--surface); border: 1px solid {% if studio.is_enabled %}rgba(52,211,153,0.28){% else %}var(--border){% endif %}; border-radius: var(--radius-md); display: flex; flex-direction: column; justify-content: space-between; gap: 0.8rem; transition: var(--transition);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 1.25rem;">{{ studio.icon }}</span>
+                                    <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ studio.name }}</strong>
+                                </div>
+                                {% if studio.is_enabled %}
+                                    <span class="dev-badge ok">● KO'RINADI</span>
+                                {% else %}
+                                    <span class="dev-badge muted">○ YASHIRILGAN</span>
+                                {% endif %}
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                                {{ studio.description }}
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 0.6rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <a href="{% url studio.url_name %}" target="_blank" style="font-size: 0.75rem; color: #a78bfa; text-decoration: none; font-family: monospace;">
+                                Ochib ko'rish ↗
+                            </a>
+                            <form action="{% url 'super_admin_toggle_studio' studio_id=studio.id %}" method="post" style="margin: 0;">
+                                {% csrf_token %}
+                                {% if studio.is_enabled %}
+                                    <button type="submit" class="dev-action remove" style="padding: 0.35rem 0.85rem; font-family: monospace;">
+                                        Yashirish
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="dev-action approve" style="padding: 0.35rem 0.85rem; font-family: monospace;">
+                                        Ko'rsatish
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

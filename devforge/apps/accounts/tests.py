@@ -143,3 +143,54 @@ class TransactionModelTest(TestCase):
         txs = list(self.Transaction.objects.filter(user=self.user))
         # En yangi birinchi (ordering = ['-created_at'])
         self.assertEqual(txs[0].description, 'Second')
+
+
+class StudioVisibilityTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_superuser(
+            username='adminuser', email='admin@devforge.uz', password='adminpass123'
+        )
+        self.client.force_login(self.admin)
+
+    def test_studios_status_default(self):
+        from apps.accounts.studios import get_studios_status
+        studios = get_studios_status()
+        self.assertEqual(len(studios), 6)
+        # Default barchasi yoqilgan
+        for s in studios:
+            self.assertTrue(s['is_enabled'])
+
+    def test_toggle_single_studio(self):
+        from apps.accounts.studios import toggle_studio_visibility, get_studios_status
+        # Image Editorni o'chirib ko'ramiz
+        new_val = toggle_studio_visibility('studio_image')
+        self.assertFalse(new_val)
+
+        studios = {s['id']: s['is_enabled'] for s in get_studios_status()}
+        self.assertFalse(studios['studio_image'])
+        self.assertTrue(studios['studio_3d'])
+
+        # Qayta yoqamiz
+        new_val = toggle_studio_visibility('studio_image')
+        self.assertTrue(new_val)
+
+    def test_set_all_studios_visibility(self):
+        from apps.accounts.studios import set_all_studios_visibility, get_studios_status
+        set_all_studios_visibility(False)
+        studios = get_studios_status()
+        self.assertTrue(all(not s['is_enabled'] for s in studios))
+
+        set_all_studios_visibility(True)
+        studios = get_studios_status()
+        self.assertTrue(all(s['is_enabled'] for s in studios))
+
+    def test_super_admin_toggle_studio_view(self):
+        url = reverse('super_admin_toggle_studio', kwargs={'studio_id': 'studio_audio'})
+        response = self.client.post(url)
+        self.assertRedirects(response, reverse('super_admin_dashboard'))
+
+        from apps.accounts.studios import get_studios_status
+        studios = {s['id']: s['is_enabled'] for s in get_studios_status()}
+        self.assertFalse(studios['studio_audio'])
+

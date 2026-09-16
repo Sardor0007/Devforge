@@ -1,16 +1,13 @@
 from .models import SiteConfig
+from .studios import get_studios_context
 
 def site_settings(request):
     """Inject global feature flags and site configuration into template context."""
-    return {
-        'all_studios_enabled': SiteConfig.get_bool('all_studios_enabled', default=False)
-    }
+    return get_studios_context()
 
 def subscription_status(request):
     """Inject the current user's subscription info into template context."""
-    res = {
-        'all_studios_enabled': SiteConfig.get_bool('all_studios_enabled', default=False)
-    }
+    res = get_studios_context()
     if request.user.is_authenticated:
         res.update({
             'subscription_type': request.user.subscription_type,
