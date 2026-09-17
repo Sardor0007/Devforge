@@ -240,6 +240,7 @@ main.container { flex: 1; min-height: 0; max-width: 100% !important; width: 100%
         <button class="tree-btn" onclick="newFolderPrompt()" title="Yangi papka">📁</button>
         <button class="tree-btn" onclick="document.getElementById('localUploadInput').click()" title="Fayl yuklash">⬆</button>
         <button class="tree-btn" onclick="document.getElementById('folderUploadInput').click()" title="Papka yuklash">📂</button>
+        <a href="{% url 'project_download' pk=project.pk %}" class="tree-btn" title="Loyihani ZIP formatda export qilish" style="text-decoration:none;display:inline-flex;align-items:center;">📤</a>
       </div>
 
       <!-- Hidden file inputs -->

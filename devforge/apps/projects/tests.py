@@ -194,3 +194,38 @@ class ProjectDownloadTest(TestCase):
         self.client.post(toggle_url)
         self.project.refresh_from_db()
         self.assertTrue(self.project.download_enabled)
+
+    def test_export_workspace_files_as_zip(self):
+        from apps.workspace.models import Workspace, WorkspaceFile
+        import zipfile, io
+        ws, _ = Workspace.objects.get_or_create(project=self.project)
+        WorkspaceFile.objects.create(workspace=ws, name="main.py", path="/", content="print('hello world')")
+
+        self.client.force_login(self.creator)
+        url = reverse('project_download', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+
+        # Test ZIP structure
+        zip_obj = zipfile.ZipFile(io.BytesIO(response.content))
+        names = zip_obj.namelist()
+        self.assertIn("main.py", names)
+        self.assertIn("README.md", names)
+        self.assertEqual(zip_obj.read("main.py"), b"print('hello world')")
+
+    def test_export_single_file(self):
+        from apps.workspace.models import Workspace, WorkspaceFile
+        ws, _ = Workspace.objects.get_or_create(project=self.project)
+        f = WorkspaceFile.objects.create(workspace=ws, name="app.js", path="/", content="console.log('hi');")
+
+        # Free user cannot export
+        self.client.force_login(self.free_user)
+        res = self.client.get(reverse('project_export_file', kwargs={'pk': self.project.pk, 'file_pk': f.pk}))
+        self.assertEqual(res.status_code, 302)
+
+        # Owner can export
+        self.client.force_login(self.creator)
+        res = self.client.get(reverse('project_export_file', kwargs={'pk': self.project.pk, 'file_pk': f.pk}))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.content, b"console.log('hi');")

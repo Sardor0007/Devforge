@@ -3,9 +3,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q
 from django.http import HttpResponse, Http404, JsonResponse
-import os, mimetypes
+from django.utils.text import slugify
+from django.utils import timezone
+import os, mimetypes, io, zipfile
 from .models import Project, ProjectRole, ProjectMember, Task, ProjectDownloadPermission
 from .forms import ProjectForm, ProjectRoleForm, TaskForm
+from apps.workspace.models import Workspace, WorkspaceFile
 
 
 @login_required
@@ -209,14 +212,21 @@ def project_detail_view(request, pk):
         for member in members:
             member.has_download_perm = member.user_id in permitted_user_ids
 
+    # Workspace files preview for export
+    workspace, _ = Workspace.objects.get_or_create(project=project)
+    workspace_files = workspace.files.filter(is_folder=False).order_by('path', 'name')
+    total_files_count = workspace_files.count()
+
     return render(request, 'projects/detail.html', {
         'project': project, 'members': members, 'open_roles': open_roles,
         'pending_requests': pending_requests, 'tasks': tasks,
         'is_member': is_member, 'is_creator': is_creator, 'has_pending': has_pending,
-        # Download
+        # Download & Export
         'download_allowed': download_allowed,
         'download_reason': download_reason,
         'download_permissions_list': download_permissions_list,
+        'workspace_files': workspace_files,
+        'total_files_count': total_files_count,
     })
 
 
@@ -253,57 +263,138 @@ def project_upload_file_view(request, pk):
 
 @login_required
 def project_toggle_download_view(request, pk):
-    """Egasi yuklab olishni yoqadi / o'chiradi."""
+    """Egasi loyihani export / yuklab olishni yoqadi yoki o'chiradi."""
     project = get_object_or_404(Project, pk=pk, creator=request.user)
     if request.method == 'POST':
-        if not project.project_file:
-            messages.error(request, "Avval loyiha faylini yuklang.")
-            return redirect('project_detail', pk=pk)
         project.download_enabled = not project.download_enabled
         project.save(update_fields=['download_enabled'])
         state = "yoqildi ✅" if project.download_enabled else "o'chirildi ❌"
-        messages.success(request, f"Yuklab olish {state}")
+        messages.success(request, f"Loyihani export qilish {state}")
     return redirect('project_detail', pk=pk)
 
 
 @login_required
 def project_download_view(request, pk):
-    """Foydalanuvchi loyiha faylini yuklab oladi."""
+    """
+    Loyihani va uning fayllarini ZIP arxiv shaklida export / yuklab olish.
+    Loyiha egasi doimo yuklab ola oladi.
+    Boshqalar faqat obuna sotib olgan va egasi ruxsat bergan bo'lsa yuklab ola oladi.
+    """
     project = get_object_or_404(Project, pk=pk)
 
     allowed, reason = _has_download_access(project, request.user)
     if not allowed:
         reason_map = {
-            'download_disabled': "Bu loyiha uchun yuklab olish yoqilmagan.",
-            'subscription_required': "Loyihani yuklab olish uchun Pro obuna kerak.",
-            'permission_required': "Loyiha egasi sizga yuklab olish ruxsatini bermagan.",
+            'download_disabled': "Bu loyiha uchun export / yuklab olish yoqilmagan.",
+            'subscription_required': "Loyihani export qilish uchun Pro obuna kerak.",
+            'permission_required': "Loyiha egasi sizga export / yuklab olish ruxsatini bermagan.",
         }
         messages.error(request, reason_map.get(reason, "Ruxsat yo'q."))
         return redirect('project_detail', pk=pk)
 
-    if not project.project_file:
-        messages.error(request, "Loyiha fayli hali yuklanmagan.")
+    # In-memory ZIP arxiv yaratish
+    zip_buffer = io.BytesIO()
+    has_content = False
+
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # 1. Workspace fayllarini arxivga kiritish
+        workspace = getattr(project, 'workspace', None)
+        if workspace:
+            for wf in workspace.files.filter(is_folder=False):
+                clean_path = wf.full_path().lstrip('/')
+                if wf.binary_file and os.path.exists(wf.binary_file.path):
+                    zf.write(wf.binary_file.path, arcname=clean_path)
+                    has_content = True
+                elif wf.content is not None:
+                    zf.writestr(clean_path, wf.content)
+                    has_content = True
+
+        # 2. Yuklangan qo'shimcha fayl
+        if project.project_file and os.path.exists(project.project_file.path):
+            file_name = os.path.basename(project.project_file.path)
+            if not has_content and file_name.lower().endswith(('.zip', '.rar', '.7z', '.tar.gz')):
+                # Agar faqat bitta yuklangan arxiv bo'lsa, to'g'ridan to'g'ri o'shani yuborish
+                mime_type, _ = mimetypes.guess_type(project.project_file.path)
+                mime_type = mime_type or 'application/octet-stream'
+                with open(project.project_file.path, 'rb') as fh:
+                    response = HttpResponse(fh.read(), content_type=mime_type)
+                    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+                    response['Content-Length'] = os.path.getsize(project.project_file.path)
+                    return response
+            else:
+                zf.write(project.project_file.path, arcname=f"uploads/{file_name}")
+                has_content = True
+
+        # 3. README.md ma'lumot hujjati
+        readme_text = f"""# {project.title}
+
+{project.description}
+
+## Loyiha Ma'lumotlari
+- **Muallif:** @{project.creator.username}
+- **Janr:** {project.get_genre_display()}
+- **Holat:** {project.get_status_display()}
+- **Tech Stack:** {project.tech_stack or 'N/A'}
+- **Export Sanasi:** {timezone.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
+- **A'zolar Soni:** {project.member_count}
+
+---
+*DevForge Platformasi orqali export qilingan.*
+"""
+        zf.writestr("README.md", readme_text)
+
+    zip_buffer.seek(0)
+    zip_data = zip_buffer.getvalue()
+
+    safe_title = slugify(project.title) or f"project_{project.pk}"
+    export_filename = f"{safe_title}_export.zip"
+
+    response = HttpResponse(zip_data, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{export_filename}"'
+    response['Content-Length'] = len(zip_data)
+    return response
+
+
+@login_required
+def project_export_file_view(request, pk, file_pk):
+    """Loyiha ichidagi bitta faylni yuklab olish / export qilish."""
+    project = get_object_or_404(Project, pk=pk)
+
+    allowed, reason = _has_download_access(project, request.user)
+    if not allowed:
+        reason_map = {
+            'download_disabled': "Bu loyiha uchun export yoqilmagan.",
+            'subscription_required': "Faylni yuklab olish uchun Pro obuna kerak.",
+            'permission_required': "Loyiha egasi sizga export ruxsatini bermagan.",
+        }
+        messages.error(request, reason_map.get(reason, "Ruxsat yo'q."))
         return redirect('project_detail', pk=pk)
 
-    try:
-        file_path = project.project_file.path
-        if not os.path.exists(file_path):
-            raise Http404("Fayl topilmadi.")
+    workspace = getattr(project, 'workspace', None)
+    if not workspace:
+        raise Http404("Workspace topilmadi.")
 
-        file_name = os.path.basename(file_path)
-        mime_type, _ = mimetypes.guess_type(file_path)
+    wf = get_object_or_404(WorkspaceFile, pk=file_pk, workspace=workspace)
+    if wf.is_folder:
+        messages.error(request, "Papkani alohida yuklab bo'lmaydi. Butun loyihani ZIP qilib export qiling.")
+        return redirect('project_detail', pk=pk)
+
+    if wf.binary_file and os.path.exists(wf.binary_file.path):
+        mime_type, _ = mimetypes.guess_type(wf.binary_file.path)
         mime_type = mime_type or 'application/octet-stream'
-
-        with open(file_path, 'rb') as fh:
+        with open(wf.binary_file.path, 'rb') as fh:
             response = HttpResponse(fh.read(), content_type=mime_type)
-            response['Content-Disposition'] = f'attachment; filename="{file_name}"'
-            response['Content-Length'] = os.path.getsize(file_path)
+            response['Content-Disposition'] = f'attachment; filename="{wf.name}"'
+            response['Content-Length'] = os.path.getsize(wf.binary_file.path)
             return response
-    except Http404:
-        raise
-    except Exception as e:
-        messages.error(request, "Fayl yuklab olishda xatolik yuz berdi.")
-        return redirect('project_detail', pk=pk)
+    else:
+        mime_type, _ = mimetypes.guess_type(wf.name)
+        mime_type = mime_type or 'text/plain; charset=utf-8'
+        content = (wf.content or '').encode('utf-8')
+        response = HttpResponse(content, content_type=mime_type)
+        response['Content-Disposition'] = f'attachment; filename="{wf.name}"'
+        response['Content-Length'] = len(content)
+        return response
 
 
 @login_required
