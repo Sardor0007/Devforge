@@ -120,3 +120,77 @@ class ProjectRoleTest(TestCase):
         ProjectRole.objects.create(project=self.project, role_type='artist')
         ProjectRole.objects.create(project=self.project, role_type='designer', is_filled=True)
         self.assertEqual(self.project.open_roles_count, 2)
+
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import ProjectDownloadPermission
+
+
+class ProjectDownloadTest(TestCase):
+    def setUp(self):
+        self.creator = User.objects.create_user(
+            username='owner', email='owner@test.com', password='pass', subscription_type='free'
+        )
+        self.pro_user = User.objects.create_user(
+            username='prouser', email='pro@test.com', password='pass', subscription_type='pro'
+        )
+        self.free_user = User.objects.create_user(
+            username='freeuser', email='free@test.com', password='pass', subscription_type='free'
+        )
+        dummy_file = SimpleUploadedFile("project.zip", b"fake zip content", content_type="application/zip")
+        self.project = Project.objects.create(
+            title='Downloadable Game',
+            description='Test game',
+            creator=self.creator,
+            project_file=dummy_file,
+            download_enabled=True
+        )
+
+    def test_owner_can_download(self):
+        self.client.force_login(self.creator)
+        url = reverse('project_download', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('attachment;', response['Content-Disposition'])
+
+    def test_free_user_cannot_download(self):
+        self.client.force_login(self.free_user)
+        # Hatto ruxsat berilgan taqdirda ham free foydalanuvchi yuklab ololmaydi
+        ProjectDownloadPermission.objects.create(project=self.project, user=self.free_user, granted_by=self.creator)
+        url = reverse('project_download', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_pro_user_without_permission_cannot_download(self):
+        self.client.force_login(self.pro_user)
+        url = reverse('project_download', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+
+    def test_pro_user_with_permission_can_download(self):
+        ProjectDownloadPermission.objects.create(project=self.project, user=self.pro_user, granted_by=self.creator)
+        self.client.force_login(self.pro_user)
+        url = reverse('project_download', kwargs={'pk': self.project.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"fake zip content")
+
+    def test_grant_and_revoke_download(self):
+        self.client.force_login(self.creator)
+        grant_url = reverse('project_grant_download', kwargs={'pk': self.project.pk, 'user_pk': self.pro_user.pk})
+        self.client.post(grant_url)
+        self.assertTrue(ProjectDownloadPermission.objects.filter(project=self.project, user=self.pro_user).exists())
+
+        revoke_url = reverse('project_revoke_download', kwargs={'pk': self.project.pk, 'user_pk': self.pro_user.pk})
+        self.client.post(revoke_url)
+        self.assertFalse(ProjectDownloadPermission.objects.filter(project=self.project, user=self.pro_user).exists())
+
+    def test_toggle_download(self):
+        self.client.force_login(self.creator)
+        toggle_url = reverse('project_toggle_download', kwargs={'pk': self.project.pk})
+        self.client.post(toggle_url)
+        self.project.refresh_from_db()
+        self.assertFalse(self.project.download_enabled)
+        self.client.post(toggle_url)
+        self.project.refresh_from_db()
+        self.assertTrue(self.project.download_enabled)

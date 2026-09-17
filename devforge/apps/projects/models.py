@@ -31,11 +31,16 @@ class Project(models.Model):
     genre       = models.CharField(max_length=30, choices=GENRE_CHOICES, default='other')
     status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='planning')
     visibility  = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
-    thumbnail   = models.ImageField(upload_to='projects/', blank=True, null=True)
-    tech_stack  = models.ManyToManyField('tags.Tag', blank=True, related_name='projects')
-    max_members = models.PositiveIntegerField(default=10)
-    created_at  = models.DateTimeField(auto_now_add=True)
-    updated_at  = models.DateTimeField(auto_now=True)
+    thumbnail        = models.ImageField(upload_to='projects/', blank=True, null=True)
+    tech_stack       = models.ManyToManyField('tags.Tag', blank=True, related_name='projects')
+    max_members      = models.PositiveIntegerField(default=10)
+    # Download system
+    project_file     = models.FileField(upload_to='project_files/', blank=True, null=True,
+                           help_text="Yuklab olinadigan loyiha fayli (ZIP, RAR va boshqalar)")
+    download_enabled = models.BooleanField(default=False,
+                           help_text="Loyihani yuklab olish yoqilganmi?")
+    created_at       = models.DateTimeField(auto_now_add=True)
+    updated_at       = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -125,3 +130,20 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.project.title} - {self.title}"
+
+
+class ProjectDownloadPermission(models.Model):
+    """Loyiha egasi tomonidan berilgan yuklab olish ruxsati."""
+    project    = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='download_permissions')
+    user       = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='download_permissions')
+    granted_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='granted_download_permissions')
+    granted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['project', 'user']
+        indexes = [
+            models.Index(fields=['project', 'user']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} → {self.project.title} (ruxsat berilgan)"

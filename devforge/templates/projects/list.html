@@ -93,7 +93,12 @@
                 {% else %}
                     <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:rgba(255,255,255,0.02);">🎮</div>
                 {% endif %}
-                <div style="position: absolute; top: 12px; right: 12px;">
+                <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; align-items: center;">
+                    {% if project.project_file and project.download_enabled %}
+                        <span class="badge" style="background: rgba(16,185,129,0.25); backdrop-filter: blur(4px); border-color: rgba(16,185,129,0.5); color: #34d399; font-size: 0.7rem;">
+                            💾 Yuklab olish
+                        </span>
+                    {% endif %}
                     <span class="badge" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border-color: rgba(255,255,255,0.1);">
                         <span class="status-dot" style="background: {% if project.status == 'active' %}var(--success){% else %}var(--text-muted){% endif %};"></span>
                         {{ project.get_status_display }}
