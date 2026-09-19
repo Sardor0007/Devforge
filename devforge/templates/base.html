@@ -955,9 +955,9 @@
         <div class="mobile-drawer-content">
             <!-- Mobile Language Selector Row -->
             <div style="display:flex;gap:6px;padding:0.75rem 1rem;background:rgba(255,255,255,0.03);border-radius:12px;margin-bottom:0.75rem;justify-content:center;">
-                <a href="{% url 'set_language_direct' 'uz' %}" onclick="window.devforgeI18n?.setLanguage('uz', false)" class="lang-opt-item" data-lang="uz" style="padding:4px 10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">🇺🇿 UZ</a>
-                <a href="{% url 'set_language_direct' 'ru' %}" onclick="window.devforgeI18n?.setLanguage('ru', false)" class="lang-opt-item" data-lang="ru" style="padding:4px 10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">🇷🇺 RU</a>
-                <a href="{% url 'set_language_direct' 'en' %}" onclick="window.devforgeI18n?.setLanguage('en', false)" class="lang-opt-item" data-lang="en" style="padding:4px 10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">🇬🇧 EN</a>
+                <a href="{% url 'set_language_direct' 'uz' %}" onclick="event.preventDefault(); window.devforgeI18n?.setLanguage('uz', true);" class="lang-opt-item" data-lang="uz" style="padding:4px 10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">🇺🇿 UZ</a>
+                <a href="{% url 'set_language_direct' 'ru' %}" onclick="event.preventDefault(); window.devforgeI18n?.setLanguage('ru', true);" class="lang-opt-item" data-lang="ru" style="padding:4px 10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">🇷🇺 RU</a>
+                <a href="{% url 'set_language_direct' 'en' %}" onclick="event.preventDefault(); window.devforgeI18n?.setLanguage('en', true);" class="lang-opt-item" data-lang="en" style="padding:4px 10px;font-size:0.8rem;border:1px solid rgba(255,255,255,0.1);border-radius:8px;">🇬🇧 EN</a>
             </div>
 
             <a href="{% url 'dashboard' %}" class="mobile-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
@@ -1419,6 +1419,7 @@
     {% endif %}
 
     <!-- ── DevForge Multi-Language (i18n) Engine ── -->
+    <div id="google_translate_element" style="display:none!important"></div>
     <script src="{% static 'js/i18n.js' %}"></script>
     <script>
         function toggleLangMenu(e) {

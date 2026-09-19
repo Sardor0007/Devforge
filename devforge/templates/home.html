@@ -952,15 +952,15 @@ footer {
           🌐 <span class="lang-code">UZ</span> <span class="lang-arrow" style="font-size:0.7rem;opacity:0.7;">▼</span>
         </button>
         <div class="lang-dropdown-menu" id="homeLangMenu">
-          <a href="{% url 'set_language_direct' 'uz' %}" onclick="window.devforgeI18n?.setLanguage('uz', false)" class="lang-opt-item" data-lang="uz">
+          <a href="{% url 'set_language_direct' 'uz' %}" onclick="event.preventDefault(); window.devforgeI18n?.setLanguage('uz', true); document.getElementById('homeLangMenu').classList.remove('show');" class="lang-opt-item" data-lang="uz">
             <span class="lang-label">O'zbekcha (UZ)</span>
             <span class="lang-chk">✓</span>
           </a>
-          <a href="{% url 'set_language_direct' 'ru' %}" onclick="window.devforgeI18n?.setLanguage('ru', false)" class="lang-opt-item" data-lang="ru">
+          <a href="{% url 'set_language_direct' 'ru' %}" onclick="event.preventDefault(); window.devforgeI18n?.setLanguage('ru', true); document.getElementById('homeLangMenu').classList.remove('show');" class="lang-opt-item" data-lang="ru">
             <span class="lang-label">Русский (RU)</span>
             <span class="lang-chk">✓</span>
           </a>
-          <a href="{% url 'set_language_direct' 'en' %}" onclick="window.devforgeI18n?.setLanguage('en', false)" class="lang-opt-item" data-lang="en">
+          <a href="{% url 'set_language_direct' 'en' %}" onclick="event.preventDefault(); window.devforgeI18n?.setLanguage('en', true); document.getElementById('homeLangMenu').classList.remove('show');" class="lang-opt-item" data-lang="en">
             <span class="lang-label">English (EN)</span>
             <span class="lang-chk">✓</span>
           </a>
@@ -1466,6 +1466,7 @@ document.addEventListener('click', function(e) {
 });
 </script>
 <!-- ── DevForge Multi-Language (i18n) Engine ── -->
+<div id="google_translate_element" style="display:none!important"></div>
 <script src="{% static 'js/i18n.js' %}"></script>
 </body>
 </html>

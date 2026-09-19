@@ -479,6 +479,7 @@ def set_language_view(request, lang_code):
     """Foydalanuvchi tilini o'zgartirish (uz, ru, en)"""
     from django.utils import translation
     from django.conf import settings
+    from django.http import JsonResponse
 
     supported = [code for code, _ in settings.LANGUAGES]
     if lang_code in supported:
@@ -488,12 +489,15 @@ def set_language_view(request, lang_code):
         request.session['_language'] = lang_code
         request.session['django_language'] = lang_code
 
-    # Qaytish manzili
-    next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
-    if 'set-language' in next_url:
-        next_url = '/'
+    # If requested via AJAX or fetch, return JSON
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        response = JsonResponse({'status': 'ok', 'lang': lang_code})
+    else:
+        next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
+        if 'set-language' in next_url:
+            next_url = '/'
+        response = redirect(next_url)
 
-    response = redirect(next_url)
     if lang_code in supported:
         cookie_name = getattr(settings, 'LANGUAGE_COOKIE_NAME', 'django_language')
         response.set_cookie(
@@ -503,4 +507,14 @@ def set_language_view(request, lang_code):
             path='/',
             samesite='Lax'
         )
+        if lang_code == 'uz':
+            response.delete_cookie('googtrans', path='/')
+        else:
+            response.set_cookie(
+                'googtrans',
+                f'/uz/{lang_code}',
+                max_age=365 * 24 * 60 * 60,
+                path='/',
+                samesite='Lax'
+            )
     return response
