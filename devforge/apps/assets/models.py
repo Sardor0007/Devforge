@@ -20,7 +20,6 @@ class Asset(models.Model):
         ('project',   'Loyihalar / Projects'),
         ('startup',   'Startuplar'),
         ('plugin',    'Plugin & Extension'),
-        ('course',    "Kurslar / O'quv materiallari"),
     ]
 
     FORMAT_CHOICES = [

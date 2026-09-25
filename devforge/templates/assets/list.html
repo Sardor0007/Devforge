@@ -337,11 +337,6 @@
                 🔌 Pluginlar
                 <span class="tab-count">{{ type_counts.plugin|default:0 }}</span>
             </a>
-            <a href="?type=course{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
-               class="type-tab {% if current_type == 'course' %}active{% endif %}">
-                🎓 Kurslar
-                <span class="tab-count">{{ type_counts.course|default:0 }}</span>
-            </a>
         </div>
     </div>
 
