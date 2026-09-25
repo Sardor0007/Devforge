@@ -27,11 +27,12 @@ class AssetUploadForm(forms.ModelForm):
 
     class Meta:
         model = Asset
-        fields = ['title', 'description', 'category', 'format', 'file', 'thumbnail', 'price', 'tags', 'only_for_user']
+        fields = ['title', 'description', 'category', 'asset_type', 'format', 'file', 'thumbnail', 'price', 'tags', 'only_for_user']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Masalan: Cyberpunk Low-Poly Character'}),
             'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 4, 'placeholder': "Aktiv haqida batafsil ma'lumot..."}),
             'category': forms.Select(attrs={'class': 'form-input'}),
+            'asset_type': forms.Select(attrs={'class': 'form-input'}),
             'format': forms.Select(attrs={'class': 'form-input', 'id': 'id_format'}),
             'file': forms.FileInput(attrs={'class': 'form-input', 'id': 'id_file'}),
             'thumbnail': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),

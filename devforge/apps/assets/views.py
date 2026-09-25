@@ -12,6 +12,7 @@ def asset_list_view(request):
     category = request.GET.get('category', '')
     price_filter = request.GET.get('price', '')
     fmt = request.GET.get('format', '')
+    asset_type = request.GET.get('type', '')
 
     is_moderator = request.user.is_authenticated and (
         request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'developer'
@@ -34,7 +35,7 @@ def asset_list_view(request):
 
     if query:
         assets = assets.filter(
-            Q(title__icontains=query) | Q(tags__name__icontains=query) | Q(description__icontains=query)
+            Q(title__icontains=query) | Q(tags__icontains=query) | Q(description__icontains=query)
         )
     if category:
         assets = assets.filter(category__slug=category)
@@ -44,6 +45,15 @@ def asset_list_view(request):
         assets = assets.filter(price__gt=0)
     if fmt:
         assets = assets.filter(format=fmt)
+    if asset_type:
+        assets = assets.filter(asset_type=asset_type)
+
+    # Count per type for tab badges
+    base_approved = Asset.objects.filter(is_approved=True, status='approved')
+    type_counts = {}
+    for code, label in Asset.ASSET_TYPE_CHOICES:
+        type_counts[code] = base_approved.filter(asset_type=code).count()
+    type_counts['all'] = base_approved.count()
 
     from django.core.paginator import Paginator
     categories = AssetCategory.objects.all()
@@ -55,9 +65,13 @@ def asset_list_view(request):
         'categories': categories,
         'query': query,
         'format_choices': Asset.FORMAT_CHOICES,
+        'asset_type_choices': Asset.ASSET_TYPE_CHOICES,
+        'current_type': asset_type,
+        'type_counts': type_counts,
         'is_moderator': is_moderator,
         'pending_count': pending_count,
     })
+
 
 
 def asset_detail_view(request, pk):

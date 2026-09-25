@@ -13,6 +13,16 @@ class AssetCategory(models.Model):
 
 
 class Asset(models.Model):
+    ASSET_TYPE_CHOICES = [
+        ('3d_asset',  '3D Assetlar'),
+        ('template',  'Shablonlar / Templates'),
+        ('software',  'Dasturlar / Software'),
+        ('project',   'Loyihalar / Projects'),
+        ('startup',   'Startuplar'),
+        ('plugin',    'Plugin & Extension'),
+        ('course',    "Kurslar / O'quv materiallari"),
+    ]
+
     FORMAT_CHOICES = [
         # 3D Modellari
         ('glb', 'GLB (.glb)'),
@@ -32,6 +42,7 @@ class Asset(models.Model):
         # Paket & Arxiv
         ('zip', 'ZIP Arxiv (.zip, .rar, .7z)'),
         ('unitypackage', 'Unity Paket (.unitypackage)'),
+        ('exe', 'Bajariladigan fayl (.exe, .apk)'),
         ('other', 'Boshqa format'),
     ]
 
@@ -43,6 +54,7 @@ class Asset(models.Model):
 
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assets')
     category = models.ForeignKey(AssetCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    asset_type = models.CharField(max_length=20, choices=ASSET_TYPE_CHOICES, default='3d_asset', db_index=True)
     title = models.CharField(max_length=200)
     description = models.TextField()
     file = models.FileField(upload_to='assets/files/')

@@ -5,17 +5,77 @@
 {% block extra_css %}
 <style>
     .marketplace-hero {
-        padding: 4rem 0;
+        padding: 3.5rem 0 2rem;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 3rem;
+        margin-bottom: 0;
     }
 
+    /* ── TYPE TABS ── */
+    .type-tabs-wrap {
+        position: sticky;
+        top: 64px;
+        z-index: 100;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 0;
+        margin-bottom: 2.5rem;
+    }
+
+    .type-tabs {
+        display: flex;
+        gap: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .type-tabs::-webkit-scrollbar { display: none; }
+
+    .type-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 22px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.45);
+        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .type-tab:hover {
+        color: rgba(255,255,255,0.8);
+        border-bottom-color: rgba(255,255,255,0.2);
+    }
+
+    .type-tab.active {
+        color: var(--accent, #00ffa3);
+        border-bottom-color: var(--accent, #00ffa3);
+    }
+
+    .type-tab .tab-count {
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.5);
+        font-size: 0.7rem;
+        padding: 1px 7px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+
+    .type-tab.active .tab-count {
+        background: rgba(0,255,163,0.15);
+        color: var(--accent, #00ffa3);
+    }
+
+    /* ── CATEGORY PILLS ── */
     .category-scroll {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         overflow-x: auto;
         padding-bottom: 1rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         scrollbar-width: none;
     }
 
@@ -23,11 +83,11 @@
 
     .category-pill {
         white-space: nowrap;
-        padding: 8px 20px;
+        padding: 6px 16px;
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: 50px;
-        font-size: 0.9rem;
+        font-size: 0.82rem;
         font-weight: 500;
         color: var(--text-secondary);
         transition: var(--transition);
@@ -39,194 +99,386 @@
         color: var(--text-primary);
     }
 
+    /* ── ASSET GRID ── */
     .asset-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .asset-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        cursor: pointer;
+    }
+
+    .asset-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,255,163,0.15);
     }
 
     .asset-thumb {
-        aspect-ratio: 1/1;
-        background: #1e293b;
-        border-radius: var(--radius-md);
-        margin-bottom: 1rem;
-        overflow: hidden;
+        aspect-ratio: 16/10;
+        background: #0d1520;
         position: relative;
+        overflow: hidden;
     }
 
     .asset-thumb img {
         width: 100%; height: 100%;
         object-fit: cover;
-        transition: var(--transition);
+        transition: transform 0.5s ease;
     }
 
-    .card:hover .asset-thumb img {
-        transform: scale(1.08);
+    .asset-card:hover .asset-thumb img { transform: scale(1.08); }
+
+    .asset-type-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.65);
+        backdrop-filter: blur(6px);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: rgba(255,255,255,0.85);
+        border: 1px solid rgba(255,255,255,0.1);
     }
 
     .format-tag {
         position: absolute;
-        bottom: 12px;
-        left: 12px;
-        background: rgba(0,0,0,0.6);
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0,0,0,0.65);
         backdrop-filter: blur(4px);
         padding: 2px 8px;
         border-radius: 4px;
-        font-size: 0.65rem;
-        font-weight: 700;
-        color: rgba(255,255,255,0.8);
+        font-size: 0.63rem;
+        font-weight: 800;
+        color: rgba(255,255,255,0.7);
+        letter-spacing: 1px;
     }
 
     .price-tag {
         position: absolute;
-        top: 12px;
-        right: 12px;
-        background: var(--accent-gradient);
-        color: #000;
-        padding: 4px 12px;
+        top: 10px;
+        right: 10px;
+        background: linear-gradient(135deg, var(--accent,#00ffa3), #00c3ff);
+        color: #0a0f1a;
+        padding: 3px 12px;
         border-radius: 50px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        font-size: 0.78rem;
+        font-weight: 800;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .price-tag.free {
-        background: var(--success);
+        background: linear-gradient(135deg, #10b981, #059669);
         color: #fff;
     }
 
+    .asset-body {
+        padding: 1rem 1.2rem 1.2rem;
+    }
+
+    .asset-title {
+        font-family: var(--font-display);
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .asset-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .asset-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .asset-stats {
+        display: flex;
+        gap: 10px;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+
+    /* ── FILTER SECTION ── */
     .filter-section {
         background: var(--surface);
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        margin-bottom: 3rem;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
     }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 6rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.4;
+    }
+
+    /* ── TYPE ICON PLACEHOLDERS ── */
+    .thumb-placeholder {
+        width: 100%; height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #0d1520, #111827);
+    }
+
+    .thumb-placeholder .ph-icon { font-size: 3rem; opacity: 0.35; }
+    .thumb-placeholder .ph-label { font-size: 0.7rem; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="animate-fade">
-    <div class="marketplace-hero" style="display: flex; justify-content: space-between; align-items: flex-center; flex-wrap: wrap; gap: 1.5rem;">
+
+    <!-- ── HERO ── -->
+    <div class="marketplace-hero" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem;">
         <div>
             <span class="section-label">Digital Assets</span>
-            <h1 style="font-family: var(--font-display); font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem;">Asset Marketplace</h1>
-            <p style="color: var(--text-secondary); max-width: 600px;">
-                High-fidelity 3D models, textures, and UI kits ready for your next project. 
-                Built for Unreal Engine, Unity, and Godot.
+            <h1 style="font-family:var(--font-display);font-size:2.8rem;font-weight:800;margin-bottom:0.5rem;">Asset Marketplace</h1>
+            <p style="color:var(--text-secondary);max-width:580px;font-size:0.95rem;">
+                {% if current_type == '3d_asset' %}3D modellari, teksturalar va materiallar — Unreal Engine, Unity, Godot uchun.
+                {% elif current_type == 'template' %}Tayyor shablonlar, UI kit va projekt qoliplamlari.
+                {% elif current_type == 'software' %}Tayyor dasturlar, o'yinlar va ilovalar — sotib oling yoki litsenziyalang.
+                {% elif current_type == 'project' %}Boshqa developerlar tomonidan yaratilgan tugallangan loyihalar.
+                {% elif current_type == 'startup' %}Startuplar, SaaS mahsulotlar va biznes-g'oyalar.
+                {% elif current_type == 'plugin' %}Plugin, extension va asboblar DevForge ekotizimlari uchun.
+                {% elif current_type == 'course' %}O'quv kurslar, darsliklar va treninglar.
+                {% else %}3D assetlar, dasturlar, loyihalar, shablonlar va startuplar — barchasi bir joyda.{% endif %}
             </p>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
             {% if request.user.is_authenticated %}
-            <a href="{% url 'my_assets' %}" class="btn btn-outline" style="border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; padding: 0.7rem 1.2rem;">
+            <a href="{% url 'my_assets' %}" class="btn btn-outline" style="font-size:0.88rem;font-weight:600;padding:0.65rem 1.2rem;">
                 📁 Mening Aktivlarim
             </a>
             {% endif %}
-
             {% if is_moderator %}
-            <a href="{% url 'asset_moderation_list' %}" class="btn" style="background: rgba(0, 245, 255, 0.15); border: 1px solid var(--accent); color: var(--accent); border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; padding: 0.7rem 1.2rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-                <span>🛡️ Moderatsiya</span>
+            <a href="{% url 'asset_moderation_list' %}" class="btn" style="background:rgba(0,245,255,0.1);border:1px solid var(--accent);color:var(--accent);font-size:0.88rem;font-weight:700;padding:0.65rem 1.2rem;display:inline-flex;align-items:center;gap:0.5rem;">
+                🛡️ Moderatsiya
                 {% if pending_count > 0 %}
-                <span style="background: #f59e0b; color: #000; font-size: 0.75rem; padding: 1px 7px; border-radius: 10px; font-weight: 800;">{{ pending_count }}</span>
+                <span style="background:#f59e0b;color:#000;font-size:0.72rem;padding:1px 7px;border-radius:10px;font-weight:800;">{{ pending_count }}</span>
                 {% endif %}
             </a>
             {% endif %}
-
-            <a href="{% url 'asset_upload' %}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.75rem 1.6rem; font-weight: 700; font-size: 0.95rem; border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(99,102,241,0.3);">
-                <span>📤 Aktiv Yuklash</span>
+            <a href="{% url 'asset_upload' %}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.5rem;font-weight:700;font-size:0.9rem;">
+                ⬆️ Aktiv Yuklash
             </a>
         </div>
     </div>
 
-    <!-- Category Filter -->
-    <div class="category-scroll">
-        <a href="{% url 'asset_list' %}" class="category-pill {% if not request.GET.category %}active{% endif %}">All Assets</a>
-        {% for cat in categories %}
-        <a href="?category={{ cat.slug }}" class="category-pill {% if request.GET.category == cat.slug %}active{% endif %}">
-            {{ cat.icon }} {{ cat.name }}
-        </a>
-        {% endfor %}
+    <!-- ── TYPE TABS ── -->
+    <div class="type-tabs-wrap">
+        <div class="type-tabs">
+            <a href="{% url 'asset_list' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if not current_type %}active{% endif %}">
+                🌐 Barchasi
+                <span class="tab-count">{{ type_counts.all|default:0 }}</span>
+            </a>
+            <a href="?type=3d_asset{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == '3d_asset' %}active{% endif %}">
+                🎲 3D Assetlar
+                <span class="tab-count">{{ type_counts.3d_asset|default:0 }}</span>
+            </a>
+            <a href="?type=template{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'template' %}active{% endif %}">
+                📐 Shablonlar
+                <span class="tab-count">{{ type_counts.template|default:0 }}</span>
+            </a>
+            <a href="?type=software{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'software' %}active{% endif %}">
+                💿 Dasturlar
+                <span class="tab-count">{{ type_counts.software|default:0 }}</span>
+            </a>
+            <a href="?type=project{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'project' %}active{% endif %}">
+                🗂️ Loyihalar
+                <span class="tab-count">{{ type_counts.project|default:0 }}</span>
+            </a>
+            <a href="?type=startup{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'startup' %}active{% endif %}">
+                🚀 Startuplar
+                <span class="tab-count">{{ type_counts.startup|default:0 }}</span>
+            </a>
+            <a href="?type=plugin{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'plugin' %}active{% endif %}">
+                🔌 Pluginlar
+                <span class="tab-count">{{ type_counts.plugin|default:0 }}</span>
+            </a>
+            <a href="?type=course{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'course' %}active{% endif %}">
+                🎓 Kurslar
+                <span class="tab-count">{{ type_counts.course|default:0 }}</span>
+            </a>
+        </div>
     </div>
 
-    <!-- Advanced Filters -->
+    <!-- ── CATEGORY & SEARCH FILTER ── -->
     <form method="get" class="filter-section">
-        <div class="flex gap-4 flex-wrap">
-            <div style="flex: 2; min-width: 200px;">
-                <input type="text" name="q" value="{{ query }}" class="input-field" placeholder="Search models, materials, tags...">
+        {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+            <div style="flex:3;min-width:200px;">
+                <input type="text" name="q" value="{{ query }}" class="input-field" placeholder="🔍 Qidirish: nom, tag, tavsif...">
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex:1;min-width:130px;">
                 <select name="price" class="input-field">
-                    <option value="">Any Price</option>
-                    <option value="free" {% if request.GET.price == 'free' %}selected{% endif %}>Free Assets</option>
-                    <option value="paid" {% if request.GET.price == 'paid' %}selected{% endif %}>Premium Assets</option>
+                    <option value="">Ixtiyoriy narx</option>
+                    <option value="free" {% if request.GET.price == 'free' %}selected{% endif %}>Bepul</option>
+                    <option value="paid" {% if request.GET.price == 'paid' %}selected{% endif %}>Pullik</option>
                 </select>
             </div>
-            <div style="flex: 1; min-width: 150px;">
+            <div style="flex:1;min-width:130px;">
                 <select name="format" class="input-field">
-                    <option value="">Any Format</option>
+                    <option value="">Ixtiyoriy format</option>
                     {% for val, label in format_choices %}
                     <option value="{{ val }}" {% if request.GET.format == val %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="btn btn-secondary">Apply Filters</button>
+            <button type="submit" class="btn btn-secondary">Filtrlarni qo'llash</button>
+            {% if query or request.GET.price or request.GET.format %}
+            <a href="?{% if current_type %}type={{ current_type }}{% endif %}" class="btn btn-ghost" style="color:var(--text-muted);">✕ Tozalash</a>
+            {% endif %}
         </div>
+
+        <!-- Category Scroll -->
+        {% if categories %}
+        <div class="category-scroll" style="margin-top:1rem;margin-bottom:0;">
+            <a href="?{% if current_type %}type={{ current_type }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+               class="category-pill {% if not request.GET.category %}active{% endif %}">Barcha aktivlar</a>
+            {% for cat in categories %}
+            <a href="?{% if current_type %}type={{ current_type }}&{% endif %}category={{ cat.slug }}{% if query %}&q={{ query }}{% endif %}"
+               class="category-pill {% if request.GET.category == cat.slug %}active{% endif %}">
+                {{ cat.icon }} {{ cat.name }}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
     </form>
 
+    <!-- ── ASSET GRID ── -->
     <div class="asset-grid">
         {% for asset in assets %}
-        <div class="card">
-            <div class="asset-thumb">
-                {% if asset.thumbnail %}
-                    <img src="{{ asset.thumbnail.url }}" alt="{{ asset.title }}">
-                {% else %}
-                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">📦</div>
-                {% endif %}
-                
-                <div class="format-tag">{{ asset.format|upper }}</div>
-                <div class="price-tag {% if asset.price == 0 %}free{% endif %}">
-                    {% if asset.price == 0 %}FREE{% else %}${{ asset.price }}{% endif %}
-                </div>
-            </div>
+        <div class="asset-card">
+            <a href="{% url 'asset_detail' pk=asset.pk %}" style="text-decoration:none;color:inherit;">
+                <div class="asset-thumb">
+                    {% if asset.thumbnail %}
+                        <img src="{{ asset.thumbnail.url }}" alt="{{ asset.title }}" loading="lazy">
+                    {% else %}
+                        <div class="thumb-placeholder">
+                            <div class="ph-icon">
+                                {% if asset.asset_type == '3d_asset' %}🎲
+                                {% elif asset.asset_type == 'template' %}📐
+                                {% elif asset.asset_type == 'software' %}💿
+                                {% elif asset.asset_type == 'project' %}🗂️
+                                {% elif asset.asset_type == 'startup' %}🚀
+                                {% elif asset.asset_type == 'plugin' %}🔌
+                                {% elif asset.asset_type == 'course' %}🎓
+                                {% else %}📦{% endif %}
+                            </div>
+                            <div class="ph-label">{{ asset.format|upper }}</div>
+                        </div>
+                    {% endif %}
 
-            <h3 style="font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 0.25rem;">{{ asset.title }}</h3>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem;">
-                <span style="font-size: 0.75rem; color: var(--text-muted);">by @{{ asset.creator.username }}</span>
-                {% if asset.category %}
-                <span class="badge" style="font-size: 0.65rem;">{{ asset.category.name }}</span>
-                {% endif %}
-            </div>
+                    <!-- Type badge -->
+                    <div class="asset-type-badge">
+                        {% if asset.asset_type == '3d_asset' %}🎲 3D
+                        {% elif asset.asset_type == 'template' %}📐 Shablon
+                        {% elif asset.asset_type == 'software' %}💿 Dastur
+                        {% elif asset.asset_type == 'project' %}🗂️ Loyiha
+                        {% elif asset.asset_type == 'startup' %}🚀 Startup
+                        {% elif asset.asset_type == 'plugin' %}🔌 Plugin
+                        {% elif asset.asset_type == 'course' %}🎓 Kurs
+                        {% else %}📦 Asset{% endif %}
+                    </div>
 
-            <div class="flex items-center justify-between pt-4" style="border-top: 1px solid var(--border);">
-                <div style="display: flex; gap: 12px; font-size: 0.8rem; color: var(--text-muted);">
-                    <span>⬇️ {{ asset.downloads }}</span>
-                    <span>❤️ {{ asset.like_count }}</span>
+                    <div class="format-tag">{{ asset.format|upper }}</div>
+                    <div class="price-tag {% if asset.price == 0 %}free{% endif %}">
+                        {% if asset.price == 0 %}FREE{% else %}\${{ asset.price }}{% endif %}
+                    </div>
                 </div>
-                <a href="{% url 'asset_detail' pk=asset.pk %}" class="btn btn-ghost btn-sm" style="padding: 0.4rem 0.8rem;">View</a>
-            </div>
+
+                <div class="asset-body">
+                    <div class="asset-title" title="{{ asset.title }}">{{ asset.title }}</div>
+                    <div class="asset-meta">
+                        <span>@{{ asset.creator.username }}</span>
+                        {% if asset.category %}
+                        <span class="badge" style="font-size:0.65rem;">{{ asset.category.name }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="asset-footer">
+                        <div class="asset-stats">
+                            <span>⬇️ {{ asset.downloads }}</span>
+                            <span>❤️ {{ asset.like_count }}</span>
+                        </div>
+                        <span class="btn btn-ghost btn-sm" style="padding:0.35rem 0.8rem;font-size:0.8rem;">Ko'rish →</span>
+                    </div>
+                </div>
+            </a>
         </div>
         {% empty %}
-        <div style="grid-column: 1/-1; text-align: center; padding: 6rem 0;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
-            <h3 style="font-family: var(--font-display);">No assets matching your criteria</h3>
-            <p style="color: var(--text-muted);">Try a different category or search term.</p>
+        <div class="empty-state">
+            <div class="empty-icon">
+                {% if current_type == '3d_asset' %}🎲
+                {% elif current_type == 'template' %}📐
+                {% elif current_type == 'software' %}💿
+                {% elif current_type == 'project' %}🗂️
+                {% elif current_type == 'startup' %}🚀
+                {% elif current_type == 'plugin' %}🔌
+                {% elif current_type == 'course' %}🎓
+                {% else %}📦{% endif %}
+            </div>
+            <h3 style="font-family:var(--font-display);margin-bottom:0.5rem;">Aktivlar topilmadi</h3>
+            <p style="color:var(--text-muted);">Boshqa kategoriya yoki qidiruv so'zini sinab ko'ring.</p>
+            <a href="{% url 'asset_list' %}" class="btn btn-outline" style="margin-top:1.5rem;">Barchasini ko'rish</a>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
-    {% if assets.has_other_pages %}
-    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 4rem;">
-        {% if assets.has_previous %}
-        <a href="?page={{ assets.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-secondary btn-sm">Prev</a>
+    <!-- ── PAGINATION ── -->
+    {% if page_obj.has_other_pages %}
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:4rem;flex-wrap:wrap;">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn btn-secondary btn-sm">← Oldingi</a>
         {% endif %}
-        
-        <span class="btn btn-ghost btn-sm" style="color: var(--accent);">Page {{ assets.number }} of {{ assets.paginator.num_pages }}</span>
-        
-        {% if assets.has_next %}
-        <a href="?page={{ assets.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="btn btn-secondary btn-sm">Next</a>
+        <span class="btn btn-ghost btn-sm" style="color:var(--accent);">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}{% if query %}&q={{ query }}{% endif %}" class="btn btn-secondary btn-sm">Keyingi →</a>
         {% endif %}
     </div>
     {% endif %}
+
 </div>
 {% endblock %}

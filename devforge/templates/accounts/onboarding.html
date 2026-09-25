@@ -1,125 +1,659 @@
 {% extends "base.html" %}
 
-{% block title %}Onboarding — DevForge{% endblock %}
+{% block title %}Xush Kelibsiz — DevForge{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── ONBOARDING FULL-SCREEN OVERRIDE ── */
+  body { overflow-x: hidden; }
+
+  .onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,255,163,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 80%, rgba(0,180,255,0.08) 0%, transparent 50%),
+      #0a0f1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    z-index: 1000;
+  }
+
+  /* Floating background particles */
+  .bg-particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: floatParticle linear infinite;
+    opacity: 0.15;
+  }
+
+  @keyframes floatParticle {
+    0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.15; }
+    90%  { opacity: 0.15; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+  }
+
+  /* ── PROGRESS BAR ── */
+  .ob-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .ob-step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .ob-step-dot.active {
+    background: var(--accent, #00ffa3);
+    box-shadow: 0 0 12px var(--accent, #00ffa3);
+    transform: scale(1.4);
+  }
+
+  .ob-step-dot.done {
+    background: rgba(0,255,163,0.5);
+    width: 24px;
+    border-radius: 5px;
+  }
+
+  .ob-step-line {
+    flex: 1;
+    max-width: 60px;
+    height: 2px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .ob-step-line-fill {
+    height: 100%;
+    background: var(--accent, #00ffa3);
+    border-radius: 1px;
+    transition: width 0.6s ease;
+    width: 0%;
+  }
+
+  /* ── CARD WRAPPER ── */
+  .ob-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 780px;
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 40px 80px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: cardIn 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── STEP PANELS ── */
+  .ob-step { display: none; }
+  .ob-step.active { display: block; animation: stepIn 0.5s cubic-bezier(0.19,1,0.22,1); }
+
+  @keyframes stepIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── HEADER ── */
+  .ob-logo {
+    font-family: var(--font-display, monospace);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--accent, #00ffa3);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .ob-title {
+    font-family: var(--font-display, monospace);
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.5px;
+  }
+
+  .ob-subtitle {
+    color: rgba(255,255,255,0.5);
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+  }
+
+  /* ── ROLE CARDS GRID ── */
+  .roles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .role-option { display: none; }
+
+  .role-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .role-label::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--role-color, #00ffa3);
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+  }
+
+  .role-label:hover {
+    border-color: var(--role-color, #00ffa3);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3), 0 0 0 1px var(--role-color, #00ffa3);
+  }
+
+  .role-label:hover::before { opacity: 0.05; }
+
+  .role-option:checked + .role-label {
+    border-color: var(--role-color, #00ffa3);
+    background: linear-gradient(135deg, rgba(0,255,163,0.1), rgba(0,255,163,0.03));
+    box-shadow:
+      0 0 0 2px var(--role-color, #00ffa3),
+      0 20px 40px rgba(0,255,163,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.1);
+    transform: translateY(-6px) scale(1.04);
+  }
+
+  .role-option:checked + .role-label::before { opacity: 0.08; }
+
+  .role-check {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--role-color, #00ffa3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .role-option:checked + .role-label .role-check {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .role-icon-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .role-option:checked + .role-label .role-icon-wrap {
+    background: linear-gradient(135deg, var(--role-color, #00ffa3)20, transparent);
+    border-color: var(--role-color, #00ffa3);
+    box-shadow: 0 0 20px var(--role-color, #00ffa3)50;
+  }
+
+  .role-name-text {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.9);
+    position: relative;
+    z-index: 1;
+  }
+
+  .role-desc-text {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.4;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SKILLS GRID ── */
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 2rem;
+  }
+
+  .skill-chk { display: none; }
+
+  .skill-pill {
+    padding: 8px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: all 0.25s;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  .skill-pill:hover {
+    border-color: var(--accent, #00ffa3);
+    color: rgba(255,255,255,0.9);
+    background: rgba(0,255,163,0.06);
+  }
+
+  .skill-chk:checked + .skill-pill {
+    background: rgba(0,255,163,0.15);
+    border-color: var(--accent, #00ffa3);
+    color: var(--accent, #00ffa3);
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(0,255,163,0.2);
+  }
+
+  /* ── SUCCESS STEP ── */
+  .ob-success {
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .success-ring {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--accent, #00ffa3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 2.5rem;
+    animation: ringPulse 1.5s ease infinite;
+    background: rgba(0,255,163,0.05);
+  }
+
+  @keyframes ringPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,163,0.3); }
+    50%       { box-shadow: 0 0 0 20px rgba(0,255,163,0); }
+  }
+
+  .ob-role-preview {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0,255,163,0.1);
+    border: 1px solid rgba(0,255,163,0.3);
+    border-radius: 50px;
+    padding: 6px 20px;
+    font-size: 0.9rem;
+    color: var(--accent, #00ffa3);
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── BOTTOM NAV ── */
+  .ob-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    gap: 1rem;
+  }
+
+  .ob-btn-back {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+    padding: 12px 28px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+  }
+
+  .ob-btn-back:hover {
+    border-color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.9);
+  }
+
+  .ob-btn-next {
+    background: linear-gradient(135deg, #00ffa3, #00c3ff);
+    color: #0a0f1a;
+    border: none;
+    padding: 13px 36px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 24px rgba(0,255,163,0.25);
+  }
+
+  .ob-btn-next:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 14px 30px rgba(0,255,163,0.35);
+  }
+
+  .ob-btn-next:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .ob-skip {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.2s;
+    background: none;
+    border: none;
+  }
+
+  .ob-skip:hover { color: rgba(255,255,255,0.6); }
+
+  .ob-step-label {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .ob-card { padding: 2rem 1.5rem; }
+    .ob-title { font-size: 1.7rem; }
+    .roles-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 800px; margin-top: 4rem;">
-    <div class="card" style="border-left: 5px solid var(--accent);">
-        <div class="card-body" style="padding: 3rem;">
-            <div style="text-align: center; margin-bottom: 3rem;">
-                <h1 class="page-title" style="font-size: 2.5rem; letter-spacing: 4px; text-transform: uppercase;">Xush Kelibsiz!</h1>
-                <p class="page-subtitle">DevForge platformasini o'zingizga moslashtiring</p>
-            </div>
+<!-- Floating Particles -->
+<div class="onboarding-overlay">
+  <div class="bg-particle" style="width:4px;height:4px;left:15%;animation-duration:12s;animation-delay:0s;background:#00ffa3;"></div>
+  <div class="bg-particle" style="width:6px;height:6px;left:35%;animation-duration:16s;animation-delay:3s;background:#00c3ff;"></div>
+  <div class="bg-particle" style="width:3px;height:3px;left:60%;animation-duration:14s;animation-delay:6s;background:#00ffa3;"></div>
+  <div class="bg-particle" style="width:5px;height:5px;left:80%;animation-duration:10s;animation-delay:1s;background:#00c3ff;"></div>
+  <div class="bg-particle" style="width:4px;height:4px;left:50%;animation-duration:18s;animation-delay:8s;background:#00ffa3;"></div>
 
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="form-group" style="margin-bottom: 3rem;">
-                    <label class="form-label" style="font-size: 1rem;">Sizning rolingiz nima?</label>
-                    <div class="grid-3" style="gap: 1.5rem;">
-                        <label class="role-card">
-                            <input type="radio" name="role" value="developer" required>
-                            <div class="role-card-inner">
-                                <div class="hex-icon" style="margin: 0 auto 1.5rem;">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"></path></svg>
-                                </div>
-                                <span class="role-name">Dasturchi</span>
-                            </div>
-                        </label>
-                        <label class="role-card">
-                            <input type="radio" name="role" value="artist">
-                            <div class="role-card-inner">
-                                <div class="hex-icon" style="margin: 0 auto 1.5rem;">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>
-                                </div>
-                                <span class="role-name">3D Rassom</span>
-                            </div>
-                        </label>
-                        <label class="role-card">
-                            <input type="radio" name="role" value="designer">
-                            <div class="role-card-inner">
-                                <div class="hex-icon" style="margin: 0 auto 1.5rem;">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                                </div>
-                                <span class="role-name">Dizayner</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
+  <!-- Logo -->
+  <div class="ob-logo">⬡ DevForge Platform</div>
 
-                <div class="form-group" style="margin-bottom: 3rem;">
-                    <label class="form-label" style="font-size: 1rem;">Asosiy ko'nikmalaringizni tanlang</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
-                        {% for skill in skills %}
-                        <label class="skill-checkbox">
-                            <input type="checkbox" name="skills" value="{{ skill }}">
-                            <span>{{ skill }}</span>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
+  <!-- Progress Dots -->
+  <div class="ob-progress">
+    <div class="ob-step-dot active" id="dot-1"></div>
+    <div class="ob-step-line"><div class="ob-step-line-fill" id="line-1"></div></div>
+    <div class="ob-step-dot" id="dot-2"></div>
+    <div class="ob-step-line"><div class="ob-step-line-fill" id="line-2"></div></div>
+    <div class="ob-step-dot" id="dot-3"></div>
+  </div>
 
-                <div style="text-align: right;">
-                    <button type="submit" class="btn btn-primary btn-lg glitch-hover">
-                        Boshlash <span style="margin-left: 0.5rem;">→</span>
-                    </button>
-                </div>
-            </form>
+  <div class="ob-card">
+    <form method="post" id="onboarding-form">
+      {% csrf_token %}
+
+      <!-- ══ STEP 1: Rol Tanlash ══ -->
+      <div class="ob-step active" id="step-1">
+        <div class="ob-step-label">Qadam 1 / 3</div>
+        <h1 class="ob-title">Xush Kelibsiz! 👋<br>Siz kimning rolidasiz?</h1>
+        <p class="ob-subtitle">Platformani sizga moslashtirish uchun rolingizni tanlang. Uni istalgan vaqt o'zgartirishingiz mumkin.</p>
+
+        <div class="roles-grid">
+
+          <!-- Developer -->
+          <input type="radio" name="role" value="developer" id="role-developer" class="role-option" required>
+          <label for="role-developer" class="role-label" style="--role-color: #00ffa3;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">💻</div>
+            <div class="role-name-text">Dasturchi</div>
+            <div class="role-desc-text">C#, C++, Python, GDScript</div>
+          </label>
+
+          <!-- 3D Artist -->
+          <input type="radio" name="role" value="artist" id="role-artist" class="role-option">
+          <label for="role-artist" class="role-label" style="--role-color: #a78bfa;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">🎨</div>
+            <div class="role-name-text">3D Rassom</div>
+            <div class="role-desc-text">Blender, Maya, ZBrush</div>
+          </label>
+
+          <!-- Designer -->
+          <input type="radio" name="role" value="designer" id="role-designer" class="role-option">
+          <label for="role-designer" class="role-label" style="--role-color: #f59e0b;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">🖌️</div>
+            <div class="role-name-text">Dizayner</div>
+            <div class="role-desc-text">UI/UX, Graphic Design</div>
+          </label>
+
+          <!-- Sound Designer -->
+          <input type="radio" name="role" value="sound" id="role-sound" class="role-option">
+          <label for="role-sound" class="role-label" style="--role-color: #f43f5e;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">🎵</div>
+            <div class="role-name-text">Ovoz Mutaxassisi</div>
+            <div class="role-desc-text">Audio, SFX, Music</div>
+          </label>
+
+          <!-- Writer -->
+          <input type="radio" name="role" value="writer" id="role-writer" class="role-option">
+          <label for="role-writer" class="role-label" style="--role-color: #06b6d4;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">✍️</div>
+            <div class="role-name-text">Scenariychi</div>
+            <div class="role-desc-text">Narrative, Story, Script</div>
+          </label>
+
+          <!-- Producer -->
+          <input type="radio" name="role" value="producer" id="role-producer" class="role-option">
+          <label for="role-producer" class="role-label" style="--role-color: #10b981;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">📊</div>
+            <div class="role-name-text">Loyiha Menejeri</div>
+            <div class="role-desc-text">Planning, Teams, Roadmap</div>
+          </label>
+
+          <!-- Entrepreneur -->
+          <input type="radio" name="role" value="entrepreneur" id="role-entrepreneur" class="role-option">
+          <label for="role-entrepreneur" class="role-label" style="--role-color: #f97316;">
+            <div class="role-check">✓</div>
+            <div class="role-icon-wrap">🚀</div>
+            <div class="role-name-text">Entrepreneur</div>
+            <div class="role-desc-text">Startup, Investor, Publisher</div>
+          </label>
+
         </div>
-    </div>
+
+        <div class="ob-actions">
+          <div></div>
+          <button type="button" class="ob-btn-next" id="btn-next-1" disabled onclick="goToStep(2)">
+            Davom etish →
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ STEP 2: Ko'nikmalar ══ -->
+      <div class="ob-step" id="step-2">
+        <div class="ob-step-label">Qadam 2 / 3</div>
+        <h1 class="ob-title">Qanday texnologiyalar<br>bilan ishlaysiz? ⚙️</h1>
+        <p class="ob-subtitle">Bir yoki bir nechta tanlang. Bu sizning profilingizni boyitadi va loyihalar tavsiyasini yaxshilaydi.</p>
+
+        <div class="skills-grid">
+          {% for skill in skills %}
+          <input type="checkbox" name="skills" value="{{ skill }}" id="skill-{{ forloop.counter }}" class="skill-chk">
+          <label for="skill-{{ forloop.counter }}" class="skill-pill">{{ skill }}</label>
+          {% endfor %}
+        </div>
+
+        <div class="ob-actions">
+          <button type="button" class="ob-btn-back" onclick="goToStep(1)">← Orqaga</button>
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <button type="button" class="ob-skip" onclick="goToStep(3)">O'tkazib yuborish</button>
+            <button type="button" class="ob-btn-next" onclick="goToStep(3)">Davom etish →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ STEP 3: Tayyor ══ -->
+      <div class="ob-step" id="step-3">
+        <div class="ob-success">
+          <div class="success-ring">🎮</div>
+
+          <div class="ob-role-preview" id="role-preview">
+            💻 Dasturchi
+          </div>
+
+          <h1 class="ob-title" style="text-align:center;">Siz tayyor, Commander!</h1>
+          <p class="ob-subtitle" style="text-align:center;max-width:420px;margin:0 auto 2rem;">
+            DevForge platformasiga xush kelibsiz. Loyihalar yaratatish, aktivlar sotish va jamoa bilan ishlashni boshlang.
+          </p>
+
+          <div style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin-bottom:2.5rem;">
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.5rem;text-align:center;min-width:120px;">
+              <div style="font-size:1.5rem;margin-bottom:0.25rem;">🎯</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Loyihalar</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.5rem;text-align:center;min-width:120px;">
+              <div style="font-size:1.5rem;margin-bottom:0.25rem;">📦</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Asset Bozori</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.5rem;text-align:center;min-width:120px;">
+              <div style="font-size:1.5rem;margin-bottom:0.25rem;">🏆</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Reyting tizimi</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.5rem;text-align:center;min-width:120px;">
+              <div style="font-size:1.5rem;margin-bottom:0.25rem;">🎨</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);">Studio Suite</div>
+            </div>
+          </div>
+
+          <button type="submit" class="ob-btn-next" style="font-size:1.1rem;padding:15px 48px;letter-spacing:1px;">
+            🚀 DevForge'ni Boshlash
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
 </div>
+{% endblock %}
 
-<style>
-    .role-card input { display: none; }
-    .role-card-inner {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 2rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border-radius: var(--radius-lg);
-    }
-    .role-card:hover .role-card-inner {
-        border-color: var(--accent);
-        background: var(--surface2);
-    }
-    .role-card input:checked + .role-card-inner {
-        border-color: var(--accent);
-        background: var(--accent-glow);
-        box-shadow: 0 0 0 2px var(--accent);
-    }
-    .role-icon { font-size: 2rem; display: block; margin-bottom: 1rem; }
-    .role-name { font-weight: 700; color: var(--text-bold); }
+{% block extra_js %}
+<script>
+  const ROLE_LABELS = {
+    developer:    { icon: '💻', name: 'Dasturchi' },
+    artist:       { icon: '🎨', name: '3D Rassom' },
+    designer:     { icon: '🖌️', name: 'Dizayner' },
+    sound:        { icon: '🎵', name: 'Ovoz Mutaxassisi' },
+    writer:       { icon: '✍️', name: 'Scenariychi' },
+    producer:     { icon: '📊', name: 'Loyiha Menejeri' },
+    entrepreneur: { icon: '🚀', name: 'Entrepreneur' },
+  };
 
-    .skill-checkbox input { display: none; }
-    .skill-checkbox span {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: 0.2s;
-        font-size: 0.9rem;
-        border-radius: 20px;
-    }
-    .skill-checkbox:hover span { border-color: var(--text); color: var(--text); }
-    .skill-checkbox input:checked + span {
-        background: var(--accent);
-        color: #0d1117;
-        border-color: var(--accent);
-        font-weight: 600;
-    }
-</style>
+  let currentStep = 1;
 
-    /* Page load animation */
-    .container {
-        animation: fadeInScale 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  // Listen to role selection
+  document.querySelectorAll('.role-option').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.getElementById('btn-next-1').disabled = false;
+    });
+  });
+
+  function goToStep(n) {
+    // Validate step 1
+    if (n > 1) {
+      const chosen = document.querySelector('.role-option:checked');
+      if (!chosen && n === 2) { shakeCard(); return; }
+
+      // Update role preview
+      if (chosen) {
+        const rl = ROLE_LABELS[chosen.value] || { icon: '👤', name: chosen.value };
+        document.getElementById('role-preview').textContent = rl.icon + ' ' + rl.name;
+      }
     }
-    @keyframes fadeInScale {
-        from { opacity: 0; transform: scale(0.95) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-</style>
+
+    // Hide current
+    document.getElementById('step-' + currentStep).classList.remove('active');
+
+    // Update progress
+    updateProgress(n);
+
+    // Show new
+    currentStep = n;
+    document.getElementById('step-' + currentStep).classList.add('active');
+  }
+
+  function updateProgress(n) {
+    const dots = [1,2,3];
+    dots.forEach(i => {
+      const dot = document.getElementById('dot-' + i);
+      dot.className = 'ob-step-dot';
+      if (i < n) dot.classList.add('done');
+      else if (i === n) dot.classList.add('active');
+    });
+
+    if (document.getElementById('line-1'))
+      document.getElementById('line-1').style.width = n > 1 ? '100%' : '0%';
+    if (document.getElementById('line-2'))
+      document.getElementById('line-2').style.width = n > 2 ? '100%' : '0%';
+  }
+
+  function shakeCard() {
+    const card = document.querySelector('.ob-card');
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = 'shakeCard 0.4s ease';
+  }
+
+  // Add shake keyframe
+  const style = document.createElement('style');
+  style.textContent = '@keyframes shakeCard{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}';
+  document.head.appendChild(style);
+</script>
 {% endblock %}
