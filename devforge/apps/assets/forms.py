@@ -16,8 +16,13 @@ class AssetUploadForm(forms.ModelForm):
         'mp3': ['.mp3'],
         'wav': ['.wav'],
         'ogg': ['.ogg'],
+        'gif': ['.gif'],
+        'mp4': ['.mp4'],
+        'webm': ['.webm'],
+        'spritesheet': ['.png', '.zip', '.rar', '.7z'],
         'zip': ['.zip', '.rar', '.7z'],
         'unitypackage': ['.unitypackage'],
+        'exe': ['.zip', '.rar', '.7z', '.apk'],
         'other': None,
     }
 
@@ -27,7 +32,7 @@ class AssetUploadForm(forms.ModelForm):
 
     class Meta:
         model = Asset
-        fields = ['title', 'description', 'category', 'asset_type', 'format', 'file', 'thumbnail', 'price', 'tags', 'only_for_user']
+        fields = ['title', 'description', 'category', 'asset_type', 'format', 'file', 'thumbnail', 'animation_preview', 'price', 'tags', 'only_for_user']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Masalan: Cyberpunk Low-Poly Character'}),
             'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 4, 'placeholder': "Aktiv haqida batafsil ma'lumot..."}),
@@ -36,6 +41,7 @@ class AssetUploadForm(forms.ModelForm):
             'format': forms.Select(attrs={'class': 'form-input', 'id': 'id_format'}),
             'file': forms.FileInput(attrs={'class': 'form-input', 'id': 'id_file'}),
             'thumbnail': forms.FileInput(attrs={'class': 'form-input', 'accept': 'image/*'}),
+            'animation_preview': forms.FileInput(attrs={'class': 'form-input', 'accept': 'video/*,image/gif', 'id': 'id_animation_preview'}),
             'price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01', 'min': '0'}),
             'tags': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'character, fantasy, lowpoly'}),
             'only_for_user': forms.Select(attrs={'class': 'form-input'}),

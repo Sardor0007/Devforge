@@ -298,6 +298,7 @@
             <label for="at_{{ value }}" class="type-label">
               <span class="tl-icon">
                 {% if value == '3d_asset' %}🎲
+                {% elif value == 'animation' %}🎬
                 {% elif value == 'template' %}📐
                 {% elif value == 'software' %}💿
                 {% elif value == 'project' %}🗂️
@@ -351,7 +352,7 @@
           </div>
 
           <!-- Thumbnail -->
-          <div>
+          <div style="margin-bottom:1.5rem;">
             <label class="uf-label">Muqova Rasmi <span style="color:var(--text-muted);font-weight:400;">(ixtiyoriy)</span></label>
             <div class="drop-zone" id="thumb-zone" style="padding:1.5rem;">
               {{ form.thumbnail }}
@@ -360,6 +361,24 @@
               <div class="drop-sub">PNG / JPG — 16:9 tavsiya etiladi. Avtomatik WebP ga o'tkaziladi</div>
             </div>
             <img id="thumb-preview" class="thumb-preview" alt="Preview">
+          </div>
+
+          <!-- Animation Preview (only shown for animation type) -->
+          <div id="anim-preview-section" style="display:none;margin-bottom:1.5rem;">
+            <label class="uf-label">
+              🎬 Animatsiya Preview
+              <span style="background:linear-gradient(135deg,#f43f5e,#a855f7);color:#fff;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:700;margin-left:0.4rem;">Animatsiya uchun</span>
+            </label>
+            <div style="background:rgba(244,63,94,0.05);border:1.5px dashed rgba(244,63,94,0.3);border-radius:14px;padding:1.5rem;text-align:center;position:relative;cursor:pointer;transition:all 0.2s;" id="anim-zone">
+              {{ form.animation_preview }}
+              <div style="font-size:2rem;margin-bottom:0.5rem;">🎬</div>
+              <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.25rem;color:rgba(255,255,255,0.8);">Preview video yoki GIF yuklang</div>
+              <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);">MP4, WebM yoki GIF — foydalanuvchilar oldindan ko'rishi uchun</div>
+            </div>
+            <div class="uf-hint" style="margin-top:0.5rem;">Bu fayl sotib olmasdan preview qilish uchun ishlatiladi. Asosiy fayl alohida yuklanadi.</div>
+            <div id="anim-preview-wrap" style="display:none;margin-top:0.75rem;">
+              <video id="anim-preview-player" controls style="width:100%;max-height:220px;border-radius:10px;border:1px solid rgba(244,63,94,0.3);"></video>
+            </div>
           </div>
         </div>
 
@@ -432,6 +451,10 @@ document.addEventListener('DOMContentLoaded', function () {
     mp3:          ['.mp3'],
     wav:          ['.wav'],
     ogg:          ['.ogg'],
+    gif:          ['.gif'],
+    mp4:          ['.mp4'],
+    webm:         ['.webm'],
+    spritesheet:  ['.png', '.zip', '.rar', '.7z'],
     zip:          ['.zip', '.rar', '.7z'],
     unitypackage: ['.unitypackage'],
     exe:          ['.exe', '.apk', '.dmg', '.zip'],
@@ -443,6 +466,37 @@ document.addEventListener('DOMContentLoaded', function () {
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
     dropZone.addEventListener('drop', () => dropZone.classList.remove('dragover'));
+  }
+
+  // Animation type: show/hide animation preview section
+  const animSection = document.getElementById('anim-preview-section');
+  const animInput   = document.getElementById('id_animation_preview');
+  const animPreviewWrap = document.getElementById('anim-preview-wrap');
+  const animPlayer  = document.getElementById('anim-preview-player');
+
+  function toggleAnimSection() {
+    const selected = document.querySelector('input[name="asset_type"]:checked');
+    if (selected && selected.value === 'animation') {
+      animSection && (animSection.style.display = 'block');
+    } else {
+      animSection && (animSection.style.display = 'none');
+    }
+  }
+
+  document.querySelectorAll('input[name="asset_type"]').forEach(r => {
+    r.addEventListener('change', toggleAnimSection);
+  });
+  toggleAnimSection(); // run on load
+
+  // Animation preview video player
+  if (animInput) {
+    animInput.addEventListener('change', function () {
+      if (this.files && this.files[0]) {
+        const url = URL.createObjectURL(this.files[0]);
+        if (animPlayer) { animPlayer.src = url; }
+        if (animPreviewWrap) animPreviewWrap.style.display = 'block';
+      }
+    });
   }
 
   function updateFormatHint() {

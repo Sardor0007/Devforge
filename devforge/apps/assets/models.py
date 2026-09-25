@@ -14,12 +14,13 @@ class AssetCategory(models.Model):
 
 class Asset(models.Model):
     ASSET_TYPE_CHOICES = [
-        ('3d_asset',  '3D Assetlar'),
-        ('template',  'Shablonlar / Templates'),
-        ('software',  'Dasturlar / Software'),
-        ('project',   'Loyihalar / Projects'),
-        ('startup',   'Startuplar'),
-        ('plugin',    'Plugin & Extension'),
+        ('3d_asset',   '3D Assetlar'),
+        ('animation',  'Animatsiyalar'),
+        ('template',   'Shablonlar / Templates'),
+        ('software',   'Dasturlar / Software'),
+        ('project',    'Loyihalar / Projects'),
+        ('startup',    'Startuplar'),
+        ('plugin',     'Plugin & Extension'),
     ]
 
     FORMAT_CHOICES = [
@@ -29,6 +30,11 @@ class Asset(models.Model):
         ('obj', 'Wavefront OBJ (.obj)'),
         ('fbx', 'FBX (.fbx)'),
         ('blend', 'Blender (.blend)'),
+        # Animatsiyalar
+        ('gif', 'GIF Animatsiya (.gif)'),
+        ('mp4', 'MP4 Video (.mp4)'),
+        ('webm', 'WebM Video (.webm)'),
+        ('spritesheet', 'Sprite Sheet (.png/.zip)'),
         # 2D & Teksturalar
         ('png', 'PNG Rasm (.png)'),
         ('jpg', 'JPEG Rasm (.jpg, .jpeg)'),
@@ -58,6 +64,8 @@ class Asset(models.Model):
     description = models.TextField()
     file = models.FileField(upload_to='assets/files/')
     thumbnail = models.ImageField(upload_to='assets/thumbs/', blank=True, null=True)
+    animation_preview = models.FileField(upload_to='assets/previews/', blank=True, null=True,
+                                         help_text="Animatsiya preview uchun GIF yoki MP4 fayl")
     format = models.CharField(max_length=20, choices=FORMAT_CHOICES, default='other')
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
     tags = models.CharField(max_length=300, blank=True, help_text="Vergul bilan ajrating")

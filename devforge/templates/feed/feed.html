@@ -199,9 +199,9 @@
 
         <!-- Feed Tabs -->
         <div class="flex gap-6 mb-8" style="border-bottom: 1px solid var(--border);">
+            <a href="?tab=all" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'all' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'all' %}var(--accent){% else %}transparent{% endif %};">All Posts</a>
             <a href="?tab=following" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'following' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'following' %}var(--accent){% else %}transparent{% endif %};">Following</a>
             <a href="?tab=trending" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'trending' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'trending' %}var(--accent){% else %}transparent{% endif %};">Trending</a>
-            <a href="?tab=all" class="btn btn-ghost" style="border-radius: 0; padding: 1rem 0; color: {% if tab == 'all' %}var(--accent){% else %}inherit{% endif %}; border-bottom: 2px solid {% if tab == 'all' %}var(--accent){% else %}transparent{% endif %};">All Posts</a>
         </div>
 
         <!-- Post List -->

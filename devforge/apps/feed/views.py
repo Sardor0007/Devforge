@@ -12,7 +12,7 @@ from .models import Post, PostLike, Comment, Follow
 
 
 def feed_view(request):
-    tab = request.GET.get('tab', 'all' if not request.user.is_authenticated else 'following')
+    tab = request.GET.get('tab', 'all')
 
     if tab == 'following' and request.user.is_authenticated:
         following_ids = request.user.following.values_list('following_id', flat=True)

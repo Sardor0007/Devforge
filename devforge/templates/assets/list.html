@@ -270,13 +270,13 @@
             <h1 style="font-family:var(--font-display);font-size:2.8rem;font-weight:800;margin-bottom:0.5rem;">Asset Marketplace</h1>
             <p style="color:var(--text-secondary);max-width:580px;font-size:0.95rem;">
                 {% if current_type == '3d_asset' %}3D modellari, teksturalar va materiallar — Unreal Engine, Unity, Godot uchun.
+                {% elif current_type == 'animation' %}2D va 3D animatsiyalar, personaj harakatlari va vizual effektlar.
                 {% elif current_type == 'template' %}Tayyor shablonlar, UI kit va projekt qoliplamlari.
                 {% elif current_type == 'software' %}Tayyor dasturlar, o'yinlar va ilovalar — sotib oling yoki litsenziyalang.
                 {% elif current_type == 'project' %}Boshqa developerlar tomonidan yaratilgan tugallangan loyihalar.
                 {% elif current_type == 'startup' %}Startuplar, SaaS mahsulotlar va biznes-g'oyalar.
                 {% elif current_type == 'plugin' %}Plugin, extension va asboblar DevForge ekotizimlari uchun.
-                {% elif current_type == 'course' %}O'quv kurslar, darsliklar va treninglar.
-                {% else %}3D assetlar, dasturlar, loyihalar, shablonlar va startuplar — barchasi bir joyda.{% endif %}
+                {% else %}3D assetlar, animatsiyalar, dasturlar, loyihalar, shablonlar va startuplar — barchasi bir joyda.{% endif %}
             </p>
         </div>
         <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
@@ -311,6 +311,11 @@
                class="type-tab {% if current_type == '3d_asset' %}active{% endif %}">
                 🎲 3D Assetlar
                 <span class="tab-count">{{ type_counts.3d_asset|default:0 }}</span>
+            </a>
+            <a href="?type=animation{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+               class="type-tab {% if current_type == 'animation' %}active{% endif %}">
+                🎬 Animatsiyalar
+                <span class="tab-count">{{ type_counts.animation|default:0 }}</span>
             </a>
             <a href="?type=template{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
                class="type-tab {% if current_type == 'template' %}active{% endif %}">
@@ -395,12 +400,12 @@
                         <div class="thumb-placeholder">
                             <div class="ph-icon">
                                 {% if asset.asset_type == '3d_asset' %}🎲
+                                {% elif asset.asset_type == 'animation' %}🎬
                                 {% elif asset.asset_type == 'template' %}📐
                                 {% elif asset.asset_type == 'software' %}💿
                                 {% elif asset.asset_type == 'project' %}🗂️
                                 {% elif asset.asset_type == 'startup' %}🚀
                                 {% elif asset.asset_type == 'plugin' %}🔌
-                                {% elif asset.asset_type == 'course' %}🎓
                                 {% else %}📦{% endif %}
                             </div>
                             <div class="ph-label">{{ asset.format|upper }}</div>
@@ -410,12 +415,12 @@
                     <!-- Type badge -->
                     <div class="asset-type-badge">
                         {% if asset.asset_type == '3d_asset' %}🎲 3D
+                        {% elif asset.asset_type == 'animation' %}🎬 Animatsiya
                         {% elif asset.asset_type == 'template' %}📐 Shablon
                         {% elif asset.asset_type == 'software' %}💿 Dastur
                         {% elif asset.asset_type == 'project' %}🗂️ Loyiha
                         {% elif asset.asset_type == 'startup' %}🚀 Startup
                         {% elif asset.asset_type == 'plugin' %}🔌 Plugin
-                        {% elif asset.asset_type == 'course' %}🎓 Kurs
                         {% else %}📦 Asset{% endif %}
                     </div>
 
@@ -447,12 +452,12 @@
         <div class="empty-state">
             <div class="empty-icon">
                 {% if current_type == '3d_asset' %}🎲
+                {% elif current_type == 'animation' %}🎬
                 {% elif current_type == 'template' %}📐
                 {% elif current_type == 'software' %}💿
                 {% elif current_type == 'project' %}🗂️
                 {% elif current_type == 'startup' %}🚀
                 {% elif current_type == 'plugin' %}🔌
-                {% elif current_type == 'course' %}🎓
                 {% else %}📦{% endif %}
             </div>
             <h3 style="font-family:var(--font-display);margin-bottom:0.5rem;">Aktivlar topilmadi</h3>
