@@ -191,8 +191,9 @@
 /* COURSE GRID */
 .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+    gap: clamp(1rem, 2vw, 1.5rem);
+    width: 100%;
 }
 
 /* COURSE CARD */

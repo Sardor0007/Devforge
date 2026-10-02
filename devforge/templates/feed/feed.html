@@ -4,12 +4,12 @@
 {% block title %}DevFeed — DevForge Community{% endblock %}
 
 {% block extra_css %}
-<style>
     .feed-layout {
         display: grid;
-        grid-template-columns: 1fr 320px;
-        gap: 2rem;
-        margin-top: 2rem;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+        gap: clamp(1rem, 2vw, 2rem);
+        margin-top: 1.5rem;
+        width: 100%;
     }
 
     /* Post Creation Box */
@@ -159,7 +159,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding: 0 1.5rem 3rem;">
+<div class="w-full" style="padding-bottom: 3rem;">
 <div class="feed-layout animate-fade">
     <main>
         <!-- Post Creator -->

@@ -7,9 +7,10 @@
 <style>
     .jobs-layout {
         display: grid;
-        grid-template-columns: 320px 1fr;
-        gap: 2.5rem;
+        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        gap: clamp(1rem, 2vw, 2.5rem);
         margin-top: 2rem;
+        width: 100%;
     }
 
     .filter-sidebar {

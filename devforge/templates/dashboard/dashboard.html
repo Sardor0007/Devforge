@@ -7,16 +7,18 @@
 <style>
     .dashboard-grid {
         display: grid;
-        grid-template-columns: 1fr 350px;
-        gap: 2rem;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 350px);
+        gap: clamp(1rem, 2vw, 2rem);
         margin-top: 2rem;
+        width: 100%;
     }
 
     .stat-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+        gap: clamp(1rem, 2vw, 1.5rem);
         margin-bottom: 2rem;
+        width: 100%;
     }
 
     .stat-card {
@@ -82,12 +84,12 @@
 {% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-8 flex-wrap gap-4">
     <div>
-        <h1 style="font-family: var(--font-display); font-size: 2rem; font-weight: 700;">Studio Terminal</h1>
+        <h1 style="font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700;">Studio Terminal</h1>
         <p style="color: var(--text-secondary);">Welcome back, Commander <span style="color: var(--accent);">{{ user.username }}</span>.</p>
     </div>
-    <div class="flex gap-4">
+    <div class="flex gap-4 flex-wrap">
         <a href="{% url 'project_create' %}" class="btn btn-primary">+ Create Project</a>
         <a href="{% url 'asset_upload' %}" class="btn btn-secondary">+ Upload Asset</a>
     </div>

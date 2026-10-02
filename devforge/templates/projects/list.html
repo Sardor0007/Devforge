@@ -17,8 +17,9 @@
 
     .project-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-        gap: 2rem;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+        gap: clamp(1rem, 2vw, 2rem);
+        width: 100%;
     }
 
     .project-card-image {
@@ -51,10 +52,10 @@
 
 {% block content %}
 <div class="animate-fade">
-    <div class="flex justify-between items-end mb-8">
+    <div class="flex justify-between items-center mb-8 flex-wrap gap-4">
         <div>
             <span class="section-label">Collaboration Hub</span>
-            <h1 style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 700;">Discover Projects</h1>
+            <h1 style="font-family: var(--font-display); font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 700;">Discover Projects</h1>
             <p style="color: var(--text-secondary);">Join innovative game development teams and build something amazing.</p>
         </div>
         <a href="{% url 'project_create' %}" class="btn btn-primary">+ Create New Project</a>
