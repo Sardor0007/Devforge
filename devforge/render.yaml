@@ -3,7 +3,7 @@ services:
     name: devforge
     env: python
     buildCommand: "./build.sh"
-    startCommand: "gunicorn devforge.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
+    startCommand: "python manage.py migrate --run-syncdb && python manage.py shell -c \"from django.contrib.sites.models import Site; Site.objects.update_or_create(id=1, defaults={'domain': 'devforge-1-9jfn.onrender.com', 'name': 'DevForge'})\" && gunicorn devforge.wsgi:application --bind 0.0.0.0:$PORT --workers 2"
     envVars:
       - key: DEBUG
         value: False
