@@ -211,15 +211,23 @@ DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
 if DATABASE_URL:
     try:
         import dj_database_url
-        DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
-        print(f"[DATABASE] Using DATABASE_URL: {DATABASE_URL[:30]}...")
+        # Render PostgreSQL requires sslmode=require
+        if '?' not in DATABASE_URL and 'postgres' in DATABASE_URL:
+            DATABASE_URL_PARSED = DATABASE_URL + '?sslmode=require'
+        else:
+            DATABASE_URL_PARSED = DATABASE_URL
+        DATABASES = {'default': dj_database_url.parse(DATABASE_URL_PARSED, conn_max_age=600)}
+        print(f"[DATABASE] PostgreSQL configured via DATABASE_URL")
     except Exception as e:
-        print(f"[DATABASE CONFIG ERROR] {e}. Falling back to SQLite.")
+        import traceback
+        print(f"[DATABASE CONFIG ERROR] {type(e).__name__}: {e}")
+        traceback.print_exc()
         DATABASES = {'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }}
 else:
+    print("[DATABASE] No DATABASE_URL set, using SQLite.")
     DATABASES = {'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',

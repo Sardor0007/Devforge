@@ -12,6 +12,7 @@ import logging
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,42 @@ class AccountAdapter(DefaultAccountAdapter):
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
     """Google / GitHub orqali kirish uchun adapter"""
+
+    def list_apps(self, request, provider=None, client_id=None):
+        """
+        SOCIALACCOUNT_PROVIDERS settings dan OAuth app'larini o'qiydi.
+        Bu django_site jadvaliga murojaat qilmaydi va istalgan DB backend bilan ishlaydi.
+        """
+        providers_conf = getattr(settings, 'SOCIALACCOUNT_PROVIDERS', {})
+        apps = []
+        for prov_id, prov_conf in providers_conf.items():
+            if provider and prov_id != provider:
+                continue
+            app_conf = prov_conf.get('APP', {})
+            if not app_conf:
+                continue
+            cid = app_conf.get('client_id', '')
+            if client_id and cid != client_id:
+                continue
+            app = SocialApp(
+                provider=prov_id,
+                client_id=cid,
+                secret=app_conf.get('secret', ''),
+                key=app_conf.get('key', ''),
+                name=prov_id.capitalize(),
+            )
+            app.pk = prov_id  # sentinel — DB ga yozilmaydi
+            apps.append(app)
+
+        if apps:
+            return apps
+
+        # Fallback: ota-klassning usulini ishlatish
+        try:
+            return super().list_apps(request, provider=provider, client_id=client_id)
+        except Exception as e:
+            logger.warning(f"list_apps fallback failed: {e}")
+            return []
 
     def pre_social_login(self, request, sociallogin):
         """
