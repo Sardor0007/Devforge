@@ -5,7 +5,9 @@
 {% block title %}Challenges - DevForge{% endblock %}
 
 {% block extra_css %}
+<style>
     .challenge-grid {
+
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
         gap: clamp(1rem, 2vw, 1.75rem);
